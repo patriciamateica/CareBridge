@@ -1,0 +1,4 @@
+rootProject.name = 'CareBridge'
+
+include 'backend'
+include 'frontend'

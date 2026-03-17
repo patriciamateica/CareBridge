@@ -1,0 +1,29 @@
+# IDE & OS
+.idea/
+.vscode/
+*.swp
+*.DS_Store
+Thumbs.db
+.editorconfig
+
+# Java / Gradle (Backend)
+.gradle/
+build/
+bin/
+out/
+env.properties
+.env
+*.log
+!gradle/wrapper/gradle-wrapper.jar
+
+# Node / Angular (Frontend)
+node_modules/
+**/node_modules/
+dist/
+.angular/
+.cache/
+**/npm-debug.log*
+
+# Docker & DB
+.docker/
+postgres_data/
