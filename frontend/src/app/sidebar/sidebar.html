@@ -1,8 +1,8 @@
-<div class="lg:hidden p-4">
+<div class="lg:hidden p-4 bg-[#5F8D5F]">
   <p-button icon="pi pi-bars" (click)="visible = true" severity="secondary" [text]="true" />
 </div>
 
-<aside class="hidden lg:block h-screen w-72 border-r border-white/10">
+<aside class="hidden lg:block">
   <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
 </aside>
 
@@ -11,24 +11,20 @@
 </p-drawer>
 
 <ng-template #sidebarContent>
-  <div class="h-full flex flex-col text-white font-sans"
-       [style.background]="'#5F8D5F'"
-       style="box-shadow: none !important; border: none !important;">
+  <div class="sidebar-container">
 
-    <div class="w-full pt-10 pb-8 px-4 border-b border-white/20 flex justify-center items-center">
+    <div class="logo-section">
       <img src="Logo App SDI_white.png"
            alt="CareBridge Logo"
            class="max-w-[220px] w-full h-auto object-contain scale-110">
     </div>
 
-    <div class="flex-grow p-4 overflow-y-auto" style="background: transparent !important;">
-      <div class="flex flex-col w-full gap-6" style="background: transparent !important; border: none !important;">
-
+    <div class="menu-area">
+      <div class="flex flex-col w-full gap-6">
         @for (section of menuSections; track section.label) {
           @if (section.roles.includes(userRole)) {
             <div class="flex flex-col gap-2">
-
-              <span class="text-xs font-bold uppercase tracking-widest text-white/50 px-4 mb-1">
+              <span class="menu-header">
                 {{ section.label }}
               </span>
 
@@ -37,9 +33,8 @@
                   <a (click)="visible = false"
                      [routerLinkActiveOptions]="{ exact: true }"
                      [routerLink]="route.path"
-                     class="group p-4 rounded-xl transition-all duration-300 no-underline flex items-center gap-4 text-white hover:bg-white/10"
-                     routerLinkActive="bg-white/20 shadow-sm font-bold !text-white">
-                    <i [class]="'pi ' + ' text-xl transition-transform group-hover:scale-110'"></i>
+                     class="menu-item"
+                     routerLinkActive="active-link">
                     <span class="text-xl tracking-wide">{{ route.title }}</span>
                   </a>
                 }
@@ -50,15 +45,14 @@
       </div>
     </div>
 
-    <div class="p-6 border-t border-white/10 flex justify-between items-center bg-black/10">
+    <div class="sidebar-footer">
       <div class="flex gap-6 text-2xl text-white">
-        <i class="pi pi-cog cursor-pointer hover:scale-110 transition-transform hover:text-emerald-200"></i>
-        <i class="pi pi-bell cursor-pointer hover:scale-110 transition-transform hover:text-emerald-200"></i>
+        <i class="pi pi-cog icon-btn"></i>
+        <i class="pi pi-bell icon-btn"></i>
       </div>
-      <span class="text-base font-semibold cursor-pointer hover:underline opacity-90 text-white">
+      <span class="logout-btn">
         Log out
       </span>
     </div>
-
   </div>
 </ng-template>

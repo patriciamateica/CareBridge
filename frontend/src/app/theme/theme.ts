@@ -33,6 +33,25 @@ export const CarebridgeTheme = definePreset(Aura, {
     }
   },
   components: {
+    primary: {
+      background: '{emerald.600}',
+      borderColor: 'transparent',
+      color: '#ffffff',
+      shadow: '0 6px 18px 0 rgba(110, 160, 111, 0.35)',
+      hoverBackground: '{emerald.700}',
+      hoverShadow: '0 8px 22px 0 rgba(110, 160, 111, 0.45)',
+    },
+    secondary: {
+      outlined: {
+        background: '#ffffff',
+        borderColor: '{surface.200}',
+        color: '{surface.700}',
+        borderWidth: '2px',
+        shadow: '0 4px 10px rgba(0, 0, 0, 0.05)',
+        hoverBackground: '{surface.50}',
+        hoverBorderColor: '{surface.300}',
+      }
+    },
     card: {
       root: {
         background: '#ffffff',
