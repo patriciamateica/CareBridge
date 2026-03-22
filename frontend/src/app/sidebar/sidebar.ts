@@ -1,5 +1,5 @@
-import {Component} from '@angular/core';
-import {RouterLink, RouterLinkActive} from "@angular/router";
+import {Component, inject} from '@angular/core';
+import {Router, RouterLink, RouterLinkActive} from "@angular/router";
 import {CommonModule} from "@angular/common";
 import {Button} from "primeng/button";
 import {Drawer} from "primeng/drawer";
@@ -13,6 +13,7 @@ import {Drawer} from "primeng/drawer";
 export class Sidebar {
   visible: boolean = false;
   userRole: string = 'admin';
+  private router = inject(Router);
 
   public menuSections = [
     {
@@ -30,11 +31,15 @@ export class Sidebar {
       label: 'MEDICAL',
       roles: ['admin', 'nurse', 'patient'],
       items: [
-        { path: '/dashboard/patient', title: 'Patients', roles: ['admin', 'nurse'] },
+        { path: '/dashboard/patient-management', title: 'Patients', roles: ['admin', 'nurse'] },
         { path: '/dashboard/medication', title: 'Medication', roles: ['admin', 'nurse', 'patient'] },
         { path: '/dashboard/records', title: 'Medical Records', roles: ['admin', 'nurse', 'patient'] },
         { path: '/dashboard/requests', title: 'Requests', roles: ['admin', 'nurse'] }
       ]
     }
   ];
+
+  logout(){
+    this.router.navigate(['/']);
+  }
 }

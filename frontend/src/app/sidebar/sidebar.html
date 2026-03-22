@@ -1,5 +1,5 @@
 <div class="lg:hidden p-4 bg-[#5F8D5F]">
-  <p-button icon="pi pi-bars" (click)="visible = true" severity="secondary" [text]="true" />
+  <p-button icon="pi pi-bars" (click)="visible = true" severity="secondary" [text]="true"/>
 </div>
 
 <aside class="hidden lg:block">
@@ -50,7 +50,7 @@
         <i class="pi pi-cog icon-btn"></i>
         <i class="pi pi-bell icon-btn"></i>
       </div>
-      <span class="logout-btn">
+      <span class="logout-btn" (click)="logout()">
         Log out
       </span>
     </div>

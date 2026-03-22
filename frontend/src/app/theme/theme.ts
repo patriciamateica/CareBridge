@@ -9,7 +9,7 @@ export const CarebridgeTheme = definePreset(Aura, {
     rose: palette('#BA615E'),
     alert: palette('#BC0000'),
     slate: palette('#F1FAF1'),
-    ink: palette('#1A1A1A')
+    ink: palette('#000000')
   },
   semantic: {
     primary: palette('{emerald}'),
@@ -22,8 +22,8 @@ export const CarebridgeTheme = definePreset(Aura, {
           100: '#E2EEE2',
           200: '#C8D9C8',
           500: '#5F705F',
-          700: '{ink}',
-          950: '{ink}'
+          700: '#000000',
+          950: '#000000'
         },
         primary: {
           color: '{emerald.600}',
@@ -55,7 +55,7 @@ export const CarebridgeTheme = definePreset(Aura, {
     card: {
       root: {
         background: '#ffffff',
-        color: '{ink}',
+        color: '#000000',
         borderRadius: '24px',
         borderWidth: '1.5px',
         borderStyle: 'solid',
@@ -63,13 +63,13 @@ export const CarebridgeTheme = definePreset(Aura, {
         shadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)'
       },
       title: {
-        color: '{ink}'
+        color: '#000000'
       }
     },
     inputtext: {
       root: {
         background: '#ffffff',
-        color: '{ink}',
+        color: '#000000',
         borderWidth: '1.5px',
         borderColor: '{surface.200}',
         borderRadius: '12px',
@@ -122,7 +122,7 @@ export const CarebridgeTheme = definePreset(Aura, {
       },
       header: {
         background: '{surface.50}',
-        color: '{emerald.800}',
+        color: '#000000',
         fontWeight: '700'
       }
     }
