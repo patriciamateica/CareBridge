@@ -29,6 +29,7 @@ gap between complex medical telemetry and actionable healthcare insights.
 - **UI Library:** PrimeNG
 - **Styles:** Tailwind CSS
 - **Icons:** PrimeIcons
+- **Testing:** Jasmine
 
 ### Backend
 
