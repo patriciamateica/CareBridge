@@ -1,0 +1,289 @@
+<p-toast></p-toast>
+
+@if (patient(); as p) {
+  <div class="detail-page">
+
+    <div class="top-bar">
+      <div>
+        <h1 class="patient-name">{{ p.firstName }} {{ p.lastName }}</h1>
+        <a class="view-profile-link" [routerLink]="[]">view profile</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <app-update-patient [patientData]="p" (refreshTable)="onPatientUpdated()"></app-update-patient>
+        <app-delete-patient [patientData]="p" (refreshTable)="onPatientDeleted()"></app-delete-patient>
+        <button class="back-btn" (click)="goBack()">Back to Roster</button>
+      </div>
+    </div>
+
+    <div class="content-columns">
+
+      <div class="vitals-card"
+           [class.vitals-active]="p.status === 'Active' && !isAnyCritical()"
+           [class.vitals-critical]="isAnyCritical()">
+
+        <h2 class="vitals-title">Vitals</h2>
+
+        @if (sparklinePath(); as path) {
+          <div class="sparkline-wrap">
+            <svg width="100%" height="52" viewBox="0 0 300 52" preserveAspectRatio="none"
+                 xmlns="http://www.w3.org/2000/svg">
+              <path [attr.d]="path"
+                    fill="none"
+                    stroke="rgba(255,255,255,0.85)"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"/>
+            </svg>
+          </div>
+        }
+
+        @if (latestVital(); as v) {
+          <div class="vital-rows">
+            <div class="vital-row" [class.vital-row-alert]="v.heartRate > 100 || v.heartRate < 60">
+              <span class="vital-name">Heart Rate</span>
+              <span class="vital-val">{{ v.heartRate }} bpm</span>
+            </div>
+            <div class="vital-row" [class.vital-alert]="v.systolic > 140 || v.systolic < 90">
+              <span class="vital-name">Blood Pressure</span>
+              <span class="vital-val">{{ v.systolic }}/{{ v.diastolic }}</span>
+            </div>
+            <div class="vital-row" [class.vital-row-alert]="v.respiratoryRate > 20 || v.respiratoryRate < 12">
+              <span class="vital-name">Respiratory Rate</span>
+              <span class="vital-val">{{ v.respiratoryRate }} bpm</span>
+            </div>
+            <div class="vital-row" [class.vital-row-alert]="v.spo2 < 95">
+              <span class="vital-name">SpO2</span>
+              <span class="vital-val">{{ v.spo2 }}%</span>
+            </div>
+          </div>
+        }
+
+        <div class="vitals-table">
+          <table>
+            <thead>
+            <tr>
+              <th>Date/Time</th>
+              <th>HR</th>
+              <th>BP</th>
+              <th>RR</th>
+              <th>SpO₂</th>
+            </tr>
+            </thead>
+            <tbody>
+              @for (v of recentVitalsTable(); track v.timestamp) {
+                <tr>
+                  <td>{{ v.timestamp | date: 'MMM d, HH:mm' }}</td>
+                  <td>{{ v.heartRate }}</td>
+                  <td>{{ v.systolic }}/{{ v.diastolic }}</td>
+                  <td>{{ v.respiratoryRate }}</td>
+                  <td>{{ v.spo2 }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="right-stack">
+
+        <div class="top-cards-row">
+
+          <div class="white-card">
+            <div class="card-header">Medical History</div>
+            <div class="card-body">
+              <div class="history-row">
+                <span class="history-label">Diagnosis:</span>
+                <span class="history-value">{{ p.diagnosis }}</span>
+              </div>
+              <div class="history-row">
+                <span class="history-label">Neurological Status:</span>
+                <span class="history-value">{{ p.neurologicalStatus }}</span>
+              </div>
+              <div class="history-row">
+                <span class="history-label">Associated Conditions:</span>
+                <span class="history-value">{{ p.associatedConditions }}</span>
+              </div>
+              <button class="green-action-btn" style="margin-top: auto; align-self: center;">
+                View Clinical Log
+              </button>
+            </div>
+          </div>
+
+          <div class="white-card">
+            <div class="card-header">Daily Check-in</div>
+            <div class="card-body">
+              <div class="checkin-row">
+                <span class="checkin-label">Pain level: <strong>{{ checkInPainLevel() }}/10</strong></span>
+                <p-slider [ngModel]="checkInPainLevel()"
+                          (ngModelChange)="checkInPainLevel.set($event)"
+                          [min]="1" [max]="10" styleClass="w-full">
+                </p-slider>
+              </div>
+              <div class="checkin-row">
+                <span class="checkin-label">Status: <strong>{{ checkInMood() }}</strong></span>
+                <div class="mood-pills">
+                  @for (mood of moodOptions; track mood) {
+                    <button class="mood-pill"
+                            [class.mood-pill-active]="checkInMood() === mood"
+                            (click)="checkInMood.set(mood)">{{ mood }}</button>
+                  }
+                </div>
+              </div>
+              <div class="checkin-row">
+                <span class="checkin-label">
+                  Experienced: <strong>{{ checkInSymptoms().join(', ') || 'None' }}</strong>
+                </span>
+                <div class="symptom-list">
+                  @for (s of symptomOptions; track s) {
+                    <label class="symptom-item">
+                      <input type="checkbox"
+                             [checked]="checkInSymptoms().includes(s)"
+                             (change)="toggleSymptom(s)"
+                             class="symptom-cb"/>
+                      <span>{{ s }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+              <div class="checkin-row">
+                <span class="checkin-label">Comments:</span>
+                <textarea class="comments-area" rows="2"
+                          placeholder="Experienced major pain..."
+                          [ngModel]="checkInComments()"
+                          (ngModelChange)="checkInComments.set($event)"></textarea>
+              </div>
+              <div class="checkin-actions">
+                <button class="green-action-btn outline" (click)="showCheckInHistory.set(true)">
+                  View Previous Logs
+                </button>
+                <button class="green-action-btn" (click)="submitCheckIn()">
+                  Save Check-in
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="white-card">
+          <div class="card-header">Prescriptions &amp; Care Notes</div>
+          <div class="presc-body">
+
+            <div class="presc-sub-card">
+              <p class="presc-subtitle">Active Medication</p>
+              <ul class="med-list">
+                @for (med of medications(); track med.id) {
+                  <li class="med-item">
+                    <span>• {{ med.name }}</span>
+                    <button class="icon-del-btn" (click)="deleteMedication(med.id)">
+                      <i class="pi pi-times text-xs"></i>
+                    </button>
+                  </li>
+                }
+                @if (!medications().length) {
+                  <li class="empty-text">No medications added yet.</li>
+                }
+              </ul>
+              <button class="green-action-btn w-full mt-auto" (click)="openMedDialog()">
+                Add medication
+              </button>
+            </div>
+
+            <div class="presc-sub-card">
+              <p class="presc-subtitle">Care Notes (Recent)</p>
+              <ul class="notes-list">
+                @for (note of careNotes().slice(0, 4); track note.id) {
+                  <li class="note-item">
+                    <span class="note-date">{{ note.createdAt | date: 'MMM d' }}:</span>
+                    <span class="note-text">{{ note.content }}</span>
+                    <button class="icon-del-btn" (click)="deleteNote(note.id)">
+                      <i class="pi pi-times text-xs"></i>
+                    </button>
+                  </li>
+                }
+                @if (!careNotes().length) {
+                  <li class="empty-text">No care notes yet.</li>
+                }
+              </ul>
+              <div class="note-input-row mt-auto">
+                <textarea class="note-textarea" rows="2"
+                          placeholder="Write a care note..."
+                          [ngModel]="newNoteContent()"
+                          (ngModelChange)="newNoteContent.set($event)"></textarea>
+                <button class="green-action-btn"
+                        (click)="submitNote()"
+                        [disabled]="!newNoteContent().trim()">
+                  Add care note
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+} @else {
+  <div class="flex items-center justify-center h-64 text-gray-400">
+    <i class="pi pi-spin pi-spinner text-3xl"></i>
+  </div>
+}
+
+<p-dialog header="Previous Check-in Logs" [(visible)]="showCheckInHistory"
+          [modal]="true" [style]="{ width: '36rem' }" appendTo="body">
+  <div class="flex flex-col gap-3 pt-2">
+    @for (ci of checkInHistory(); track ci.id) {
+      <div class="checkin-log-item">
+        <div class="flex justify-between items-start">
+          <span class="font-semibold text-gray-700">{{ ci.date | date: 'dd MMM yyyy' }}</span>
+          <button class="icon-del-btn" (click)="patientService.deleteCheckIn(ci.id)">
+            <i class="pi pi-trash text-xs"></i>
+          </button>
+        </div>
+        <div class="grid grid-cols-2 gap-1 mt-1 text-sm text-gray-600">
+          <span>Pain: <strong>{{ ci.painLevel }}/10</strong></span>
+          <span>Mood: <strong>{{ ci.mood }}</strong></span>
+          <span class="col-span-2">Symptoms: {{ ci.symptoms.join(', ') || 'None' }}</span>
+          @if (ci.comments) {
+            <span class="col-span-2 text-gray-500 italic">"{{ ci.comments }}"</span>
+          }
+        </div>
+      </div>
+    }
+    @if (!checkInHistory().length) {
+      <p class="text-gray-400 text-center py-8">No previous check-ins.</p>
+    }
+  </div>
+</p-dialog>
+
+<p-dialog header="Add Medication" [(visible)]="showMedDialog"
+          [modal]="true" [style]="{ width: '28rem' }" appendTo="body">
+  <div class="flex flex-col gap-4 pt-2">
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-semibold text-gray-600">Medication Name *</label>
+      <input pInputText placeholder="e.g. Metformin 500mg"
+             [ngModel]="newMedName()" (ngModelChange)="newMedName.set($event)"/>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold text-gray-600">Dose *</label>
+        <input pInputText placeholder="e.g. 500mg"
+               [ngModel]="newMedDose()" (ngModelChange)="newMedDose.set($event)"/>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-semibold text-gray-600">Timing *</label>
+        <input pInputText placeholder="e.g. BID, OD"
+               [ngModel]="newMedTiming()" (ngModelChange)="newMedTiming.set($event)"/>
+      </div>
+    </div>
+    <div class="flex gap-3 pt-1">
+      <p-button label="Cancel" severity="secondary" [outlined]="true" class="flex-1" styleClass="w-full"
+                (onClick)="showMedDialog.set(false)" type="button"/>
+      <p-button label="Add Medication" class="flex-1" styleClass="w-full"
+                (onClick)="submitMedication()"
+                [disabled]="!newMedName().trim() || !newMedDose().trim() || !newMedTiming().trim()"/>
+    </div>
+  </div>
+</p-dialog>
