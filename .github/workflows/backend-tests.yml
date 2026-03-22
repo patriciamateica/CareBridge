@@ -19,5 +19,8 @@ jobs:
           distribution: 'temurin'
           java-version: 24
 
+      - name: Grant Gradle execute permission
+        run: chmod +x backend/gradlew
+
       - name: Run backend tests 🧪
         run: ./backend/gradlew -p ./backend/ test -PexcludeTags=architecture
