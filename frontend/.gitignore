@@ -29,3 +29,5 @@ yarn-error.log*
 #Database & Docker
 .docker/
 postgres_data/
+/src/typescript-client/
+/karma.conf.js
