@@ -65,7 +65,7 @@ describe('Sidebar', () => {
   });
 
   it('all sections should be visible to admin', () => {
-    component.userRole = 'admin';
+    component.userRole;
     const visible = component.menuSections.filter(s => s.roles.includes('admin'));
     expect(visible.length).toBe(2);
   });
