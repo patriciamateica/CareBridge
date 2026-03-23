@@ -27,9 +27,35 @@
 
 .search-wrap {
   position: relative;
-  width: 230px;
-  flex-grow: 1;
+  width: 350px;
 }
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 0.875rem;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.5rem 0.875rem 0.5rem 2.25rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 0.875rem;
+  color: #1a1a1a;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.search-input::placeholder { color: #9ca3af; }
+.search-input:focus { border-color: #5f8d5f; }
 
 .stat-cards {
   display: grid;
