@@ -28,8 +28,7 @@ export class Sidebar {
         { path: '/dashboard/home-nurse',   title: 'Home Nurse',   roles: ['admin', 'nurse'] },
         { path: '/dashboard/home-patient', title: 'Home Patient', roles: ['admin', 'patient'] },
         { path: '/dashboard/village',      title: 'Care Village', roles: ['admin', 'patient'] },
-        { path: '/dashboard/appointments', title: 'Appointments', roles: ['admin', 'nurse'] },
-        { path: '/dashboard/theme',        title: 'Theme',        roles: ['admin'] }
+        { path: '/dashboard/appointments', title: 'Appointments', roles: ['admin', 'nurse'] }
       ]
     },
     {
