@@ -1,0 +1,223 @@
+.login-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  background-color: #F1FAF1;
+  position: relative;
+  padding: 60px 20px;
+  box-sizing: border-box;
+}
+
+.page-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 2rem;
+  z-index: 10;
+}
+
+.logo {
+  height: 45px;
+  width: auto;
+  display: block;
+}
+
+.login-card {
+  margin: auto 0;
+  background-color: #ffffff;
+  border-radius: 24px;
+  border: 1px solid #E0E0E0;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+  padding: 3.5rem;
+  width: 100%;
+  max-width: 550px;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  box-sizing: border-box;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.login-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1a1a1a;
+}
+
+.login-subtitle {
+  color: #5F705F;
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.form-field label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.form-field input:not(.custom-pwd-input) {
+  width: 100%;
+  height: 52px;
+  background: #f9fcf9;
+  border: 1.5px solid #C8D9C8;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  outline: none;
+  color: #333;
+  font-family: inherit;
+}
+
+.form-field input:not(.custom-pwd-input):focus {
+  border-color: #6EA06F;
+  box-shadow: 0 0 0 4px rgba(110, 160, 111, 0.1);
+}
+
+.form-field input::placeholder {
+  color: #a0b0a0;
+  opacity: 1;
+}
+
+:host ::ng-deep .custom-pwd-container,
+:host ::ng-deep .custom-pwd-container .p-password,
+:host ::ng-deep .custom-pwd-container .p-inputtext {
+  width: 100% !important;
+  height: 52px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+:host ::ng-deep .custom-pwd-input {
+  width: 100% !important;
+  background-color: #f9fcf9 !important;
+  border: 1.5px solid #C8D9C8 !important;
+  border-radius: 12px !important;
+  padding: 0.75rem 1.25rem !important;
+  padding-right: 3rem !important;
+  font-size: 1rem !important;
+  color: #333 !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s !important;
+}
+
+:host ::ng-deep .custom-pwd-input:focus {
+  border-color: #6EA06F !important;
+  box-shadow: 0 0 0 4px rgba(110, 160, 111, 0.1) !important;
+}
+
+:host ::ng-deep .custom-pwd-container .p-password-toggle-icon {
+  position: absolute !important;
+  right: 16px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #6EA06F !important;
+  z-index: 10 !important;
+  cursor: pointer !important;
+}
+
+::ng-deep .p-password-panel {
+  display: none !important;
+}
+
+.options-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: -0.5rem;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.remember-me label {
+  font-size: 0.9rem;
+  color: #333;
+  cursor: pointer;
+  margin: 0;
+}
+
+:host ::ng-deep .p-checkbox .p-checkbox-box.p-highlight {
+  background: #6EA06F !important;
+  border: 1.5px solid #000000 !important;
+}
+
+.forgot-link {
+  font-size: 0.9rem;
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+  color: #6EA06F;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 1rem !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 1.1rem !important;
+  background: #6EA06F !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 15px rgba(110, 160, 111, 0.2);
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.submit-btn:hover {
+  background: #5a8a5b !important;
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.95rem;
+  color: #5F705F;
+}
+
+.register-link a {
+  color: #6EA06F;
+  text-decoration: none;
+  font-weight: 700;
+  margin-left: 0.4rem;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+  .login-page { padding: 20px 15px; }
+  .page-header { position: relative; padding: 1rem; text-align: center; }
+  .login-card { padding: 2.5rem 1.5rem; margin: 0; }
+  .options-row { flex-direction: column; align-items: flex-start; gap: 1rem; }
+}

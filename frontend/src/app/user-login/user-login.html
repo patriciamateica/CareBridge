@@ -1,0 +1,65 @@
+<div class="login-page">
+  <header class="page-header">
+    <img src="Logo App SDI_green.png" alt="CareBridge Logo" class="logo">
+  </header>
+
+  <div class="login-card">
+    <div class="login-header">
+      <h1 class="login-title">Welcome back!</h1>
+      <p class="login-subtitle">Please enter your details.</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+
+      <div class="form-field">
+        <label>Email Address</label>
+        <input pInputText
+               formControlName="email"
+               placeholder="Enter your email" />
+        @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
+          <p-message severity="error" size="small" variant="simple">
+            A valid email is required.
+          </p-message>
+        }
+      </div>
+
+      <div class="form-field">
+        <label>Password</label>
+        <p-password
+          formControlName="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          placeholder="Enter your password"
+          class="custom-pwd-container"
+          inputStyleClass="custom-pwd-input">
+        </p-password>
+        @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
+          <p-message severity="error" size="small" variant="simple">
+            Password is required.
+          </p-message>
+        }
+      </div>
+
+      <div class="options-row">
+        <div class="remember-me">
+          <p-checkbox formControlName="rememberMe" [binary]="true" inputId="remember"></p-checkbox>
+          <label for="remember">Remember me</label>
+        </div>
+        <a (click)="onForgotPassword()" class="forgot-link">Forgot your password?</a>
+      </div>
+
+      <button pButton
+              type="submit"
+              class="submit-btn"
+              (click)="onSubmit()">
+        <span pButtonLabel>Sign in</span>
+      </button>
+
+      <div class="register-link">
+        <span>Don't have an account?</span>
+        <a (click)="onRegister()">Register now</a>
+      </div>
+
+    </form>
+  </div>
+</div>
