@@ -1,0 +1,124 @@
+<div class="registration-page">
+  <header class="page-header">
+    <img src="Logo App SDI_green.png" alt="CareBridge Logo" class="logo">
+  </header>
+
+  <div class="registration-card">
+    <div class="registration-header">
+      <h1 class="registration-title">Registration</h1>
+      <p class="registration-subtitle">Create an account.</p>
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="registration-form">
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>First Name</label>
+          <input pInputText formControlName="firstName" placeholder="First Name"/>
+          @if (registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched) {
+            <p-message severity="error" size="small" variant="simple">
+              First name is required.
+            </p-message>
+          }
+        </div>
+        <div class="form-field">
+          <label>Last Name</label>
+          <input pInputText formControlName="lastName" placeholder="Last Name"/>
+          @if (registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched) {
+            <p-message severity="error" size="small" variant="simple">
+              Last name is required.
+            </p-message>
+          }
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Email Address</label>
+          <input pInputText formControlName="email" placeholder="Email"/>
+          @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
+            <p-message severity="error" size="small" variant="simple">
+              A valid email is required.
+            </p-message>
+          }
+        </div>
+        <div class="form-field">
+          <label>Phone Number</label>
+          <input pInputText formControlName="phoneNumber" placeholder="Phone Number"/>
+          @if (registerForm.get('phoneNumber')?.invalid && registerForm.get('phoneNumber')?.touched) {
+            <p-message severity="error" size="small" variant="simple">
+              Phone number is required.
+            </p-message>
+          }
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label>Password</label>
+          <p-password
+            formControlName="password"
+            [feedback]="false"
+            [toggleMask]="true"
+            placeholder="Enter Password"
+            class="custom-pwd-container"
+            inputStyleClass="custom-pwd-input">>
+          </p-password>
+          @if (registerForm.get('password')?.invalid && (registerForm.get('password')?.dirty
+            || registerForm.get('password')?.touched)) {
+            @if (registerForm.get('password')?.hasError('required')) {
+              <p-message severity="error" size="small" variant="simple">
+                Password is required.
+              </p-message>
+            }
+            @if (registerForm.get('password')?.hasError('minlength')
+            || registerForm.get('password')?.hasError('pattern')) {
+              <p-message severity="error" size="small" variant="simple">
+                Password must be at least 8 characters long, include an uppercase letter, a number,
+                and a special symbol.
+              </p-message>
+            }
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Confirm Password</label>
+          <p-password
+            formControlName="confirmPassword"
+            [feedback]="false"
+            [toggleMask]="true"
+            placeholder="Confirm Password"
+            class="custom-pwd-container"
+            inputStyleClass="custom-pwd-input">
+          </p-password>
+          @if (registerForm.get('confirmPassword')?.dirty ||
+          registerForm.get('confirmPassword')?.touched) {
+            @if (registerForm.get('confirmPassword')?.hasError('required')) {
+              <p-message severity="error" size="small" variant="simple">
+                Please enter your password again for confirmation.
+              </p-message>
+            } @else if (registerForm.hasError('passwordMismatch')) {
+              <p-message severity="error" size="small" variant="simple">
+                The Passwords do not match.
+              </p-message>
+            }
+          }
+        </div>
+      </div>
+
+      <button
+        pButton
+        type="submit"
+        class="submit-btn"
+        (click)="onSubmit()">
+        <span pButtonLabel>Register</span>
+      </button>
+
+      <div class="login-link">
+        <span>Already have an account? </span>
+        <a (click)="onSignIn()" style="cursor: pointer;">Sign in</a>
+      </div>
+
+    </form>
+  </div>
+</div>
