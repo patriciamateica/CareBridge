@@ -1,0 +1,45 @@
+<div class="activation-page">
+  <header class="page-header">
+    <img src="Logo App SDI_green.png" alt="CareBridge Logo" class="logo">
+  </header>
+
+  <div class="activation-card">
+    <div class="activation-header">
+      <h1 class="activation-title">Activate Account</h1>
+      <p class="activation-subtitle">Enter your id to get started.</p>
+    </div>
+
+    <form [formGroup]="activationForm" (ngSubmit)="onSubmit()" class="activation-form">
+
+      <div class="form-field">
+        <label>Activation ID</label>
+        <input pInputText
+               formControlName="activationId"
+               placeholder="e.g. NRS-0001" />
+
+        <div>
+          <p>• To access your account, you must enter the Activation Number provided to you by the Medical Institution you are affiliated with.</p>
+        </div>
+
+        @if (activationForm.get('activationId')?.invalid && activationForm.get('activationId')?.touched) {
+          <p-message severity="error" size="small" variant="simple">
+            Activation ID is required.
+          </p-message>
+        }
+      </div>
+
+      <button pButton
+              type="submit"
+              class="submit-btn"
+              (click)="onSubmit()">
+        <span pButtonLabel>Submit</span>
+      </button>
+
+<!--      <div class="help-link">-->
+<!--        <span>Need help?</span>-->
+<!--        <a href="mailto:support@carebridge.com">Contact Support</a>-->
+<!--      </div>-->
+
+    </form>
+  </div>
+</div>
