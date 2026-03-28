@@ -31,3 +31,11 @@ yarn-error.log*
 postgres_data/
 /src/typescript-client/
 /karma.conf.js
+/src/app/theme/feature/theme-showcase/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
