@@ -6,8 +6,14 @@
   min-height: 100vh;
   background-color: #F1FAF1;
   position: relative;
-  padding: 60px 20px;
+  padding: 60px 1rem 2rem;
   box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .login-page {
+    padding: 60px 2rem 2rem;
+  }
 }
 
 .page-header {
@@ -22,6 +28,12 @@
   height: 45px;
   width: auto;
   display: block;
+}
+
+@media (min-width: 640px) {
+  .logo {
+    height: 45px;
+  }
 }
 
 .login-card {
@@ -39,6 +51,20 @@
   box-sizing: border-box;
 }
 
+@media (min-width: 480px) {
+  .login-card {
+    padding: 2.5rem 2.25rem;
+    border-radius: 1.5rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .login-card {
+    padding: 3.5rem;
+    max-width: 550px;
+  }
+}
+
 .login-header {
   text-align: center;
   margin-bottom: 2.5rem;
@@ -51,10 +77,29 @@
   color: #1a1a1a;
 }
 
+@media (min-width: 480px) {
+  .login-title {
+    font-size: 2.25rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .login-title {
+    font-size: 2.5rem;
+  }
+}
+
+
 .login-subtitle {
   color: #5F705F;
   margin-top: 0.5rem;
   font-size: 1rem;
+}
+
+@media (min-width: 480px) {
+  .login-subtitle {
+    font-size: 1rem;
+  }
 }
 
 .login-form {

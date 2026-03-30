@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import { CommonModule } from "@angular/common";
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
@@ -9,6 +9,7 @@ import { Password } from "primeng/password";
 import { Message } from "primeng/message";
 import {ToastService} from '../toast-service/toast-service';
 import {AuthService} from '../../auth-service/auth.service';
+import {CookiesService} from '../../cookies/cookieservice';
 
 @Component({
   selector: 'app-login',
@@ -26,9 +27,13 @@ import {AuthService} from '../../auth-service/auth.service';
   ]
 })
 export class UserLogin {
-  toastService = inject(ToastService);
-  authService = inject(AuthService);
-  router = inject(Router);
+  private readonly toastService = inject(ToastService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly cookiesService = inject(CookiesService);
+
+  loginError = signal<string>('');
+  isLoading  = signal(false);
 
   loginForm = new FormGroup({
     email: new FormControl('', [Validators.required, Validators.email]),
@@ -36,13 +41,18 @@ export class UserLogin {
     rememberMe: new FormControl(false)
   });
 
+
+
   onSubmit() {
+    this.loginError.set('');
     if (!this.loginForm.valid) {
       this.loginForm.markAllAsTouched();
     } else {
       console.log('Login Payload:', this.loginForm.value);
     }
     this.router.navigate(['/dashboard/home-nurse']);
+    this.cookiesService.logActivity('login_started', this.loginForm.value.email ?? '');
+
   }
 
   onRegister(){

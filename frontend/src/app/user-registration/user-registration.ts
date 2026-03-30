@@ -17,6 +17,7 @@ import {Message} from "primeng/message";
 import {Router} from "@angular/router";
 import {ToastService} from "../toast-service/toast-service";
 import {AuthService, RegisterRequest} from '../../auth-service/auth.service';
+import {CookiesService} from '../../cookies/cookieservice';
 
 const passwordValidators = [
   Validators.required,
@@ -41,9 +42,10 @@ const passwordValidators = [
 })
 
 export class UserRegistration {
-  toastService = inject(ToastService);
-  authService = inject(AuthService);
-  router = inject(Router);
+  private readonly toastService = inject(ToastService);
+  private readonly authService = inject(AuthService);
+  private readonly cookiesService = inject(CookiesService);
+  private readonly router = inject(Router);
 
   passwordMatchValidator = (control: AbstractControl): ValidationErrors | null => {
     const password = control.get('password');
@@ -96,6 +98,7 @@ export class UserRegistration {
     //   })
     //}
     this.router.navigate(['/activate-account-flow']);
+    this.cookiesService.logActivity('registration_started', this.registerForm.value.email ?? '');
   }
 
   onSignIn(){

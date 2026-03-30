@@ -2,19 +2,26 @@
   display: flex;
   justify-content: center;
   min-height: 100vh;
-  height: auto;
   background-color: #F1FAF1;
   position: relative;
   align-items: center;
-  padding: 100px 20px;
+  padding: 80px 1rem 2rem;
   box-sizing: border-box;
   overflow-y: auto;
 }
+
+@media (min-width: 640px) {
+  .registration-page {
+    padding: 100px 2rem 2rem;
+  }
+}
+
 .page-header {
   position: absolute;
   top: 0;
   left: 0;
   padding: 2rem;
+  z-index: 10;
 }
 
 .logo {
@@ -22,6 +29,13 @@
   width: auto;
   display: block;
 }
+
+@media (min-width: 640px) {
+  .logo {
+    height: 45px;
+  }
+}
+
 .registration-card {
   background-color: #ffffff;
   border-radius: 24px;
@@ -33,6 +47,19 @@
   display: flex;
   flex-direction: column;
   height: fit-content;
+}
+
+@media (min-width: 640px) {
+  .registration-card {
+    padding: 3rem 2.5rem;
+    border-radius: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .registration-card {
+    padding: 3.5rem;
+  }
 }
 
 .registration-header {
@@ -47,9 +74,21 @@
   margin: 0;
 }
 
+@media (min-width: 480px) {
+  .registration-title { font-size: 2.25rem; }
+}
+
+@media (min-width: 768px) {
+  .registration-title { font-size: 2.5rem; }
+}
+
 .registration-subtitle {
   color: #5F705F;
   margin-top: 0.5rem;
+}
+
+@media (min-width: 640px) {
+  .registration-subtitle { font-size: 1rem; }
 }
 
 .registration-form {
@@ -63,6 +102,14 @@
   gap: 1.5rem;
   margin-bottom: 1.5rem;
   flex: 0 0 auto;
+}
+
+@media (min-width: 560px) {
+  .form-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
 }
 
 .form-field {
@@ -207,19 +254,3 @@
   text-decoration: underline;
 }
 
-@media (max-width: 640px) {
-  .form-row {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .registration-card {
-    padding: 2rem 1.5rem;
-  }
-
-  .page-header {
-    position: relative;
-    padding: 1rem;
-    text-align: center;
-  }
-}
