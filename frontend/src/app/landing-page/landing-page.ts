@@ -23,4 +23,12 @@ export class LandingPage {
   onLearnMore() {
     this.router.navigate(['/dashboard/home-nurse']);
   }
+
+  onRegister() {
+    this.router.navigate(['/user-registration']);
+  }
+
+  onLogin() {
+    this.router.navigate(['/user-login']);
+  }
 }

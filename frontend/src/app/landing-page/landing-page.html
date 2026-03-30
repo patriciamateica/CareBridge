@@ -1,35 +1,39 @@
 <div class="h-screen w-full bg-[#F1FAF1] flex flex-col font-sans overflow-hidden">
 
-  <nav class="w-full max-w-7xl mx-auto py-6 px-10 flex justify-between items-center shrink-0">
-    <img src="Logo App SDI_green.png" alt="Logo" class="h-14 lg:h-16">
+  <nav class="w-full max-w-7xl mx-auto py-4 px-5 sm:py-6 sm:px-10 flex justify-between items-center shrink-0">
+    <img src="Logo App SDI_green.png" alt="Logo" class="nav-logo h-10 sm:h-14 lg:h-16">
 
-    <div class="flex gap-4">
+    <div class="nav-buttons flex gap-2 sm:gap-4">
       <p-button label="Sign in"
                 severity="secondary"
                 [outlined]="true"
+                (click)="onLogin()"
                 styleClass="btn-nav shadow-soft hover-scale" />
 
       <p-button label="Register"
+                (click)="onRegister()"
                 styleClass="btn-nav shadow-emerald hover-scale text-white" />
     </div>
   </nav>
 
-  <main class="grow w-full max-w-7xl mx-auto grid grid-cols-12 px-10 items-center min-h-0">
+  <main class="landing-grid grow w-full max-w-7xl mx-auto grid grid-cols-12 px-5 sm:px-10 items-center min-h-0">
 
-    <div class="col-span-7 flex flex-col gap-6 text-left z-10 pr-10">
-      <h1 class="text-6xl xl:text-7xl font-bold leading-[1.1] text-[#1A1A1A] tracking-tight">
+    <div class="hero-text-col col-span-12 md:col-span-7 flex flex-col gap-4 sm:gap-6 text-left z-10 md:pr-10">
+
+      <h1 class="hero-headline hero-title text-4xl sm:text-5xl xl:text-7xl font-bold leading-[1.1] text-[#1A1A1A] tracking-tight">
         Comfort at home,<br>
         <span class="text-[#1A1A1A]">support by your side.</span>
       </h1>
 
-      <p class="text-lg xl:text-xl text-gray-600 leading-relaxed font-medium max-w-xl">
+      <p class="hero-body text-base sm:text-lg xl:text-xl text-gray-600 leading-relaxed font-medium max-w-xl">
         CareBridge is a compassionate care management platform dedicated to patients and their families.
         We empower you to manage your health journey with dignity, providing real-time connections
         to your healthcare team so you are never alone in your care.
       </p>
 
-      <div class="flex gap-6 mt-4">
+      <div class="hero-cta flex flex-wrap gap-4 mt-2 sm:mt-4">
         <p-button label="Get Started"
+                  (click)="onRegister()"
                   styleClass="btn-hero shadow-emerald hover-scale text-white" />
 
         <p-button label="Learn More"
@@ -40,32 +44,35 @@
       </div>
     </div>
 
-    <div class="col-span-5 relative h-full flex items-center justify-end overflow-visible">
-      <img src="people.png" alt="3d picture of a nurse and her patient"
-           class="max-h-[85%] w-auto object-contain select-none scale-110 translate-x-10">
+    <div class="hero-image-col col-span-5 relative h-full hidden md:flex items-center justify-end overflow-visible">
+      <img src="people.png"
+           alt="3d picture of a nurse and her patient"
+           class="hero-image max-h-[85%] w-auto object-contain select-none scale-110 translate-x-10">
     </div>
+
   </main>
 
   <footer class="w-full flex justify-center shrink-0">
     <div class="w-full max-w-5xl footer-card">
-      <div class="flex items-center justify-between">
-        <h2 class="text-2xl font-bold text-[#1A1A1A]">How It Works</h2>
+      <div class="footer-inner flex items-center justify-between flex-wrap gap-4">
+        <h2 class="text-lg sm:text-2xl font-bold text-[#1A1A1A]">How It Works</h2>
 
-        <div class="flex gap-12 items-center">
+        <div class="footer-features flex flex-wrap gap-6 sm:gap-12 items-center">
           <div class="flex items-center gap-3">
             <i class="pi pi-phone text-xl text-[#6EA06F]"></i>
-            <span class="font-bold text-base text-[#1A1A1A]">24/7 Support</span>
+            <span class="font-bold text-sm sm:text-base text-[#1A1A1A]">24/7 Support</span>
           </div>
           <div class="flex items-center gap-3">
             <i class="pi pi-shield text-xl text-[#6EA06F]"></i>
-            <span class="font-bold text-base text-[#1A1A1A]">HIPAA Compliant</span>
+            <span class="font-bold text-sm sm:text-base text-[#1A1A1A]">HIPAA Compliant</span>
           </div>
           <div class="flex items-center gap-3">
             <i class="pi pi-users text-xl text-[#6EA06F]"></i>
-            <span class="font-bold text-base text-[#1A1A1A]">Care Team Access</span>
+            <span class="font-bold text-sm sm:text-base text-[#1A1A1A]">Care Team Access</span>
           </div>
         </div>
       </div>
     </div>
   </footer>
+
 </div>
