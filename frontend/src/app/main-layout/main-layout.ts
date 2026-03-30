@@ -9,6 +9,7 @@ import {Sidebar} from '../sidebar/sidebar';
     Sidebar
   ],
   templateUrl: './main-layout.html',
+  styleUrl: '/main-layout.css',
 })
 export class MainLayout {
 
