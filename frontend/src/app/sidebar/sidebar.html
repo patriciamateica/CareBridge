@@ -1,22 +1,28 @@
-<div class="lg:hidden p-4 bg-[#5F8D5F]">
-  <p-button icon="pi pi-bars" (click)="visible = true" severity="secondary" [text]="true"/>
+<div class="lg:hidden flex justify-between items-center p-3 bg-[#5F8D5F]">
+  <img src="Logo App SDI_white.png" alt="CareBridge Logo" class="h-8 ml-2 object-contain">
+  <p-button icon="pi pi-bars" (click)="visible = true" severity="secondary" [text]="true" styleClass="text-white"/>
 </div>
 
-<aside class="hidden lg:block">
+<aside class="hidden lg:block w-[18rem] h-screen sticky top-0 shrink-0 bg-[#5F8D5F]">
   <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
 </aside>
 
-<p-drawer [(visible)]="visible" [style]="{'background': '#5F8D5F', 'border': 'none', 'width': '300px'}">
-  <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
-</p-drawer>
+<div class="lg:hidden">
+  <p-drawer [(visible)]="visible"
+            [modal]="false"
+            [showCloseIcon]="false"
+            styleClass="carebridge-drawer"
+            [style]="{'background': '#5F8D5F', 'border': 'none', 'padding': '0', 'width': '280px'}">
+    <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
+  </p-drawer>
+</div>
 
 <ng-template #sidebarContent>
   <div class="sidebar-container">
-
     <div class="logo-section">
       <img src="Logo App SDI_white.png"
            alt="CareBridge Logo"
-           class="max-w-[220px] w-full h-auto object-contain scale-110">
+           class="max-w-[200px] w-full h-auto object-contain">
     </div>
 
     <div class="menu-area">
@@ -24,9 +30,7 @@
         @for (section of menuSections; track section.label) {
           @if (section.roles.includes(userRole)) {
             <div class="flex flex-col gap-2">
-              <span class="menu-header">
-                {{ section.label }}
-              </span>
+              <span class="menu-header">{{ section.label }}</span>
 
               @for (route of section.items; track route.path) {
                 @if (route.roles.includes(userRole)) {
@@ -50,9 +54,8 @@
         <i class="pi pi-cog icon-btn"></i>
         <i class="pi pi-bell icon-btn"></i>
       </div>
-      <span class="logout-btn" (click)="logout()">
-        Log out
-      </span>
+      <span class="logout-btn" (click)="logout()">Log out</span>
     </div>
+
   </div>
 </ng-template>
