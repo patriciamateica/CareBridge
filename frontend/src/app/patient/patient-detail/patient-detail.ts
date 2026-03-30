@@ -2,35 +2,31 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Button } from 'primeng/button';
 import { SliderModule } from 'primeng/slider';
 import { TextareaModule } from 'primeng/textarea';
 import { InputTextModule } from 'primeng/inputtext';
-import { Dialog } from 'primeng/dialog';
-import { Toast } from 'primeng/toast';
-import { MessageService } from 'primeng/api';
 import { PatientService } from '../patient-crud/patient-service';
 import { MoodStatus, Patient, PatientStatus } from '../patient-crud/patient-model';
 import { UpdatePatient } from '../ui/update-patient/update-patient';
 import { DeletePatient } from '../ui/delete-patient/delete-patient';
+import {ToastService} from '../../toast-service/toast-service';
 
 @Component({
   selector: 'app-patient-detail',
   standalone: true,
   imports: [
-    DatePipe, FormsModule, Button,
+    DatePipe, FormsModule,
     SliderModule, TextareaModule, InputTextModule,
-    Dialog, Toast, UpdatePatient, DeletePatient, RouterLink
+    UpdatePatient, DeletePatient, RouterLink
   ],
   templateUrl: './patient-detail.html',
   styleUrl: './patient-detail.css',
-  providers: [MessageService]
 })
 export class PatientDetail implements OnInit {
   protected readonly patientService = inject(PatientService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly messageService = inject(MessageService);
+  private readonly toastService = inject(ToastService);
 
   patient = signal<Patient | null>(null);
 
@@ -44,6 +40,7 @@ export class PatientDetail implements OnInit {
   newMedName = signal('');
   newMedDose = signal('');
   newMedTiming = signal('');
+  readonly isInactive = computed(() => this.patient()?.status === 'Inactive');
 
   readonly moodOptions: MoodStatus[] = ['Calm', 'Anxious', 'Depressed', 'Irritable'];
   readonly symptomOptions = ['Nausea', 'Shortness of Breath', 'Fatigue', 'Insomnia', 'Constipation'];
@@ -145,6 +142,7 @@ export class PatientDetail implements OnInit {
   onPatientDeleted() { this.router.navigate(['/dashboard/patient-management']); }
 
   submitCheckIn() {
+    if (this.isInactive()) return;
     const p = this.patient();
     if (!p) return;
     this.patientService.upsertCheckIn(p.id, {
@@ -153,10 +151,11 @@ export class PatientDetail implements OnInit {
       symptoms: this.checkInSymptoms(),
       comments: this.checkInComments(),
     });
-    this.messageService.add({ severity: 'success', summary: 'Saved', detail: 'Daily check-in saved.' });
+    return this.toastService.showSuccess("Daily Check-In message saved.");
   }
 
   toggleSymptom(symptom: string) {
+    if (this.isInactive()) return;
     const current = this.checkInSymptoms();
     if (current.includes(symptom)) {
       this.checkInSymptoms.set(current.filter(s => s !== symptom));
@@ -166,16 +165,20 @@ export class PatientDetail implements OnInit {
   }
 
   submitNote() {
+    if (this.isInactive()) return;
     const content = this.newNoteContent().trim();
     if (!content || !this.patient()) return;
     this.patientService.addCareNote(this.patient()!.id, content, 'Ana Pop');
     this.newNoteContent.set('');
-    this.messageService.add({ severity: 'success', summary: 'Added', detail: 'Care note saved.' });
+    return this.toastService.showSuccess("Care Note saved.");
   }
 
-  deleteNote(id: string) { this.patientService.deleteCareNote(id); }
+  deleteNote(id: string) {
+    if (this.isInactive()) return;
+    this.patientService.deleteCareNote(id); }
 
   openMedDialog() {
+    if (this.isInactive()) return;
     this.newMedName.set('');
     this.newMedDose.set('');
     this.newMedTiming.set('');
@@ -183,16 +186,19 @@ export class PatientDetail implements OnInit {
   }
 
   submitMedication() {
+    if (this.isInactive()) return;
     const name = this.newMedName().trim();
     const dose = this.newMedDose().trim();
     const timing = this.newMedTiming().trim();
     if (!name || !dose || !timing || !this.patient()) return;
     this.patientService.addMedication(this.patient()!.id, name, dose, timing, 'Ana Pop');
     this.showMedDialog.set(false);
-    this.messageService.add({ severity: 'success', summary: 'Added', detail: 'Medication added.' });
+    return this.toastService.showSuccess("Medication Added.");
   }
 
-  deleteMedication(id: string) { this.patientService.deleteMedication(id); }
+  deleteMedication(id: string) {
+    if (this.isInactive()) return;
+    this.patientService.deleteMedication(id); }
 
   getPainColor(level: number): string {
     if (level <= 3) return '#4ade80';

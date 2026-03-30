@@ -5,6 +5,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DailyCheckIn, Patient, VitalReading } from '../patient-crud/patient-model';
 import { PatientService } from '../patient-crud/patient-service';
+import { Subject } from 'rxjs';
 
 const mockPatient: Patient = {
   id: 'p-test', firstName: 'Maria', lastName: 'Vaida',
@@ -33,7 +34,9 @@ describe('PatientDetail', () => {
   let router: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    router = jasmine.createSpyObj('Router', ['navigate']);
+    router = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject()
+    });
     router.navigate.and.returnValue(Promise.resolve(true));
 
     patientService = jasmine.createSpyObj('PatientService', [
@@ -55,7 +58,7 @@ describe('PatientDetail', () => {
       imports: [PatientDetail, NoopAnimationsModule],
       providers: [
         { provide: PatientService, useValue: patientService },
-        { provide: Router, useValue: router },
+        { provide: Router, useValue: router }, // Uses fixed router
         { provide: ActivatedRoute, useValue: {
             snapshot: { paramMap: { get: (_: string) => 'p-test' } }
           }},
@@ -120,8 +123,8 @@ describe('PatientDetail', () => {
     it('returns a valid SVG path string when vitals exist', () => {
       const path = component.sparklinePath();
       expect(path).not.toBeNull();
-      expect(path).toContain('M ');   // starts with move-to
-      expect(path).toContain('C ');   // contains cubic bezier curves
+      expect(path).toContain('M ');
+      expect(path).toContain('C ');
     });
 
     it('returns null when fewer than 2 vitals', () => {
@@ -373,5 +376,4 @@ describe('PatientDetail', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/dashboard/patient-management']);
     });
   });
-
 });

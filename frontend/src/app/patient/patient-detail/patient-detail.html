@@ -1,5 +1,3 @@
-<p-toast></p-toast>
-
 @if (patient(); as p) {
   <div class="detail-page">
 
@@ -9,7 +7,9 @@
         <a class="view-profile-link" [routerLink]="[]">view profile</a>
       </div>
       <div class="flex items-center gap-3">
-        <app-update-patient [patientData]="p" (refreshTable)="onPatientUpdated()"></app-update-patient>
+        @if (!isInactive()) {
+          <app-update-patient [patientData]="p" (refreshTable)="onPatientUpdated()"></app-update-patient>
+        }
         <app-delete-patient [patientData]="p" (refreshTable)="onPatientDeleted()"></app-delete-patient>
         <button class="back-btn" (click)="goBack()">Back to Roster</button>
       </div>
@@ -115,6 +115,7 @@
               <div class="checkin-row">
                 <span class="checkin-label">Pain level: <strong>{{ checkInPainLevel() }}/10</strong></span>
                 <p-slider [ngModel]="checkInPainLevel()"
+                          [disabled]="isInactive()"
                           (ngModelChange)="checkInPainLevel.set($event)"
                           [min]="1" [max]="10" styleClass="w-full">
                 </p-slider>
@@ -124,6 +125,7 @@
                 <div class="mood-pills">
                   @for (mood of moodOptions; track mood) {
                     <button class="mood-pill"
+                            [disabled]="isInactive()"
                             [class.mood-pill-active]="checkInMood() === mood"
                             (click)="checkInMood.set(mood)">{{ mood }}</button>
                   }
@@ -137,6 +139,7 @@
                   @for (s of symptomOptions; track s) {
                     <label class="symptom-item">
                       <input type="checkbox"
+                             [disabled]="isInactive()"
                              [checked]="checkInSymptoms().includes(s)"
                              (change)="toggleSymptom(s)"
                              class="symptom-cb"/>
@@ -148,6 +151,7 @@
               <div class="checkin-row">
                 <span class="checkin-label">Comments:</span>
                 <textarea class="comments-area" rows="2"
+                          [disabled]="isInactive()"
                           placeholder="Experienced major pain..."
                           [ngModel]="checkInComments()"
                           (ngModelChange)="checkInComments.set($event)"></textarea>
@@ -156,9 +160,11 @@
                 <button class="green-action-btn outline" (click)="showCheckInHistory.set(true)">
                   View Previous Logs
                 </button>
-                <button class="green-action-btn" (click)="submitCheckIn()">
-                  Save Check-in
-                </button>
+                @if (!isInactive()) {
+                  <button class="green-action-btn" (click)="submitCheckIn()">
+                    Save Check-in
+                  </button>
+                }
               </div>
             </div>
           </div>
@@ -175,18 +181,22 @@
                 @for (med of medications(); track med.id) {
                   <li class="med-item">
                     <span>• {{ med.name }}</span>
-                    <button class="icon-del-btn" (click)="deleteMedication(med.id)">
-                      <i class="pi pi-times text-xs"></i>
-                    </button>
+                    @if (!isInactive()) {
+                      <button class="icon-del-btn" (click)="deleteMedication(med.id)">
+                        <i class="pi pi-times text-xs"></i>
+                      </button>
+                    }
                   </li>
                 }
                 @if (!medications().length) {
                   <li class="empty-text">No medications added yet.</li>
                 }
               </ul>
-              <button class="green-action-btn w-full mt-auto" (click)="openMedDialog()">
-                Add medication
-              </button>
+              @if (!isInactive()) {
+                <button class="green-action-btn w-full mt-auto" (click)="openMedDialog()">
+                  Add medication
+                </button>
+              }
             </div>
 
             <div class="presc-sub-card">
@@ -196,9 +206,11 @@
                   <li class="note-item">
                     <span class="note-date">{{ note.createdAt | date: 'MMM d' }}:</span>
                     <span class="note-text">{{ note.content }}</span>
-                    <button class="icon-del-btn" (click)="deleteNote(note.id)">
-                      <i class="pi pi-times text-xs"></i>
-                    </button>
+                    @if (!isInactive()) {
+                      <button class="icon-del-btn" (click)="deleteNote(note.id)">
+                        <i class="pi pi-times text-xs"></i>
+                      </button>
+                    }
                   </li>
                 }
                 @if (!careNotes().length) {
@@ -207,14 +219,17 @@
               </ul>
               <div class="note-input-row mt-auto">
                 <textarea class="note-textarea" rows="2"
-                          placeholder="Write a care note..."
+                          [disabled]="isInactive()"
+                          [placeholder]="isInactive() ? 'Read only' : 'Write a care note...'"
                           [ngModel]="newNoteContent()"
                           (ngModelChange)="newNoteContent.set($event)"></textarea>
-                <button class="green-action-btn"
-                        (click)="submitNote()"
-                        [disabled]="!newNoteContent().trim()">
-                  Add care note
-                </button>
+                @if (!isInactive()) {
+                  <button class="green-action-btn"
+                          (click)="submitNote()"
+                          [disabled]="!newNoteContent().trim()">
+                    Add care note
+                  </button>
+                }
               </div>
             </div>
 
@@ -230,60 +245,3 @@
     <i class="pi pi-spin pi-spinner text-3xl"></i>
   </div>
 }
-
-<p-dialog header="Previous Check-in Logs" [(visible)]="showCheckInHistory"
-          [modal]="true" [style]="{ width: '36rem' }" appendTo="body">
-  <div class="flex flex-col gap-3 pt-2">
-    @for (ci of checkInHistory(); track ci.id) {
-      <div class="checkin-log-item">
-        <div class="flex justify-between items-start">
-          <span class="font-semibold text-gray-700">{{ ci.date | date: 'dd MMM yyyy' }}</span>
-          <button class="icon-del-btn" (click)="patientService.deleteCheckIn(ci.id)">
-            <i class="pi pi-trash text-xs"></i>
-          </button>
-        </div>
-        <div class="grid grid-cols-2 gap-1 mt-1 text-sm text-gray-600">
-          <span>Pain: <strong>{{ ci.painLevel }}/10</strong></span>
-          <span>Mood: <strong>{{ ci.mood }}</strong></span>
-          <span class="col-span-2">Symptoms: {{ ci.symptoms.join(', ') || 'None' }}</span>
-          @if (ci.comments) {
-            <span class="col-span-2 text-gray-500 italic">"{{ ci.comments }}"</span>
-          }
-        </div>
-      </div>
-    }
-    @if (!checkInHistory().length) {
-      <p class="text-gray-400 text-center py-8">No previous check-ins.</p>
-    }
-  </div>
-</p-dialog>
-
-<p-dialog header="Add Medication" [(visible)]="showMedDialog"
-          [modal]="true" [style]="{ width: '28rem' }" appendTo="body">
-  <div class="flex flex-col gap-4 pt-2">
-    <div class="flex flex-col gap-1">
-      <label class="text-sm font-semibold text-gray-600">Medication Name *</label>
-      <input pInputText placeholder="e.g. Metformin 500mg"
-             [ngModel]="newMedName()" (ngModelChange)="newMedName.set($event)"/>
-    </div>
-    <div class="grid grid-cols-2 gap-3">
-      <div class="flex flex-col gap-1">
-        <label class="text-sm font-semibold text-gray-600">Dose *</label>
-        <input pInputText placeholder="e.g. 500mg"
-               [ngModel]="newMedDose()" (ngModelChange)="newMedDose.set($event)"/>
-      </div>
-      <div class="flex flex-col gap-1">
-        <label class="text-sm font-semibold text-gray-600">Timing *</label>
-        <input pInputText placeholder="e.g. BID, OD"
-               [ngModel]="newMedTiming()" (ngModelChange)="newMedTiming.set($event)"/>
-      </div>
-    </div>
-    <div class="flex gap-3 pt-1">
-      <p-button label="Cancel" severity="secondary" [outlined]="true" class="flex-1" styleClass="w-full"
-                (onClick)="showMedDialog.set(false)" type="button"/>
-      <p-button label="Add Medication" class="flex-1" styleClass="w-full"
-                (onClick)="submitMedication()"
-                [disabled]="!newMedName().trim() || !newMedDose().trim() || !newMedTiming().trim()"/>
-    </div>
-  </div>
-</p-dialog>
