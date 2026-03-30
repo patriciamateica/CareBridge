@@ -6,6 +6,7 @@ import { Router } from "@angular/router";
 import { ButtonModule } from "primeng/button";
 import { PasswordModule } from "primeng/password";
 import { MessageModule } from "primeng/message";
+import {CookiesService} from '../../cookies/cookieservice';
 
 // import { ToastService } from "../toast-service/toast-service";
 // import { AuthService } from '../../auth-service/auth.service';
@@ -30,9 +31,11 @@ const passwordValidators = [
   ]
 })
 export class ForgotPassword {
-  // toastService = inject(ToastService);
-  // authService = inject(AuthService);
-  router = inject(Router);
+  // private readonly toastService = inject(ToastService);
+  // private readonly authService = inject(AuthService);
+  private readonly  router = inject(Router);
+  private readonly cookiesService = inject(CookiesService);
+
 
   passwordMatchValidator = (control: AbstractControl): ValidationErrors | null => {
     const password = control.get('password');
