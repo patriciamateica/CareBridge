@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {ApplicationConfig, importProvidersFrom, provideBrowserGlobalErrorListeners} from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { providePrimeNG } from 'primeng/config';
@@ -6,9 +6,15 @@ import { MessageService } from 'primeng/api';
 
 import { routes } from './app.routes';
 import { CarebridgeTheme } from './theme/theme';
+import {ApiModule, Configuration} from '../typescript-client';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // importProvidersFrom(
+    //   ApiModule.forRoot(() => new Configuration({
+    //     basePath: ''
+    //   }))
+    // ),
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(),

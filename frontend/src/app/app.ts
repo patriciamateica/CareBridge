@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import {Component, inject, signal} from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import {Toast} from 'primeng/toast';
+import {CookiesService} from '../cookies/cookieservice';
 
 @Component({
   selector: 'app-root',
@@ -10,4 +11,5 @@ import {Toast} from 'primeng/toast';
 })
 export class App {
   protected readonly title = signal('frontend');
+  public cookieService = inject(CookiesService);
 }
