@@ -2,12 +2,18 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   min-height: 100vh;
   background-color: #F1FAF1;
   position: relative;
-  padding: 60px 20px;
+  padding: 60px 1rem 2rem;
   box-sizing: border-box;
+}
+
+@media (min-width: 640px) {
+  .activation-page {
+    padding: 100px 2rem 2rem;
+  }
 }
 
 .page-header {
@@ -22,6 +28,12 @@
   height: 45px;
   width: auto;
   display: block;
+}
+
+@media (min-width: 640px) {
+  .logo {
+    height: 45px;
+  }
 }
 
 .activation-card {
@@ -39,6 +51,30 @@
   box-sizing: border-box;
 }
 
+@media (min-width: 480px) {
+  .activation-card {
+    padding: 2.5rem 2.25rem;
+    border-radius: 1.5rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .activation-card {
+    padding: 3.5rem;
+  }
+}
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .activation-header {
   text-align: center;
   margin-bottom: 2.5rem;
@@ -51,10 +87,29 @@
   color: #1a1a1a;
 }
 
+@media (min-width: 480px) {
+  .activation-title {
+    font-size: 2.25rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .activation-title {
+    font-size: 2.5rem;
+  }
+}
+
+
 .activation-subtitle {
   color: #5F705F;
   margin-top: 0.5rem;
   font-size: 1.1rem;
+}
+
+@media (min-width: 640px) {
+  .activation-subtitle {
+    font-size: 1.1rem;
+  }
 }
 
 .activation-form {
@@ -156,12 +211,14 @@
   .activation-page {
     padding: 20px 15px;
   }
+
   .page-header {
     position: relative;
     padding: 1rem;
     display: flex;
     justify-content: center;
   }
+
   .activation-card {
     padding: 2.5rem 1.5rem;
     margin: 0;

@@ -7,6 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { AuthService } from '../../auth-service/auth.service';
 import { ToastService } from '../toast-service/toast-service';
 import {Message} from 'primeng/message';
+import {CookiesService} from '../../cookies/cookieservice';
 
 @Component({
   selector: 'app-activation',
@@ -15,9 +16,11 @@ import {Message} from 'primeng/message';
   imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, Message],
 })
 export class ActivateAccountFlow {
-  authService = inject(AuthService);
-  toastService = inject(ToastService);
-  router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly toastService = inject(ToastService);
+  private readonly router = inject(Router);
+  private readonly cookiesService = inject(CookiesService);
+
 
   activationForm = new FormGroup({
     activationId: new FormControl('', [Validators.required]),
@@ -45,5 +48,6 @@ export class ActivateAccountFlow {
     //   }
     // });
     this.router.navigate(['/dashboard/home-nurse']);
+    this.cookiesService.logActivity('activation_attempted', this.activationForm.value.activationId ?? '');
   }
 }
