@@ -3,10 +3,11 @@ import { PatientManagement } from './patient-management';
 import { PatientService } from '../../patient-crud/patient-service';
 import { MessageService } from 'primeng/api';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { provideRouter, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { signal } from '@angular/core';
 import { Patient } from '../../patient-crud/patient-model';
-import {AuthService} from '../../../../auth-service/auth.service';
+import { AuthService } from '../../../../auth-service/auth.service';
+import { Subject } from 'rxjs'; // <-- Added to mock router events
 
 const makePatient = (overrides: Partial<Patient> = {}): Patient => ({
   id: 'p1', firstName: 'Maria', lastName: 'Ionescu',
@@ -39,7 +40,9 @@ describe('PatientManagement', () => {
     patientService.getLastVitalTime.and.returnValue(null);
     patientService.getTodayCheckIn.and.returnValue(null);
 
-    router = jasmine.createSpyObj('Router', ['navigate']);
+    router = jasmine.createSpyObj('Router', ['navigate'], {
+      events: new Subject()
+    });
     router.navigate.and.returnValue(Promise.resolve(true));
 
     await TestBed.configureTestingModule({
@@ -48,8 +51,7 @@ describe('PatientManagement', () => {
         { provide: PatientService, useValue: patientService },
         { provide: Router, useValue: router },
         AuthService,
-        MessageService,
-        provideRouter([]),
+        MessageService
       ],
     }).compileComponents();
 

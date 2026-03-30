@@ -1,5 +1,3 @@
-<p-toast></p-toast>
-
 <div class="pm-page">
 
   <div class="pm-header">
@@ -15,144 +13,153 @@
     </div>
   </div>
 
-  @if (viewMode() === 'charts') {
+  <div class="split-layout">
 
-    <div class="stat-cards">
-      <div class="stat-card">
-        <p class="stat-label">Active Patients</p>
-        <p class="stat-number">{{ activeCount() }}</p>
-        <p class="stat-sub">Total Caseload</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Critical Alerts</p>
-        <p class="stat-number critical">{{ criticalCount() }}</p>
-        <p class="stat-sub">Patients needing immediate care</p>
-      </div>
-      <div class="stat-card">
-        <p class="stat-label">Pending tasks</p>
-        <p class="stat-number">{{ pendingTasksCount() }}</p>
-        <p class="stat-sub">New Requests and follow-ups</p>
+    <div class="split-table">
+      <div class="table-card">
+        <p-table
+          [value]="filteredPatients()"
+          [paginator]="true"
+          [rows]="rowsPerPage"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="Showing {first}–{last} of {totalRecords} patients"
+          styleClass="p-datatable-sm"
+          rowHover="true"
+          [rowsPerPageOptions]="[5, 10, 20]"
+          paginatorDropdownAppendTo="body"
+          [customSort]="true"
+          (sortFunction)="customSort($event)"
+          responsiveLayout="stack"
+          [breakpoint]="'960px'"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th pSortableColumn="lastName">
+                Patient <p-sortIcon field="lastName"/>
+              </th>
+              <th pSortableColumn="diagnosis">
+                Primary Diagnosis <p-sortIcon field="diagnosis"/>
+              </th>
+
+              @if (authService.isAdmin()) {
+                <th pSortableColumn="assignedNurse">
+                  Assigned Nurse <p-sortIcon field="assignedNurse"/>
+                </th>
+              }
+
+              <th pSortableColumn="lastVital">Last Vital Check <p-sortIcon field="lastVital"/></th>
+              <th pSortableColumn="status">Status <p-sortIcon field="status"/></th>
+              <th class="text-center">Actions</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-patient>
+            <tr class="cursor-pointer" (click)="openDetail(patient)">
+              <td>
+                <span class="p-column-title font-bold lg:hidden">Patient</span>
+                <div class="flex items-center gap-3">
+                  <div class="patient-avatar">
+                    <i class="pi pi-user text-sm" style="color:#5f8d5f"></i>
+                  </div>
+                  <span class="font-semibold text-gray-800">
+                    {{ patient.firstName }} {{ patient.lastName }}
+                  </span>
+                </div>
+              </td>
+              <td>
+                <span class="p-column-title font-bold lg:hidden">Primary Diagnosis</span>
+                <span class="text-gray-600">{{ patient.diagnosis }}</span>
+              </td>
+
+              @if (authService.isAdmin()) {
+                <td>
+                  <span class="p-column-title font-bold lg:hidden">Assigned Nurse</span>
+                  <span class="text-gray-600">{{ patient.assignedNurse }}</span>
+                </td>
+              }
+
+              <td>
+                <span class="p-column-title font-bold lg:hidden">Last Vital Check</span>
+                <span class="text-gray-500 text-sm">
+                  @if (getLastVitalTime(patient.id); as t) {
+                    {{ t | date: 'dd MMM, HH:mm' }}
+                  } @else {
+                    <span class="italic text-gray-400">No data</span>
+                  }
+                </span>
+              </td>
+              <td>
+                <span class="p-column-title font-bold lg:hidden">Status</span>
+                <p-tag [value]="patient.status" [severity]="getSeverity(patient.status)"></p-tag>
+              </td>
+              <td (click)="$event.stopPropagation()">
+                <span class="p-column-title font-bold lg:hidden text-center">Actions</span>
+                <div class="flex justify-center gap-1">
+                  <app-update-patient [patientData]="patient" (refreshTable)="triggerRefresh()"></app-update-patient>
+                  <app-delete-patient [patientData]="patient" (refreshTable)="triggerRefresh()"></app-delete-patient>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td [attr.colspan]="authService.isAdmin() ? 6 : 5">
+                <div class="empty-state">
+                  <i class="pi pi-users text-4xl text-gray-300"></i>
+                  <p class="text-gray-400 text-base">No patients found</p>
+                  @if (searchQuery()) {
+                    <p class="text-gray-400 text-sm">Try clearing the search filter</p>
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+        </p-table>
       </div>
     </div>
 
-    <div class="charts-row">
+    <div class="split-charts">
+
+      <div class="stat-cards">
+        <div class="stat-card">
+          <p class="stat-label">Active Patients</p>
+          <p class="stat-number">{{ activeCount() }}</p>
+          <p class="stat-sub">Total Caseload</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Critical Alerts</p>
+          <p class="stat-number critical">{{ criticalCount() }}</p>
+          <p class="stat-sub">Patients needing immediate care</p>
+        </div>
+        <div class="stat-card">
+          <p class="stat-label">Pending tasks</p>
+          <p class="stat-number">{{ pendingTasksCount() }}</p>
+          <p class="stat-sub">New Requests and follow-ups</p>
+        </div>
+      </div>
+
       <div class="chart-card">
         <p class="chart-title">Patients Status Overview</p>
         <div class="donut-wrap">
-          <p-chart type="doughnut" [data]="donutData()" [options]="donutOptions" height="280"></p-chart>
+          <p-chart type="doughnut" [data]="donutData()" [options]="donutOptions" height="220"></p-chart>
         </div>
         <div class="donut-legend">
           <button class="legend-pill normal">{{ donutData().normalPct }}% Normal</button>
           <button class="legend-pill critical">{{ donutData().criticalPct }}% Critical</button>
         </div>
       </div>
+
       <div class="chart-card">
         <p class="chart-title">Reported Symptoms Today</p>
         <div class="bar-wrap">
-          <p-chart type="bar" [data]="symptomsData()" [options]="barOptions" height="280"></p-chart>
+          <p-chart type="bar" [data]="symptomsData()" [options]="barOptions" height="200"></p-chart>
         </div>
       </div>
+
     </div>
 
-    <div class="view-toggle-row">
-      <button class="toggle-btn" (click)="viewMode.set('table')">Tabular View</button>
-    </div>
-
-  }
-
-  @if (viewMode() === 'table') {
-
-    <div class="table-card">
-      <p-table
-        [value]="filteredPatients()"
-        [paginator]="true"
-        [rows]="rowsPerPage"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="Showing {first}–{last} of {totalRecords} patients"
-        styleClass="p-datatable-sm"
-        rowHover="true"
-        [rowsPerPageOptions]="[5, 10, 20]"
-        paginatorDropdownAppendTo="body"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th pSortableColumn="lastName">
-              Patient <p-sortIcon field="lastName"/>
-            </th>
-            <th pSortableColumn="diagnosis">
-              Primary Diagnosis <p-sortIcon field="diagnosis"/>
-            </th>
-
-            @if (authService.isAdmin()) {
-              <th pSortableColumn="assignedNurse">
-                Assigned Nurse <p-sortIcon field="assignedNurse"/>
-              </th>
-            }
-
-            <th>Last Vital Check</th>
-            <th pSortableColumn="status">Status <p-sortIcon field="status"/></th>
-            <th class="text-center">Actions</th>
-          </tr>
-        </ng-template>
-
-        <ng-template pTemplate="body" let-patient>
-          <tr class="cursor-pointer" (click)="openDetail(patient)">
-            <td>
-              <div class="flex items-center gap-3">
-                <div class="patient-avatar">
-                  <i class="pi pi-user text-sm" style="color:#5f8d5f"></i>
-                </div>
-                <span class="font-semibold text-gray-800">
-                  {{ patient.firstName }} {{ patient.lastName }}
-                </span>
-              </div>
-            </td>
-            <td class="text-gray-600">{{ patient.diagnosis }}</td>
-
-            @if (authService.isAdmin()) {
-              <td class="text-gray-600">{{ patient.assignedNurse }}</td>
-            }
-
-            <td class="text-gray-500 text-sm">
-              @if (getLastVitalTime(patient.id); as t) {
-                {{ t | date: 'dd MMM, HH:mm' }}
-              } @else {
-                <span class="italic text-gray-400">No data</span>
-              }
-            </td>
-            <td>
-              <p-tag [value]="patient.status" [severity]="getSeverity(patient.status)"></p-tag>
-            </td>
-            <td (click)="$event.stopPropagation()">
-              <div class="flex justify-center gap-1">
-                <app-update-patient [patientData]="patient" (refreshTable)="triggerRefresh()"></app-update-patient>
-                <app-delete-patient [patientData]="patient" (refreshTable)="triggerRefresh()"></app-delete-patient>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td [attr.colspan]="authService.isAdmin() ? 6 : 5">
-              <div class="empty-state">
-                <i class="pi pi-users text-4xl text-gray-300"></i>
-                <p class="text-gray-400 text-base">No patients found</p>
-                @if (searchQuery()) {
-                  <p class="text-gray-400 text-sm">Try clearing the search filter</p>
-                }
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-
-      </p-table>
-    </div>
-
-    <div class="view-toggle-row">
-      <button class="toggle-btn" (click)="viewMode.set('charts')">Charts View</button>
-    </div>
-
-  }
+  </div>
 
 </div>
