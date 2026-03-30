@@ -4,10 +4,11 @@ import { Message } from 'primeng/message';
 import { InputTextModule } from 'primeng/inputtext';
 import { Dialog } from 'primeng/dialog';
 import { Button } from 'primeng/button';
-import { MessageService } from 'primeng/api';
 import { SelectModule } from 'primeng/select';
 import { PatientService } from '../../patient-crud/patient-service';
 import { CreatePatientDto, PatientStatus } from '../../patient-crud/patient-model';
+import {ToastService} from '../../../toast-service/toast-service';
+import {CookiesService} from '../../../../cookies/cookieservice';
 
 @Component({
   selector: 'app-create-patient',
@@ -17,7 +18,9 @@ import { CreatePatientDto, PatientStatus } from '../../patient-crud/patient-mode
 })
 export class CreatePatient {
   private readonly patientService = inject(PatientService);
-  private readonly messageService = inject(MessageService);
+  private readonly toastService = inject(ToastService);
+  private readonly cookiesService = inject(CookiesService);
+
 
   visible = signal(false);
   refreshTable = output<void>();
@@ -33,15 +36,17 @@ export class CreatePatient {
   onSubmit(form: NgForm) {
     if (!form.valid) return;
     this.patientService.create(this.newPatient);
+
+    this.cookiesService.logActivity(
+      'patient_created',
+      `${this.newPatient.firstName} ${this.newPatient.lastName}`
+    );
+
     this.visible.set(false);
     this.refreshTable.emit();
     form.resetForm();
     this.newPatient = this.empty();
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Patient Added',
-      detail: `${this.newPatient.firstName} ${this.newPatient.lastName} added to roster.`
-    });
+    this.toastService.showSuccess(`Patient ${this.newPatient.firstName} ${this.newPatient.lastName} added to roster.`);
   }
 
   private empty(): CreatePatientDto {

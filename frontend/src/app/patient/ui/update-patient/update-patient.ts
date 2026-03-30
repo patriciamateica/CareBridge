@@ -5,9 +5,10 @@ import { Button } from 'primeng/button';
 import { Message } from 'primeng/message';
 import { InputText } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { MessageService } from 'primeng/api';
 import { PatientService } from '../../patient-crud/patient-service';
 import { Patient, PatientStatus, UpdatePatientDto } from '../../patient-crud/patient-model';
+import {ToastService} from '../../../toast-service/toast-service';
+import {CookiesService} from '../../../../cookies/cookieservice';
 
 @Component({
   selector: 'app-update-patient',
@@ -16,7 +17,9 @@ import { Patient, PatientStatus, UpdatePatientDto } from '../../patient-crud/pat
 })
 export class UpdatePatient implements OnChanges {
   private readonly patientService = inject(PatientService);
-  private readonly messageService = inject(MessageService);
+  private readonly toastService = inject(ToastService);
+  private readonly cookiesService = inject(CookiesService);
+
 
   patientData = input.required<Patient>();
   refreshTable = output<void>();
@@ -32,13 +35,15 @@ export class UpdatePatient implements OnChanges {
   onSubmit(form: NgForm) {
     if (!form.valid) return;
     this.patientService.update(this.patientData().id, this.editPatient);
+
+    this.cookiesService.logActivity(
+      'patient_updated',
+      `${this.patientData().firstName} ${this.patientData().lastName}`
+    );
+
     this.visible.set(false);
     this.refreshTable.emit();
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Updated',
-      detail: 'Patient updated successfully!'
-    });
+    this.toastService.showSuccess('Patient updated successfully!');
   }
 
   private sync() {
