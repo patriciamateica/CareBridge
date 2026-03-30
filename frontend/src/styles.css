@@ -1,3 +1,86 @@
 @import "tailwindcss";
 @import "tailwindcss-primeui";
 @import "primeicons/primeicons.css";
+
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background-color: #F1FAF1;
+  -webkit-text-size-adjust: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid #5f8d5f;
+  outline-offset: 2px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+router-outlet + * {
+  animation: routeEnter 0.3s ease-out both;
+}
+
+@keyframes routeEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+@media (max-width: 480px) {
+  .p-dialog {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 0 auto;
+  }
+
+  .p-dialog .p-dialog-content {
+    padding: 1rem !important;
+  }
+}
+
+.p-datatable-wrapper {
+  overflow-x: auto;
+}
+
+@media (max-width: 640px) {
+  .p-datatable .p-datatable-tbody > tr > td,
+  .p-datatable .p-datatable-thead > tr > th {
+    padding: 0.5rem 0.625rem !important;
+    font-size: 0.8125rem !important;
+  }
+}
+
+.p-drawer-mask {
+  backdrop-filter: blur(2px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in     { animation: fadeIn 0.3s ease-out both; }
+.animate-slide-in    { animation: slideInLeft 0.35s ease-out both; }
+.animate-scale-in    { animation: scaleIn 0.3s ease-out both; }
