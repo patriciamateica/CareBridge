@@ -1,1 +1,71 @@
-<p>home-nurse works!</p>
+<div class="nurse-dashboard">
+
+  <header class="dashboard-header">
+    <div class="welcome-text">
+      <h1>Welcome Back: {{ nurseName() }}!</h1>
+      <p>Today is {{ currentDate() }}</p>
+    </div>
+
+    <div class="header-actions">
+      <div class="user-avatar"><i class="pi pi-user"></i></div>
+      <div class="badge-group">
+        <span class="pill-badge pending">3 Pending Tasks</span>
+        <span class="pill-badge critical">{{ criticalCount() }} Critical Alerts</span>
+        <span class="pill-badge assigned">{{ totalCount() }} Assigned Patients</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="dashboard-grid">
+
+    <section class="tasks-section">
+      <h2>Today's Tasks</h2>
+      <div class="task-list scrollable-task-container">
+        @for (task of tasks(); track task.id) {
+          <div class="task-card">
+            <div class="task-info">
+              <span class="task-time">{{ task.time }}</span>
+              <span class="task-divider">-</span>
+              <span class="task-type">{{ task.type }}</span>
+              <span class="task-patient">{{ task.patientName }}</span>
+            </div>
+            <button class="status-btn">Upcoming</button>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="stats-section">
+      <div class="alerts-card">
+        <h2>Critical Alerts</h2>
+        <div class="alerts-container">
+          @for (alert of alerts(); track alert.id) {
+            <div class="alert-item">
+              <p class="alert-title"><span class="urgent-label">Urgent:</span> {{ alert.patientName }}</p>
+              <p class="alert-detail">{{ alert.description }}</p>
+            </div>
+          }
+          @if (alerts().length === 0) {
+            <p class="text-gray-400 italic">No urgent alerts today.</p>
+          }
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <div class="chart-wrapper">
+          <p-chart type="doughnut" [data]="chartData()" [options]="chartOptions" height="200px"></p-chart>
+        </div>
+        <div class="chart-legend">
+          <div class="legend-item critical">
+            <span class="percent">{{ criticalPercent() }}%</span>
+            <span class="label">Critical Condition</span>
+          </div>
+          <div class="legend-item normal">
+            <span class="percent">{{ normalPercent() }}%</span>
+            <span class="label">Normal Condition</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

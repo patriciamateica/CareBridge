@@ -1,0 +1,61 @@
+<p-dialog
+  [visible]="visible()"
+  (onHide)="onHide()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="profile-dialog"
+  [style]="{ width: '700px', maxWidth: '90vw' }">
+
+  <ng-template pTemplate="header">
+    <div class="flex items-center gap-4">
+      <div class="w-14 h-14 rounded-full border border-surface-300 flex items-center justify-center bg-transparent">
+        <i class="pi pi-user text-2xl text-surface-600"></i>
+      </div>
+      <h2 class="text-3xl font-bold m-0 text-surface-900">{{ patientName() }}</h2>
+    </div>
+  </ng-template>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 mt-4 relative">
+    <div class="flex flex-col gap-4 md:pr-8 md:border-r border-surface-300">
+      <div>
+        <div class="font-bold text-surface-900">Date of Birth:</div>
+        <div class="text-surface-700">{{ patientDetails()?.dob }}</div>
+      </div>
+      <div>
+        <div class="font-bold text-surface-900">Email Address:</div>
+        <div class="text-surface-700">{{ patientDetails()?.email }}</div>
+      </div>
+      <div>
+        <div class="font-bold text-surface-900">Nationality:</div>
+        <div class="text-surface-700">{{ patientDetails()?.nationality }}</div>
+      </div>
+      <div>
+        <div class="font-bold text-surface-900">Phone Number:</div>
+        <div class="text-surface-700">{{ patientDetails()?.phone }}</div>
+      </div>
+      <div>
+        <div class="font-bold text-surface-900">Residential Address:</div>
+        <div class="text-surface-700">{{ patientDetails()?.address }}</div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-4 md:pl-8 pt-4 md:pt-0">
+      <div>
+        <div class="flex justify-between items-start">
+          <div class="font-bold text-surface-900">Diagnosis:</div>
+          <div class="font-bold text-surface-900">( {{ patientDetails()?.diagnosisDate }} )</div>
+        </div>
+        <div class="text-surface-700 whitespace-pre-line">{{ patientDetails()?.diagnosis }}</div>
+      </div>
+      <div>
+        <div class="font-bold text-surface-900">Neurological Status:</div>
+        <div class="text-surface-700">{{ patientDetails()?.neurologicalStatus }}</div>
+      </div>
+      <div>
+        <div class="font-bold text-surface-900">Associated Conditions:</div>
+        <div class="text-surface-700">{{ patientDetails()?.associatedConditions }}</div>
+      </div>
+    </div>
+  </div>
+</p-dialog>

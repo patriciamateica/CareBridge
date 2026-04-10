@@ -1,0 +1,120 @@
+<div class="h-full flex flex-col font-sans text-surface-900 gap-4">
+
+  <div class="flex justify-between items-center shrink-0">
+    <h1 class="hp-title text-2xl font-bold m-0">Welcome Back: {{ patientName }}</h1>
+    <div class="flex items-center gap-4">
+      <div class="w-10 h-10 rounded-full border border-surface-300 flex items-center justify-center bg-white cursor-pointer hover:bg-surface-50 transition-colors"
+           (click)="profileDialogVisible.set(true)">
+        <i class="pi pi-user text-lg text-surface-600"></i>
+      </div>
+
+      <div class="px-4 py-1.5 border border-surface-300 rounded-lg bg-white font-medium text-sm">
+        {{ currentDate }}
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-sm border border-surface-100 p-5 shrink-0">
+    <h2 class="text-xl font-semibold mb-4 m-0">Your Health Vitals</h2>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-[#C06C66] text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1">
+          <span class="text-xs tracking-wide w-full text-left">Heart Rate</span>
+          <span class="text-2xl font-medium">103 bpm</span>
+          <span class="text-xs">Abnormal</span>
+        </div>
+        <div class="bg-[#C06C66] text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1">
+          <span class="text-xs tracking-wide w-full text-left">Blood Pressure</span>
+          <span class="text-2xl font-medium">111/80 mmHg</span>
+          <span class="text-xs">Abnormal</span>
+        </div>
+        <div class="bg-[#C06C66] text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1">
+          <span class="text-xs tracking-wide w-full text-left">Respiratory Rate</span>
+          <span class="text-2xl font-medium">11 bpm</span>
+          <span class="text-xs">Abnormal</span>
+        </div>
+        <div class="bg-[#78A17D] text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1">
+          <span class="text-xs tracking-wide w-full text-left">SpO2</span>
+          <span class="text-2xl font-medium">98%</span>
+          <span class="text-xs">Normal</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col h-full">
+        <div class="flex justify-between items-start mb-2">
+          <div class="flex gap-3 ml-8 text-[10px] font-bold text-surface-600 uppercase">
+            <div class="flex flex-col items-center gap-1"><span>HR</span><div class="w-3 h-3 bg-[#C06C66]"></div></div>
+            <div class="flex flex-col items-center gap-1"><span>BP</span><div class="w-3 h-3 bg-[#78A17D]"></div></div>
+            <div class="flex flex-col items-center gap-1"><span>RR</span><div class="w-3 h-3 bg-[#4A6B50]"></div></div>
+            <div class="flex flex-col items-center gap-1"><span>SpO2</span><div class="w-3 h-3 bg-[#88B7B2]"></div></div>
+          </div>
+          <div class="border border-surface-200 text-[10px] px-2 py-1 rounded">Last 7 days</div>
+        </div>
+        <div class="flex-1 relative min-h-[140px]">
+          <div class="absolute inset-0">
+            <p-chart type="line" [data]="chartData" [options]="chartOptions" height="100%"></p-chart>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-sm border border-surface-100 p-5 flex flex-col flex-1 min-h-fit">
+    <h2 class="text-xl font-semibold mb-4 m-0 shrink-0">Your Daily Wellness Check</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-0">
+
+      <div class="flex flex-col gap-5">
+        <div>
+          <div class="text-sm font-medium mb-3">Pain level: {{ painLevel }}/10</div>
+          <p-slider [(ngModel)]="painLevel" [min]="0" [max]="10" styleClass="custom-slider"></p-slider>
+        </div>
+        <div>
+          <div class="font-medium text-sm mb-3">Symptom Checklist</div>
+          <div class="grid grid-cols-2 gap-3 text-surface-700 text-sm">
+            <div class="flex items-center gap-2"><p-checkbox [(ngModel)]="symptoms.nausea" [binary]="true" inputId="s1"></p-checkbox><label for="s1">Nausea</label></div>
+            <div class="flex items-center gap-2"><p-checkbox [(ngModel)]="symptoms.insomnia" [binary]="true" inputId="s2"></p-checkbox><label for="s2">Insomnia</label></div>
+            <div class="flex items-center gap-2"><p-checkbox [(ngModel)]="symptoms.fatigue" [binary]="true" inputId="s3"></p-checkbox><label for="s3">Fatigue</label></div>
+            <div class="col-span-2 flex items-center gap-2"><p-checkbox [(ngModel)]="symptoms.shortnessOfBreath" [binary]="true" inputId="s4"></p-checkbox><label for="s4">Shortness of Breath</label></div>
+            <div class="col-span-2 flex items-center gap-2"><p-checkbox [(ngModel)]="symptoms.constipation" [binary]="true" inputId="s5"></p-checkbox><label for="s5">Constipation</label></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="font-medium text-sm mb-3">Mood Tracker</div>
+        <div class="flex flex-col gap-3 text-surface-700 text-sm">
+          <div class="flex items-center gap-3"><p-checkbox [(ngModel)]="moods.calm" [binary]="true" inputId="m1"></p-checkbox><label for="m1">Calm</label></div>
+          <div class="flex items-center gap-3"><p-checkbox [(ngModel)]="moods.anxious" [binary]="true" inputId="m2"></p-checkbox><label for="m2">Anxious</label></div>
+          <div class="flex items-center gap-3"><p-checkbox [(ngModel)]="moods.depressed" [binary]="true" inputId="m3"></p-checkbox><label for="m3">Depressed</label></div>
+          <div class="flex items-center gap-3"><p-checkbox [(ngModel)]="moods.irritable" [binary]="true" inputId="m4"></p-checkbox><label for="m4">Irritable</label></div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-4">
+        <div class="flex-1 flex flex-col min-h-0">
+          <div class="font-medium text-sm mb-2">Notes</div>
+          <textarea pTextarea [(ngModel)]="notes" class="w-full flex-1 min-h-0 bg-surface-50 border border-surface-200 rounded-lg p-2 outline-none focus:border-[#78A17D] resize-none"></textarea>
+        </div>
+
+        <div class="flex flex-col gap-2 shrink-0">
+          <div class="bg-surface-50 border border-surface-200 rounded-lg p-2 flex justify-between items-center">
+            <div>
+              <div class="text-[10px] font-bold text-surface-500 uppercase">History</div>
+              <div class="text-xs text-surface-700">Today, 2:15 pm.</div>
+            </div>
+            <div class="flex gap-3 text-surface-500">
+              <i class="pi pi-file-edit cursor-pointer hover:text-[#78A17D]"></i>
+              <i class="pi pi-trash cursor-pointer hover:text-[#C06C66]"></i>
+            </div>
+          </div>
+          <button pButton class="w-full bg-[#78A17D] border-none py-2 text-base font-medium hover:bg-[#658A6A] rounded-lg" (click)="submitWellnessCheck()">
+            Submit
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

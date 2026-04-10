@@ -1,18 +1,19 @@
 .registration-page {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   min-height: 100vh;
   background-color: #F1FAF1;
   position: relative;
-  align-items: center;
-  padding: 80px 1rem 2rem;
+  padding: 1rem;
   box-sizing: border-box;
   overflow-y: auto;
 }
 
 @media (min-width: 640px) {
   .registration-page {
-    padding: 100px 2rem 2rem;
+    padding: 60px 2rem 2rem;
   }
 }
 
@@ -22,12 +23,14 @@
   left: 0;
   padding: 2rem;
   z-index: 10;
+  justify-content: center;
 }
 
 .logo {
   height: 45px;
   width: auto;
   display: block;
+  align-items: center;
 }
 
 @media (min-width: 640px) {

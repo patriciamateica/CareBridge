@@ -1,0 +1,169 @@
+<!--<p-toast></p-toast>-->
+
+<!--<div class="pm-page">-->
+
+<!--  <div class="pm-header">-->
+<!--    <h2 class="pm-title">Patient Roster</h2>-->
+<!--    <div class="pm-header-actions">-->
+<!--      <div class="search-wrap w-full flex-grow grow max-w-md">-->
+<!--        <p-iconfield>-->
+<!--          <p-inputicon class="pi pi-search"/>-->
+<!--          <input pInputText type="text" placeholder="Search Patients..."-->
+<!--                 [value]="searchQuery()"-->
+<!--                 (input)="searchQuery.set($any($event.target).value)"/>-->
+<!--        </p-iconfield>-->
+<!--      </div>-->
+<!--      <app-create-patient (refreshTable)="triggerRefresh()"></app-create-patient>-->
+<!--    </div>-->
+<!--  </div>-->
+
+<!--  @if (viewMode() === 'charts') {-->
+
+<!--    <div class="stat-cards">-->
+
+<!--      <div class="stat-card">-->
+<!--        <p class="stat-label">Active Patients</p>-->
+<!--        <p class="stat-number">{{ activeCount() }}</p>-->
+<!--        <p class="stat-sub">Total Caseload</p>-->
+<!--      </div>-->
+
+<!--      <div class="stat-card">-->
+<!--        <p class="stat-label">Critical Alerts</p>-->
+<!--        <p class="stat-number critical">{{ criticalCount() }}</p>-->
+<!--        <p class="stat-sub">Patients needing immediate care</p>-->
+<!--      </div>-->
+
+<!--      <div class="stat-card">-->
+<!--        <p class="stat-label">Pending tasks</p>-->
+<!--        <p class="stat-number">{{ pendingTasksCount() }}</p>-->
+<!--        <p class="stat-sub">New Requests and follow-ups</p>-->
+<!--      </div>-->
+
+<!--    </div>-->
+
+<!--    <div class="charts-row">-->
+
+<!--      <div class="chart-card">-->
+<!--        <p class="chart-title">Patients Status Overview</p>-->
+<!--        <div class="donut-wrap">-->
+<!--          <p-chart type="doughnut"-->
+<!--                   [data]="donutData()"-->
+<!--                   [options]="donutOptions"-->
+<!--                   height="280">-->
+<!--          </p-chart>-->
+<!--        </div>-->
+<!--        <div class="donut-legend">-->
+<!--          <button class="legend-pill normal">{{ donutData().normalPct }}% Normal</button>-->
+<!--          <button class="legend-pill critical">{{ donutData().criticalPct }}% Critical</button>-->
+<!--        </div>-->
+<!--      </div>-->
+
+<!--      <div class="chart-card">-->
+<!--        <p class="chart-title">Reported Symptoms Today</p>-->
+<!--        <div class="bar-wrap">-->
+<!--          <p-chart type="bar"-->
+<!--                   [data]="symptomsData()"-->
+<!--                   [options]="barOptions"-->
+<!--                   height="280">-->
+<!--          </p-chart>-->
+<!--        </div>-->
+<!--      </div>-->
+
+<!--    </div>-->
+
+<!--    <div class="view-toggle-row">-->
+<!--      <button class="toggle-btn" (click)="viewMode.set('table')">-->
+<!--        Tabular View-->
+<!--      </button>-->
+<!--    </div>-->
+
+<!--  }-->
+
+<!--  @if (viewMode() === 'table') {-->
+
+<!--    <div class="table-card">-->
+<!--      <p-table-->
+<!--        [value]="filteredPatients()"-->
+<!--        [paginator]="true"-->
+<!--        [rows]="rowsPerPage"-->
+<!--        [rowsPerPageOptions]="[5, 10, 20]"-->
+<!--        [showCurrentPageReport]="true"-->
+<!--        currentPageReportTemplate="Showing {first}–{last} of {totalRecords} patients"-->
+<!--        styleClass="p-datatable-sm"-->
+<!--        rowHover="true"-->
+<!--      >-->
+<!--        <ng-template pTemplate="header">-->
+<!--          <tr>-->
+<!--            <th pSortableColumn="lastName">Patient <p-sortIcon field="lastName"/></th>-->
+<!--            <th pSortableColumn="diagnosis">Primary Diagnosis <p-sortIcon field="diagnosis"/></th>-->
+<!--            <th pSortableColumn="assignedNurse">Assigned Nurse <p-sortIcon field="assignedNurse"/></th>-->
+<!--            <th>Last Vital Check</th>-->
+<!--            <th pSortableColumn="status">Status <p-sortIcon field="status"/></th>-->
+<!--            <th class="text-center">Actions</th>-->
+<!--          </tr>-->
+<!--        </ng-template>-->
+
+<!--        <ng-template pTemplate="body" let-patient>-->
+<!--          <tr class="cursor-pointer" (click)="openDetail(patient)">-->
+<!--            <td>-->
+<!--              <div class="flex items-center gap-3">-->
+<!--                <div class="patient-avatar">-->
+<!--                  <i class="pi pi-user text-sm" style="color:#5f8d5f"></i>-->
+<!--                </div>-->
+<!--                <span class="font-semibold text-gray-800">-->
+<!--                  {{ patient.firstName }} {{ patient.lastName }}-->
+<!--                </span>-->
+<!--              </div>-->
+<!--            </td>-->
+<!--            <td class="text-gray-600">{{ patient.diagnosis }}</td>-->
+<!--            <td class="text-gray-600">{{ patient.assignedNurse }}</td>-->
+<!--            <td class="text-gray-500 text-sm">-->
+<!--              @if (getLastVitalTime(patient.id); as t) {-->
+<!--                {{ t | date: 'dd MMM, HH:mm' }}-->
+<!--              } @else {-->
+<!--                <span class="italic text-gray-400">No data</span>-->
+<!--              }-->
+<!--            </td>-->
+<!--            <td>-->
+<!--              <p-tag [value]="patient.status"-->
+<!--                     [severity]="getSeverity(patient.status)">-->
+<!--              </p-tag>-->
+<!--            </td>-->
+<!--            <td (click)="$event.stopPropagation()">-->
+<!--              <div class="flex justify-center gap-1">-->
+<!--                <app-update-patient [patientData]="patient"-->
+<!--                                    (refreshTable)="triggerRefresh()">-->
+<!--                </app-update-patient>-->
+<!--                <app-delete-patient [patientData]="patient"-->
+<!--                                    (refreshTable)="triggerRefresh()">-->
+<!--                </app-delete-patient>-->
+<!--              </div>-->
+<!--            </td>-->
+<!--          </tr>-->
+<!--        </ng-template>-->
+
+<!--        <ng-template pTemplate="emptymessage">-->
+<!--          <tr>-->
+<!--            <td colspan="6">-->
+<!--              <div class="empty-state">-->
+<!--                <i class="pi pi-users text-4xl text-gray-300"></i>-->
+<!--                <p class="text-gray-400 text-base">No patients found</p>-->
+<!--                @if (searchQuery()) {-->
+<!--                  <p class="text-gray-400 text-sm">Try clearing the search filter</p>-->
+<!--                }-->
+<!--              </div>-->
+<!--            </td>-->
+<!--          </tr>-->
+<!--        </ng-template>-->
+<!--      </p-table>-->
+<!--    </div>-->
+
+<!--    <div class="view-toggle-row">-->
+<!--      <button class="toggle-btn" (click)="viewMode.set('charts')">-->
+<!--        Charts View-->
+<!--      </button>-->
+<!--    </div>-->
+
+<!--  }-->
+
+<!--</div>-->

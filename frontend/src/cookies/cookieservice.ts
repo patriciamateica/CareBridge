@@ -47,7 +47,7 @@ export class CookiesService {
     document.cookie.split(';').forEach(c => {
       const name = c.split('=')[0].trim();
       this.delete(name, path);
-    });
+    })
   }
 
   savePreference(key: string, value: string): void {

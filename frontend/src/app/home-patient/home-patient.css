@@ -1,0 +1,51 @@
+.hp-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+::ng-deep .custom-slider.p-slider {
+  background: #E2E8F0;
+  height: 6px;
+  border-radius: 10px;
+}
+
+::ng-deep .custom-slider.p-slider .p-slider-range {
+  background: #78A17D;
+}
+
+::ng-deep .custom-slider.p-slider .p-slider-handle {
+  background: #ffffff;
+  border: 3px solid #78A17D;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin-top: -7px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+::ng-deep .custom-slider.p-slider .p-slider-handle:hover {
+  background: #F4F7F5;
+  box-shadow: 0 0 0 4px rgba(120, 161, 125, 0.2);
+}
+
+::ng-deep .p-checkbox .p-checkbox-box {
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+::ng-deep .p-checkbox .p-checkbox-box.p-highlight {
+  border-color: #78A17D;
+  background: #78A17D;
+}
+
+::ng-deep .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box.p-highlight:hover {
+  border-color: #658A6A;
+  background: #658A6A;
+}
+
+::ng-deep .p-checkbox:not(.p-checkbox-disabled) .p-checkbox-box:hover {
+  border-color: #78A17D;
+}
