@@ -2,6 +2,8 @@ package com.carebridge.backend.user;
 
 import com.carebridge.backend.security.RegisterRequest;
 import com.carebridge.backend.user.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -59,10 +61,7 @@ public class UserService implements UserDetailsService {
         return loadUserByUsername(email);
     }
 
-    public List<User> getUsersPaginated(int page, int size) {
-        if (page < 0 || size <= 0) {
-            throw new IllegalArgumentException("Invalid page or size parameters");
-        }
-        return userRepository.findAllPaginated(page, size);
+    public Page<User> getUsersPaginated(Pageable pageable) {
+        return userRepository.findAllPaginated(pageable);
     }
 }

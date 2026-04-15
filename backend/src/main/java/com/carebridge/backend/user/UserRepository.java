@@ -1,6 +1,9 @@
 package com.carebridge.backend.user;
 
 import com.carebridge.backend.user.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -43,10 +46,15 @@ public class UserRepository {
         users.remove(id);
     }
 
-    public List<User> findAllPaginated(int page, int size) {
+    public Page<User> findAllPaginated(Pageable pageable) {
         List<User> allUsers = new ArrayList<>(users.values());
-        int start = Math.min(page * size, allUsers.size());
-        int end = Math.min((page + 1) * size, allUsers.size());
-        return allUsers.subList(start, end);
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), allUsers.size());
+
+        List<User> content = (start >= allUsers.size())
+            ? new ArrayList<>()
+            : allUsers.subList(start, end);
+
+        return new PageImpl<>(content, pageable, allUsers.size());
     }
 }
