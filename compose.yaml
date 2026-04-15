@@ -1,7 +1,7 @@
 services:
   postgres:
     image: 'postgres:latest'
-    container_name: carebridge_postgres
+    container_name: carebridge
     env_file: "env.properties"
     restart: unless-stopped
     environment:
