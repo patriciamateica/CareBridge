@@ -1,0 +1,295 @@
+enum Role {
+    PATIENT
+    NURSE
+    ADMIN
+    FAMILY
+}
+
+enum UserStatus {
+    PENDING_ACTIVATION
+    ACTIVE
+    INACTIVE
+}
+
+enum TaskType {
+    ERRAND
+    MEAL_PREP
+    COMPANIONSHIP
+    TRANSPORTATION
+}
+
+enum TaskStatus {
+    OPEN
+    CLAIMED
+    COMPLETED
+}
+
+enum RosterStatus {
+    PENDING
+    ACTIVE
+    DECLINED
+    INACTIVE
+}
+
+enum Mood {
+    Calm
+    Anxious
+    Depressed
+    Irritable
+}
+
+enum DocumentType {
+    CT_SCAN
+    MRI
+    BLOOD_WORK
+    X_RAY
+    OTHER
+}
+
+enum ClinicalLogStatus {
+    ACTIVE
+    DELETED
+}
+
+enum AppointmentsStatus {
+    REQUESTED
+    VALIDATED
+    CANCELLED
+    COMPLETED
+}
+
+type User {
+    id: ID!
+    activationNumber: String
+    firstName: String
+    lastName: String
+    email: String
+    phoneNumber: Int
+    dateOfBirth: String
+    residentialAddress: String
+    nationality: String
+    role: Role
+    userStatus: UserStatus
+}
+
+type Vitals {
+    id: ID!
+    heartRate: Int
+    bloodPressure: Int
+    respiratoryRate: Int
+    spO2: Int
+    patientId: ID!
+    timestamp: String
+}
+
+type Task {
+    id: ID!
+    title: String
+    description: String
+    taskType: TaskType
+    neededBy: String
+    status: TaskStatus
+    patientId: ID!
+    claimerId: ID
+}
+
+type Roster {
+    id: ID!
+    patientId: ID!
+    nurseId: ID!
+    status: RosterStatus
+}
+
+type Prescription {
+    id: ID!
+    name: String
+    dose: String
+    timing: String
+    patientId: ID!
+    nurseId: ID!
+}
+
+type PatientDetails {
+    id: ID!
+    userId: ID!
+    primaryDiagnosis: String
+    diagnostics: [String]
+    scans: [String]
+    emergencyContact: String
+    assignedNurseId: ID
+}
+
+type NurseDetails {
+    id: ID!
+    userId: ID!
+    specialization: String
+    hospitalAffiliation: String
+    experienceYears: Int
+    hireMeStatus: Boolean
+}
+
+type HealthStatus {
+    id: ID!
+    painScale: Int
+    mood: Mood
+    symptoms: [String]
+    notes: String
+    timestamp: String
+    patientId: ID!
+}
+
+type ClinicalLog {
+    id: ID!
+    documentTitle: String
+    documentType: DocumentType
+    datePerformed: String
+    fileUrl: String
+    patientId: ID!
+    nurseId: ID!
+    uploadTimestamp: String
+    status: ClinicalLogStatus
+}
+
+type CareNotes {
+    id: ID!
+    content: String
+    patientId: ID!
+    nurseId: ID!
+    timestamp: String
+}
+
+type Appointments {
+    id: ID!
+    patientId: ID!
+    nurseId: ID!
+    description: String
+    timeSlot: String
+    status: AppointmentsStatus
+}
+
+input RegisterRequestInput {
+    firstName: String!
+    lastName: String!
+    email: String!
+    password: String!
+    phoneNumber: String!
+}
+
+input LoginRequestInput {
+    email: String!
+    password: String!
+}
+
+type Query {
+    getUsers(page: Int = 0, size: Int = 10): [User]
+    getUserById(id: ID!): User
+
+    getVitals(page: Int = 0, size: Int = 10): [Vitals]
+    getVitalsById(id: ID!): Vitals
+    getVitalsByPatientId(patientId: ID!): [Vitals]
+
+    getTasks(page: Int = 0, size: Int = 10): [Task]
+    getTaskById(id: ID!): Task
+    getTasksByPatientId(patientId: ID!): [Task]
+
+    getRosters(page: Int = 0, size: Int = 10): [Roster]
+    getRosterById(id: ID!): Roster
+    getRostersByNurseId(nurseId: ID!): [Roster]
+
+    getPrescriptions(page: Int = 0, size: Int = 10): [Prescription]
+    getPrescriptionById(id: ID!): Prescription
+    getPrescriptionsByPatientId(patientId: ID!): [Prescription]
+
+    getAllPatientDetails(page: Int = 0, size: Int = 10): [PatientDetails]
+    getPatientDetailsById(id: ID!): PatientDetails
+    getPatientDetailsByUserId(userId: ID!): PatientDetails
+
+    getAllNurseDetails(page: Int = 0, size: Int = 10): [NurseDetails]
+    getNurseDetailsById(id: ID!): NurseDetails
+    getNurseDetailsByUserId(userId: ID!): NurseDetails
+
+    getHealthStatuses(page: Int = 0, size: Int = 10): [HealthStatus]
+    getHealthStatusById(id: ID!): HealthStatus
+    getHealthStatusesByPatientId(patientId: ID!): [HealthStatus]
+
+    getClinicalLogs(page: Int = 0, size: Int = 10): [ClinicalLog]
+    getClinicalLogById(id: ID!): ClinicalLog
+    getClinicalLogsByPatientId(patientId: ID!): [ClinicalLog]
+
+    getCareNotes(page: Int = 0, size: Int = 10): [CareNotes]
+    getCareNoteById(id: ID!): CareNotes
+    getCareNotesByPatientId(patientId: ID!): [CareNotes]
+
+    getAppointments(page: Int = 0, size: Int = 10): [Appointments]
+    getAppointmentById(id: ID!): Appointments
+    getAppointmentsByPatientId(patientId: ID!): [Appointments]
+}
+
+type Mutation {
+    registerUser(input: RegisterRequestInput!): User
+    loginUser(input: LoginRequestInput!): String
+    updateUserStatus(id: ID!, status: UserStatus!): User
+
+    createVitals(patientId: ID!, heartRate: Int!, bloodPressure: Int!, respiratoryRate: Int!, spO2: Int!, timestamp: String!): Vitals
+    deleteVitals(id: ID!): Boolean
+
+    createTask(title: String!, description: String!, taskType: TaskType!, neededBy: String!, patientId: ID!): Task
+    claimTask(taskId: ID!, claimerId: ID!): Task
+    updateTaskStatus(taskId: ID!, status: TaskStatus!): Task
+    deleteTask(id: ID!): Boolean
+
+    createRoster(patientId: ID!, nurseId: ID!, status: RosterStatus!): Roster
+    updateRosterStatus(id: ID!, status: RosterStatus!): Roster
+    deleteRoster(id: ID!): Boolean
+
+    createPrescription(name: String!, dose: String!, timing: String!, patientId: ID!, nurseId: ID!): Prescription
+    deletePrescription(id: ID!): Boolean
+
+    createPatientDetails(userId: ID!, primaryDiagnosis: String!, diagnostics: [String], scans: [String], emergencyContact: String, assignedNurseId: ID): PatientDetails
+    updatePatientDiagnosis(id: ID!, primaryDiagnosis: String!): PatientDetails
+
+    createNurseDetails(userId: ID!, specialization: String!, hospitalAffiliation: String!, experienceYears: Int!, hireMeStatus: Boolean!): NurseDetails
+    updateNurseHireStatus(id: ID!, hireMeStatus: Boolean!): NurseDetails
+
+    createHealthStatus(patientId: ID!, painScale: Int!, mood: Mood!, symptoms: [String], notes: String, timestamp: String!): HealthStatus
+    deleteHealthStatus(id: ID!): Boolean
+
+    createClinicalLog(documentTitle: String!, documentType: DocumentType!, datePerformed: String!, fileUrl: String!, patientId: ID!, nurseId: ID!): ClinicalLog
+    deleteClinicalLog(id: ID!): Boolean
+
+    createCareNote(patientId: ID!, nurseId: ID!, content: String!, timestamp: String!): CareNotes
+    deleteCareNote(id: ID!): Boolean
+
+    createAppointment(patientId: ID!, nurseId: ID!, description: String!, timeSlot: String!, status: AppointmentsStatus!): Appointments
+    updateAppointmentStatus(id: ID!, status: AppointmentsStatus!): Appointments
+    deleteAppointment(id: ID!): Boolean
+}
+
+type Subscription {
+    onUserRegistered: User
+    onUserStatusUpdated(id: ID): User
+
+    onPrescriptionCreated(patientId: ID): Prescription
+    onPrescriptionDeleted(patientId: ID): ID
+
+    onPatientDetailsCreated(userId: ID): PatientDetails
+    onPatientDiagnosisUpdated(id: ID): PatientDetails
+
+    onNurseDetailsCreated(userId: ID): NurseDetails
+    onNurseHireStatusUpdated(id: ID): NurseDetails
+
+    onVitalsAdded(patientId: ID): Vitals
+
+    onHealthStatusAdded(patientId: ID): HealthStatus
+
+    onTaskCreated(patientId: ID): Task
+    onTaskStatusUpdated(taskId: ID): Task
+
+    onAppointmentScheduled(patientId: ID, nurseId: ID): Appointments
+    onAppointmentStatusChanged(id: ID): Appointments
+
+    onClinicalLogAdded(patientId: ID): ClinicalLog
+    onCareNoteAdded(patientId: ID): CareNotes
+
+    onRosterUpdated(nurseId: ID): Roster
+}
