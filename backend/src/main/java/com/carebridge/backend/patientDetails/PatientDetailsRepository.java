@@ -45,6 +45,12 @@ public class PatientDetailsRepository {
         return Optional.ofNullable(records.get(id));
     }
 
+    public Optional<PatientDetails> findByUserId(UUID userId) {
+        return records.values().stream()
+                .filter(pd -> pd.getUserId().equals(userId))
+                .findFirst();
+    }
+
     public void deleteById(UUID id) {
         records.remove(id);
     }

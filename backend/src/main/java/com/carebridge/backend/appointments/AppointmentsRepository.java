@@ -45,6 +45,12 @@ public class AppointmentsRepository {
         return Optional.ofNullable(records.get(id));
     }
 
+    public List<Appointments> findByPatientId(UUID patientId) {
+        return records.values().stream()
+                .filter(a -> a.getPatientId().equals(patientId))
+                .toList();
+    }
+
     public void deleteById(UUID id) {
         records.remove(id);
     }

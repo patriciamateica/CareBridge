@@ -45,6 +45,12 @@ public class ClinicalLogRepository {
         return Optional.ofNullable(records.get(id));
     }
 
+    public List<ClinicalLog> findByPatientId(UUID patientId) {
+        return records.values().stream()
+                .filter(l -> l.getPatientId().equals(patientId))
+                .toList();
+    }
+
     public void deleteById(UUID id) {
         records.remove(id);
     }

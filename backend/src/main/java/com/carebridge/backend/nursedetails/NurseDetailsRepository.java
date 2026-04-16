@@ -45,6 +45,12 @@ public class NurseDetailsRepository {
         return Optional.ofNullable(records.get(id));
     }
 
+    public Optional<NurseDetails> findByUserId(UUID userId) {
+        return records.values().stream()
+                .filter(nd -> nd.getUserId().equals(userId))
+                .findFirst();
+    }
+
     public void deleteById(UUID id) {
         records.remove(id);
     }

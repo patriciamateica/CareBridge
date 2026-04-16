@@ -43,7 +43,11 @@ public class AuthService {
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setEmail(request.email());
-        user.setPhoneNumber(Integer.parseInt(request.phoneNumber()));
+        try {
+            user.setPhoneNumber(Integer.parseInt(request.phoneNumber()));
+        } catch (NumberFormatException e) {
+            user.setPhoneNumber(0);
+        }
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setRole(Role.PATIENT);
         user.setUserStatus(UserStatus.ACTIVE);

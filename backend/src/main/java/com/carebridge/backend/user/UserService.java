@@ -9,14 +9,18 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
+import java.util.UUID;
 
 @Service
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    private final Sinks.Many<User> registrationSink = Sinks.many().multicast().onBackpressureBuffer();
+    private final Sinks.Many<User> statusUpdateSink = Sinks.many().multicast().onBackpressureBuffer();
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -45,6 +49,19 @@ public class UserService implements UserDetailsService {
             .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
     }
 
+    public User getUserById(UUID id) {
+        return userRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
+    }
+
+    public User updateStatus(UUID id, UserStatus status) {
+        User user = getUserById(id);
+        user.setUserStatus(status);
+        User updatedUser = userRepository.save(user);
+        statusUpdateSink.tryEmitNext(updatedUser);
+        return updatedUser;
+    }
+
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
@@ -57,11 +74,20 @@ public class UserService implements UserDetailsService {
         return loadUserByUsername(emailFromToken);
     }
 
-    public UserDetails findByEmail(String email) {
-        return loadUserByUsername(email);
-    }
-
     public Page<User> getUsersPaginated(Pageable pageable) {
         return userRepository.findAllPaginated(pageable);
+    }
+
+    public Flux<User> getUserRegistrationStream() {
+        return registrationSink.asFlux();
+    }
+
+    public void emitRegistration(User user) {
+        registrationSink.tryEmitNext(user);
+    }
+
+    public Flux<User> getUserStatusStream(UUID id) {
+        return statusUpdateSink.asFlux()
+            .filter(user -> id == null || user.getId().equals(id));
     }
 }

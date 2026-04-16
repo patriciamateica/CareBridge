@@ -41,6 +41,12 @@ public class HealthStatusRepository {
         return Optional.ofNullable(records.get(id));
     }
 
+    public List<HealthStatus> findByPatientId(UUID patientId) {
+        return records.values().stream()
+                .filter(h -> h.getPatientId().equals(patientId))
+                .toList();
+    }
+
     public void deleteById(UUID id) {
         records.remove(id);
     }

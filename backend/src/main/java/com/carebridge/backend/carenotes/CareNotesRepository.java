@@ -46,6 +46,12 @@ public class CareNotesRepository {
         return Optional.ofNullable(records.get(id));
     }
 
+    public List<CareNotes> findByPatientId(UUID patientId) {
+        return records.values().stream()
+                .filter(n -> n.getPatientId().equals(patientId))
+                .toList();
+    }
+
     public void deleteById(UUID id) {
         records.remove(id);
     }

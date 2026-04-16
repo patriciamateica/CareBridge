@@ -37,7 +37,6 @@ public class UserRepository {
         return user;
     }
 
-
     public Optional<User> findById(UUID id) {
         return Optional.ofNullable(users.get(id));
     }

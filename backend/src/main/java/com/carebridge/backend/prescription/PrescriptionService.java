@@ -4,12 +4,17 @@ import com.carebridge.backend.prescription.model.Prescription;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class PrescriptionService {
     private final PrescriptionRepository prescriptionRepository;
+    private final Sinks.Many<Prescription> createdSink = Sinks.many().multicast().onBackpressureBuffer();
+    private final Sinks.Many<UUID> deletedSink = Sinks.many().multicast().onBackpressureBuffer();
 
     public PrescriptionService(PrescriptionRepository prescriptionRepository) {
         this.prescriptionRepository = prescriptionRepository;
@@ -24,7 +29,9 @@ public class PrescriptionService {
     }
 
     public Prescription create(Prescription prescription) {
-        return prescriptionRepository.save(prescription);
+        Prescription saved = prescriptionRepository.save(prescription);
+        createdSink.tryEmitNext(saved);
+        return saved;
     }
 
     public Prescription update(UUID id, Prescription updatedPrescription) {
@@ -40,8 +47,22 @@ public class PrescriptionService {
     }
 
     public boolean delete(UUID id) {
-        prescriptionRepository.findById(id).orElseThrow();
+        Prescription prescription = prescriptionRepository.findById(id).orElseThrow();
         prescriptionRepository.deleteById(id);
+        deletedSink.tryEmitNext(prescription.getPatientId());
         return true;
+    }
+
+    public List<Prescription> getByPatientId(UUID patientId) {
+        return prescriptionRepository.findByPatientId(patientId);
+    }
+
+    public Flux<Prescription> getCreatedStream(UUID patientId) {
+        return createdSink.asFlux()
+                .filter(p -> patientId == null || p.getPatientId().equals(patientId));
+    }
+
+    public Flux<UUID> getDeletedStream(UUID patientId) {
+        return deletedSink.asFlux(); // Simple for now, ideally filter by some context
     }
 }

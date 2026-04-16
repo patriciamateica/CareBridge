@@ -41,6 +41,12 @@ public class VitalsRepository {
         return Optional.ofNullable(vitals.get(id));
     }
 
+    public List<Vitals> findByPatientId(UUID patientId) {
+        return vitals.values().stream()
+                .filter(v -> v.getPatientId().equals(patientId))
+                .toList();
+    }
+
     public void deleteById(UUID id) {
         vitals.remove(id);
     }

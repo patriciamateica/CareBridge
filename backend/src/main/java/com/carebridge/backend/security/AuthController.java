@@ -40,10 +40,15 @@ public class AuthController {
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.email(), loginRequest.password()));
 
+            if (authentication == null || authentication.getPrincipal() == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
             CustomUserDetails authenticatedUser = (CustomUserDetails) authentication.getPrincipal();
 
             String jwtToken = jwtService.generateToken(authenticatedUser.getUsername(),
                 authenticatedUser.getAuthorities());
+
             ResponseCookie cookie = ResponseCookie.from("jwt", jwtToken)
                 .httpOnly(cookieProperties.isHttpOnly())
                 .secure(cookieProperties.isSecure())

@@ -4,12 +4,16 @@ import com.carebridge.backend.healthStatus.model.HealthStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class HealthStatusService {
     private final HealthStatusRepository healthStatusRepository;
+    private final Sinks.Many<HealthStatus> statusSink = Sinks.many().multicast().onBackpressureBuffer();
 
     public HealthStatusService(HealthStatusRepository healthStatusRepository) {
         this.healthStatusRepository = healthStatusRepository;
@@ -24,7 +28,9 @@ public class HealthStatusService {
     }
 
     public HealthStatus create(HealthStatus healthStatus) {
-        return healthStatusRepository.save(healthStatus);
+        HealthStatus saved = healthStatusRepository.save(healthStatus);
+        statusSink.tryEmitNext(saved);
+        return saved;
     }
 
     public HealthStatus update(UUID id, HealthStatus updatedStatus) {
@@ -35,12 +41,21 @@ public class HealthStatusService {
         oldStatus.setSymptoms(updatedStatus.getSymptoms());
         oldStatus.setNotes(updatedStatus.getNotes());
 
-        return oldStatus; // Automatically updated in the RAM map since it's the same object reference
+        return oldStatus;
     }
 
     public boolean delete(UUID id) {
         healthStatusRepository.findById(id).orElseThrow(); // Ensure it exists
         healthStatusRepository.deleteById(id);
         return true;
+    }
+
+    public List<HealthStatus> getByPatientId(UUID patientId) {
+        return healthStatusRepository.findByPatientId(patientId);
+    }
+
+    public Flux<HealthStatus> getStatusStream(UUID patientId) {
+        return statusSink.asFlux()
+                .filter(h -> patientId == null || h.getPatientId().equals(patientId));
     }
 }

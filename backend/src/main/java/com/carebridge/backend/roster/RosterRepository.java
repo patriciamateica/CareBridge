@@ -45,6 +45,12 @@ public class RosterRepository {
         return Optional.ofNullable(records.get(id));
     }
 
+    public List<Roster> findByNurseId(UUID nurseId) {
+        return records.values().stream()
+                .filter(r -> r.getNurseId().equals(nurseId))
+                .toList();
+    }
+
     public void deleteById(UUID id) {
         records.remove(id);
     }

@@ -45,6 +45,12 @@ public class PrescriptionRepository {
         return Optional.ofNullable(records.get(id));
     }
 
+    public List<Prescription> findByPatientId(UUID patientId) {
+        return records.values().stream()
+                .filter(p -> p.getPatientId().equals(patientId))
+                .toList();
+    }
+
     public void deleteById(UUID id) {
         records.remove(id);
     }
