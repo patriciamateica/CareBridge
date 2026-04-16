@@ -53,6 +53,10 @@ public class PrescriptionService {
         return true;
     }
 
+    public void deleteAll() {
+        prescriptionRepository.deleteAll();
+    }
+
     public List<Prescription> getByPatientId(UUID patientId) {
         return prescriptionRepository.findByPatientId(patientId);
     }

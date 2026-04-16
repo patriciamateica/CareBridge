@@ -56,6 +56,10 @@ public class TaskService {
         return true;
     }
 
+    public void deleteAll() {
+        repository.deleteAll();
+    }
+
     public Flux<Task> getNewTaskStream(UUID patientId) {
         return taskSink.asFlux()
             .filter(task -> patientId == null || task.getPatientId().equals(patientId));

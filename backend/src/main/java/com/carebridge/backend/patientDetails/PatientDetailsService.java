@@ -52,6 +52,10 @@ public class PatientDetailsService {
         return true;
     }
 
+    public void deleteAll() {
+        repository.deleteAll();
+    }
+
     public PatientDetails getByUserId(UUID userId) {
         return repository.findByUserId(userId).orElseThrow();
     }

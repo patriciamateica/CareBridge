@@ -50,6 +50,10 @@ public class CareNotesService {
         return true;
     }
 
+    public void deleteAll() {
+        repository.deleteAll();
+    }
+
     public List<CareNotes> getByPatientId(UUID patientId) {
         return repository.findByPatientId(patientId);
     }

@@ -58,6 +58,10 @@ public class RosterService {
         return true;
     }
 
+    public void deleteAll() {
+        rosterRepository.deleteAll();
+    }
+
     public List<Roster> getByNurseId(UUID nurseId) {
         return rosterRepository.findByNurseId(nurseId);
     }

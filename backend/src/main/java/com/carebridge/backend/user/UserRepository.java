@@ -45,6 +45,10 @@ public class UserRepository {
         users.remove(id);
     }
 
+    public void deleteAll() {
+        users.clear();
+    }
+
     public Page<User> findAllPaginated(Pageable pageable) {
         List<User> allUsers = new ArrayList<>(users.values());
         int start = (int) pageable.getOffset();

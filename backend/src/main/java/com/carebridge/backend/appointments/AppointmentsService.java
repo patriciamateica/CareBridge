@@ -61,6 +61,10 @@ public class AppointmentsService {
         return true;
     }
 
+    public void deleteAll() {
+        appointmentsRepository.deleteAll();
+    }
+
     public List<Appointments> getByPatientId(UUID patientId) {
         return appointmentsRepository.findByPatientId(patientId);
     }

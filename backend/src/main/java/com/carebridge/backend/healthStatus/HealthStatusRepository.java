@@ -50,4 +50,8 @@ public class HealthStatusRepository {
     public void deleteById(UUID id) {
         records.remove(id);
     }
+
+    public void deleteAll() {
+        records.clear();
+    }
 }

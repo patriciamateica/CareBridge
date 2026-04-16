@@ -50,6 +50,10 @@ public class HealthStatusService {
         return true;
     }
 
+    public void deleteAll() {
+        healthStatusRepository.deleteAll();
+    }
+
     public List<HealthStatus> getByPatientId(UUID patientId) {
         return healthStatusRepository.findByPatientId(patientId);
     }

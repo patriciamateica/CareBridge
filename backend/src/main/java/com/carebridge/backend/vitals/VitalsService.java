@@ -54,6 +54,10 @@ public class VitalsService {
         return vitalsRepository.findByPatientId(patientId);
     }
 
+    public void deleteAll() {
+        vitalsRepository.deleteAll();
+    }
+
     public Flux<Vitals> getVitalsStream(UUID patientId) {
         return vitalsSink.asFlux()
             .filter(v -> patientId == null || v.getPatientId().equals(patientId));

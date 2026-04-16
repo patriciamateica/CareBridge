@@ -50,4 +50,8 @@ public class VitalsRepository {
     public void deleteById(UUID id) {
         vitals.remove(id);
     }
+
+    public void deleteAll() {
+        vitals.clear();
+    }
 }

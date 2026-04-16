@@ -78,6 +78,10 @@ public class UserService implements UserDetailsService {
         return userRepository.findAllPaginated(pageable);
     }
 
+    public void deleteAll(){
+        userRepository.deleteAll();
+    }
+
     public Flux<User> getUserRegistrationStream() {
         return registrationSink.asFlux();
     }

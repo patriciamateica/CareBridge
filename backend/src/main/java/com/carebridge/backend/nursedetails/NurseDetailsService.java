@@ -51,6 +51,10 @@ public class NurseDetailsService {
         return true;
     }
 
+    public void deleteAll() {
+        repository.deleteAll();
+    }
+
     public NurseDetails getByUserId(UUID userId) {
         return repository.findByUserId(userId).orElseThrow();
     }

@@ -60,6 +60,10 @@ public class ClinicalLogService {
         return true;
     }
 
+    public void deleteAll() {
+        repository.deleteAll();
+    }
+
     public List<ClinicalLog> getByPatientId(UUID patientId) {
         return repository.findByPatientId(patientId);
     }
