@@ -83,9 +83,11 @@ class VitalsServiceTest {
         Vitals updatedData = new Vitals(null, null, 90, 130,
             18, 99, null);
         when(vitalsRepository.findById(vitalsId)).thenReturn(Optional.of(sampleVitals));
+        when(vitalsRepository.save(any(Vitals.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Vitals result = vitalsService.update(vitalsId, updatedData);
 
+        assertNotNull(result);
         assertEquals(90, result.getHeartRate());
         assertEquals(130, result.getBloodPressure());
         assertEquals(18, result.getRespiratoryRate());

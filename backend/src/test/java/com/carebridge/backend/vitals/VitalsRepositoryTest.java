@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class VitalsRepositoryTest {
 
-    private VitalsRepository repository;
+    private com.carebridge.backend.vitals.VitalsRepository repository;
     private Vitals sampleVitals;
 
     @BeforeEach

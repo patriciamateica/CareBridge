@@ -94,9 +94,11 @@ class TaskServiceTest {
         UUID newClaimerId = UUID.randomUUID();
         Task updatedData = new Task(null, "Drive to Clinic", "Needs a ride at 2 PM.", TaskType.TRANSPORTATION, LocalDateTime.now(), TaskStatus.CLAIMED, sampleTask.getPatientId(), newClaimerId);
         when(repository.findById(taskId)).thenReturn(Optional.of(sampleTask));
+        when(repository.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Task result = service.update(taskId, updatedData);
 
+        assertNotNull(result);
         assertEquals(TaskStatus.CLAIMED, result.getStatus());
         assertEquals(newClaimerId, result.getClaimerId());
         assertEquals(taskId, result.getId());

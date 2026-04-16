@@ -40,7 +40,7 @@ class VitalsControllerTest {
     private ObjectMapper objectMapper;
 
     @MockitoBean
-    private VitalsService vitalsService;
+    private com.carebridge.backend.vitals.VitalsService vitalsService;
 
     @MockitoBean
     private VitalsMapper vitalsMapper;
