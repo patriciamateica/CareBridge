@@ -17,7 +17,7 @@ class UserRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        repository = new UserRepository();
+        repository = new com.carebridge.backend.user.UserRepository();
         sampleUser = new User();
         sampleUser.setFirstName("John");
         sampleUser.setLastName("Doe");
