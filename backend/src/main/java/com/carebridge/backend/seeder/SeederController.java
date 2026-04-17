@@ -18,7 +18,7 @@ public class SeederController {
     @PostMapping("/seed")
     public ResponseEntity<String> seedRepository() {
         seederService.seedRepository();
-        return ResponseEntity.ok("Repository successfully seeded with 10 batches of fake data.");
+        return ResponseEntity.ok("Repository successfully seeded with 15 fully assigned patients.");
     }
 
     @PostMapping("/unseed")
