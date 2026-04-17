@@ -6,18 +6,14 @@ import { MessageService } from 'primeng/api';
 
 import { routes } from './app.routes';
 import { CarebridgeTheme } from './theme/theme';
-import {ApiModule, Configuration} from '../typescript-client';
+import { graphqlProvider } from './graphql.provider';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // importProvidersFrom(
-    //   ApiModule.forRoot(() => new Configuration({
-    //     basePath: ''
-    //   }))
-    // ),
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(),
+    graphqlProvider,
     MessageService,
     providePrimeNG({
       theme: {
