@@ -4,7 +4,6 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { AuthService } from '../../auth-service/auth.service';
 import { ToastService } from '../toast-service/toast-service';
 import {Message} from 'primeng/message';
 import {CookiesService} from '../../cookies/cookieservice';
@@ -16,7 +15,6 @@ import {CookiesService} from '../../cookies/cookieservice';
   imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, Message],
 })
 export class ActivateAccountFlow {
-  private readonly authService = inject(AuthService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
   private readonly cookiesService = inject(CookiesService);
@@ -27,27 +25,13 @@ export class ActivateAccountFlow {
   });
 
   onSubmit() {
-    // if (!this.activationForm.valid) {
-    //   this.activationForm.markAllAsTouched();
-    //   return;
-    // }
-    //
-    // const email = localStorage.getItem('pending_activation_email') ?? '';
-    // const activationId = this.activationForm.value.activationId!;
-    //
-    // this.authService.activateUser(email, activationId).subscribe({
-    //   next: (role) => {
-    //     this.toastService.showSuccess(`Account activated successfully!`);
-    //     localStorage.removeItem('pending_activation_email');
-    //     setTimeout(() => {
-    //       this.router.navigate([ROLE_ROUTES[role]]);
-    //     }, 1500);
-    //   },
-    //   error: (err) => {
-    //     this.toastService.showError(err?.error ?? 'Invalid activation ID');
-    //   }
-    // });
-    this.router.navigate(['/dashboard/home-nurse']);
+    if (!this.activationForm.valid) {
+      this.activationForm.markAllAsTouched();
+      return;
+    }
+
+    this.toastService.showSuccess('Activation step acknowledged. Please sign in.');
+    this.router.navigate(['/user-login']);
     this.cookiesService.logActivity('activation_attempted', this.activationForm.value.activationId ?? '');
   }
 }

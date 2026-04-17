@@ -47,11 +47,29 @@ export class UserLogin {
     this.loginError.set('');
     if (!this.loginForm.valid) {
       this.loginForm.markAllAsTouched();
-    } else {
-      console.log('Login Payload:', this.loginForm.value);
+      return;
     }
-    this.router.navigate(['/dashboard/home-nurse']);
-    this.cookiesService.logActivity('login_started', this.loginForm.value.email ?? '');
+
+    this.isLoading.set(true);
+    const email = this.loginForm.value.email ?? '';
+    const password = this.loginForm.value.password ?? '';
+
+    this.authService.login({ email, password }).subscribe({
+      next: (role) => {
+        this.cookiesService.logActivity('login_success', email);
+        const targetRoute = role === 'patient' ? '/dashboard/home-patient' : '/dashboard/home-nurse';
+        this.toastService.showSuccess('Logged in successfully.');
+        this.router.navigate([targetRoute]);
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        const message = err?.error ?? 'Login failed. Please check your credentials.';
+        this.loginError.set(message);
+        this.toastService.showError(message);
+        this.cookiesService.logActivity('login_failed', email);
+        this.isLoading.set(false);
+      }
+    });
 
   }
 

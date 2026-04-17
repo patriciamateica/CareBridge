@@ -51,9 +51,13 @@
       <button pButton
               type="submit"
               class="submit-btn"
-              (click)="onSubmit()">
-        <span pButtonLabel>Sign in</span>
+              [disabled]="isLoading()">
+        <span pButtonLabel>{{ isLoading() ? 'Signing in...' : 'Sign in' }}</span>
       </button>
+
+      @if (loginError()) {
+        <p-message severity="error" size="small" variant="simple">{{ loginError() }}</p-message>
+      }
 
       <div class="register-link">
         <span>Don't have an account?</span>

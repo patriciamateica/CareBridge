@@ -1,7 +1,8 @@
-import {inject, Injectable, signal} from '@angular/core';
-import {Observable, throwError, of} from 'rxjs';
-import {delay} from 'rxjs/operators';
-import {CookiesService} from '../cookies/cookieservice';
+import { Injectable, inject, signal } from '@angular/core';
+import { Apollo } from 'apollo-angular';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
+import { GET_USERS, LOGIN_USER, REGISTER_USER } from '../app/graphql/user.graphql';
 
 export type UserRole = 'admin' | 'nurse' | 'patient';
 
@@ -13,38 +14,35 @@ export interface RegisterRequest {
   password: string;
 }
 
-export interface MockUser {
-  firstName: string;
-  lastName: string;
+export interface LoginRequest {
   email: string;
-  phoneNumber: string;
   password: string;
-  activated: boolean;
-  role?: UserRole;
-  displayName?: string;
 }
 
-const ACTIVATION_CODES: Record<string, UserRole> = {
-  'NRS-0001': 'nurse',
-  'NRS-0002': 'nurse',
-  'PAT-0001': 'patient',
-  'PAT-0002': 'patient',
-  'ADM-0001': 'admin',
-  'ADM-0002': 'admin',
+type GqlUser = {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role?: string;
 };
 
-const STORAGE_KEY = 'mock_users';
+const AUTH_TOKEN_KEY = 'carebridge_auth_token';
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private cookiesService = inject(CookiesService);
+  private readonly apollo = inject(Apollo);
 
-  readonly currentRole = signal<UserRole>('admin');
-  readonly currentUserName = signal<string>('Ana Pop');
+  readonly currentRole = signal<UserRole>('patient');
+  readonly currentUserName = signal<string>('Guest');
+
+  constructor() {
+    this.hydrateSessionFromToken();
+  }
 
   setRole(role: UserRole, name: string) {
     this.currentRole.set(role);
-    this.currentUserName.set(name);
+    this.currentUserName.set(name || 'Guest');
   }
 
   isAdmin(): boolean {
@@ -59,40 +57,149 @@ export class AuthService {
     return this.currentRole() === 'patient';
   }
 
-  private getUsers(): MockUser[] {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]');
-  }
-
-  private saveUsers(users: MockUser[]): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
-  }
-
   registerNewUser(payload: RegisterRequest): Observable<void> {
-    const users = this.getUsers();
-    if (users.some(u => u.email === payload.email)) {
-      return throwError(() => ({error: 'Email already exists'})).pipe(delay(400));
-    }
-    users.push({...payload, activated: false});
-    this.saveUsers(users);
-    return of(void 0).pipe(delay(600));
+    return this.apollo.mutate<{ registerUser: GqlUser }>({
+      mutation: REGISTER_USER,
+      variables: {
+        input: {
+          firstName: payload.firstName,
+          lastName: payload.lastName,
+          email: payload.email,
+          phoneNumber: payload.phoneNumber,
+          password: payload.password,
+        }
+      }
+    }).pipe(
+      map(() => void 0),
+      catchError((error) => {
+        const backendMessage = error?.message ?? error?.graphQLErrors?.[0]?.message ?? 'Registration failed.';
+        return throwError(() => ({ error: backendMessage }));
+      })
+    );
   }
 
-  activateUser(email: string, activationId: string): Observable<UserRole> {
-    const role = ACTIVATION_CODES[activationId.toUpperCase()];
-    if (!role) {
-      return throwError(() => ({error: 'Invalid activation ID'})).pipe(delay(400));
-    }
-    const users = this.getUsers();
-    const idx = users.findIndex(u => u.email === email);
-    if (idx === -1) {
-      return throwError(() => ({error: 'User not found'})).pipe(delay(400));
-    }
-    users[idx] = {...users[idx], activated: true, role};
-    this.saveUsers(users);
+  login(credentials: LoginRequest): Observable<UserRole> {
+    const email = credentials.email.trim().toLowerCase();
 
-    const displayName = users[idx].displayName ?? email;
-    this.setRole(role, displayName);
+    return this.apollo.mutate<{ loginUser: string }>({
+      mutation: LOGIN_USER,
+      variables: {
+        input: {
+          email,
+          password: credentials.password,
+        }
+      }
+    }).pipe(
+      switchMap((result) => {
+        const token = result.data?.loginUser;
+        if (!token) {
+          return throwError(() => ({ error: 'Login failed. Empty token returned by backend.' }));
+        }
 
-    return of(role).pipe(delay(600));
+        this.persistToken(token);
+
+        return this.apollo.query<{ getUsers: GqlUser[] }>({
+          query: GET_USERS,
+          variables: { page: 0, size: 500 },
+          fetchPolicy: 'network-only',
+        }).pipe(
+          map((queryResult) => {
+            const users = queryResult.data?.getUsers ?? [];
+            const user = users.find((row) => (row.email ?? '').toLowerCase() === email);
+            const role = this.mapRole(user?.role);
+            const name = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || email;
+            this.setRole(role, name);
+            return role;
+          })
+        );
+      }),
+      catchError((error) => {
+        const backendMessage = error?.error ?? error?.message ?? error?.graphQLErrors?.[0]?.message ?? 'Invalid email or password.';
+        return throwError(() => ({ error: backendMessage }));
+      })
+    );
+  }
+
+  activateUser(_: string, __: string): Observable<UserRole> {
+    return of(this.currentRole());
+  }
+
+  logout(): void {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    this.currentRole.set('patient');
+    this.currentUserName.set('Guest');
+  }
+
+  getAuthToken(): string | null {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+  }
+
+  private hydrateSessionFromToken(): void {
+    const token = this.getAuthToken();
+    if (!token) return;
+
+    const claims = this.parseJwtClaims(token);
+    const roleFromToken = this.extractRoleFromClaims(claims);
+    if (roleFromToken) {
+      this.currentRole.set(roleFromToken);
+    }
+
+    const subjectClaim = claims?.['sub'];
+    const emailFromToken = typeof subjectClaim === 'string' ? subjectClaim : '';
+    if (!emailFromToken) return;
+
+    this.apollo.query<{ getUsers: GqlUser[] }>({
+      query: GET_USERS,
+      variables: { page: 0, size: 500 },
+      fetchPolicy: 'network-only',
+    }).pipe(
+      map((result) => result.data?.getUsers ?? []),
+      tap((users) => {
+        const user = users.find((row) => (row.email ?? '').toLowerCase() === emailFromToken.toLowerCase());
+        if (!user) return;
+        const resolvedRole = this.mapRole(user.role) || roleFromToken || 'patient';
+        const name = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || emailFromToken;
+        this.setRole(resolvedRole, name);
+      }),
+      catchError(() => of([]))
+    ).subscribe();
+  }
+
+  private persistToken(token: string): void {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+  }
+
+  private mapRole(role?: string): UserRole {
+    switch ((role ?? '').toUpperCase()) {
+      case 'ADMIN':
+        return 'admin';
+      case 'NURSE':
+        return 'nurse';
+      default:
+        return 'patient';
+    }
+  }
+
+  private parseJwtClaims(token: string): Record<string, unknown> | null {
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = payload.padEnd(Math.ceil(payload.length / 4) * 4, '=');
+      return JSON.parse(atob(padded));
+    } catch {
+      return null;
+    }
+  }
+
+  private extractRoleFromClaims(claims: Record<string, unknown> | null): UserRole | null {
+    if (!claims) return null;
+    const authorities = claims['authorities'];
+    if (!Array.isArray(authorities)) return null;
+    const normalized = authorities.map((a) => String(a).toUpperCase());
+    if (normalized.some((a) => a.includes('ADMIN'))) return 'admin';
+    if (normalized.some((a) => a.includes('NURSE'))) return 'nurse';
+    if (normalized.some((a) => a.includes('PATIENT'))) return 'patient';
+    return null;
   }
 }
