@@ -54,6 +54,7 @@ public class SeederService {
 
     private static final int MIN_NURSE_USERS = 6;
     private static final int PATIENTS_PER_SEED = 15;
+    private static final int PRESCRIPTIONS_PER_PATIENT = 2;
     private static final String ADMIN_EMAIL = "admin@carebridge.local";
     private static final String ADMIN_PASSWORD = "Admin123!";
     private static final String ADMIN_FIRST_NAME = "System";
@@ -180,7 +181,16 @@ public class SeederService {
         healthStatusService.create(new HealthStatus(UUID.randomUUID(), random.nextInt(0, 10), Mood.values()[random.nextInt(Mood.values().length)], List.of("Fever", "Cough", "Fatigue"), faker.lorem().sentence(), LocalDate.now(), patientId));
         clinicalLogService.create(new ClinicalLog(UUID.randomUUID(), faker.medical().medicineName() + " Report", DocumentType.values()[random.nextInt(DocumentType.values().length)], LocalDate.now(), faker.internet().url(), patientId, nurseId, LocalDateTime.now(), ClinicalLogStatus.ACTIVE));
         careNotesService.create(new CareNotes(UUID.randomUUID(), faker.lorem().paragraph(), patientId, nurseId, LocalDateTime.now()));
-        prescriptionService.create(new Prescription(UUID.randomUUID(), faker.medical().medicineName(), random.nextInt(100, 500) + "mg", "Twice a day", patientId, nurseId));
+        for (int i = 0; i < PRESCRIPTIONS_PER_PATIENT; i++) {
+            prescriptionService.create(new Prescription(
+                UUID.randomUUID(),
+                faker.medical().medicineName(),
+                random.nextInt(100, 500) + "mg",
+                "Twice a day",
+                patientId,
+                nurseId
+            ));
+        }
     }
 
     private void createPatientBundle(UUID patientId, UUID nurseId) {
@@ -190,7 +200,9 @@ public class SeederService {
         healthStatusService.create(new HealthStatus(UUID.randomUUID(), random.nextInt(0, 10), Mood.values()[random.nextInt(Mood.values().length)], List.of("Fever", "Cough", "Fatigue"), faker.lorem().sentence(), LocalDate.now(), patientId));
         clinicalLogService.create(new ClinicalLog(UUID.randomUUID(), faker.medical().medicineName() + " Report", DocumentType.values()[random.nextInt(DocumentType.values().length)], LocalDate.now(), faker.internet().url(), patientId, nurseId, LocalDateTime.now(), ClinicalLogStatus.ACTIVE));
         careNotesService.create(new CareNotes(UUID.randomUUID(), faker.lorem().paragraph(), patientId, nurseId, LocalDateTime.now()));
-        prescriptionService.create(new Prescription(UUID.randomUUID(), faker.medical().medicineName(), random.nextInt(100, 500) + "mg", "Twice a day", patientId, nurseId));
+        for (int i = 0; i < PRESCRIPTIONS_PER_PATIENT; i++) {
+            prescriptionService.create(new Prescription(UUID.randomUUID(), faker.medical().medicineName(), random.nextInt(100, 500) + "mg", "Twice a day", patientId, nurseId));
+        }
         rosterService.create(new Roster(UUID.randomUUID(), patientId, nurseId, RosterStatus.ACTIVE));
         patientDetailsService.create(new PatientDetails(UUID.randomUUID(), patientId, faker.medical().diseaseName(), List.of(faker.medical().symptoms()), List.of("scan_1.png"), faker.phoneNumber().phoneNumber(), nurseId));
         ensureNurseDetailsExists(nurseId);

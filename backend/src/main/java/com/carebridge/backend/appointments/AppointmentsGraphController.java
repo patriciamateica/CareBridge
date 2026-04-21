@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,7 +47,7 @@ public class AppointmentsGraphController {
 
         Appointments appointment = new Appointments(
                 UUID.randomUUID(), patientId, nurseId, description,
-                LocalDateTime.parse(timeSlot), status);
+                parseDateTime(timeSlot), status);
         return appointmentsService.create(appointment);
     }
 
@@ -68,5 +69,13 @@ public class AppointmentsGraphController {
     @SubscriptionMapping
     public Flux<Appointments> onAppointmentStatusChanged(@Argument UUID id) {
         return appointmentsService.getStatusChangedStream(id);
+    }
+
+    private LocalDateTime parseDateTime(String rawDateTime) {
+        try {
+            return LocalDateTime.parse(rawDateTime);
+        } catch (Exception ignored) {
+            return OffsetDateTime.parse(rawDateTime).toLocalDateTime();
+        }
     }
 }

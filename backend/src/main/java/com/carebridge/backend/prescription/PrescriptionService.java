@@ -24,6 +24,10 @@ public class PrescriptionService {
         return prescriptionRepository.findAll(pageable);
     }
 
+    public Page<Prescription> findByPatientId(UUID patientId, Pageable pageable) {
+        return prescriptionRepository.findByPatientId(patientId, pageable);
+    }
+
     public Prescription getById(UUID id) {
         return prescriptionRepository.findById(id).orElseThrow();
     }
@@ -59,6 +63,10 @@ public class PrescriptionService {
 
     public List<Prescription> getByPatientId(UUID patientId) {
         return prescriptionRepository.findByPatientId(patientId);
+    }
+
+    public long countByPatientId(UUID patientId) {
+        return prescriptionRepository.countByPatientId(patientId);
     }
 
     public Flux<Prescription> getCreatedStream(UUID patientId) {

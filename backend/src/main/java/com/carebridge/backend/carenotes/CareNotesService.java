@@ -23,13 +23,17 @@ public class CareNotesService {
         return repository.findAll(pageable);
     }
 
+    public Page<CareNotes> findByPatientId(UUID patientId, Pageable pageable) {
+        return repository.findByPatientId(patientId, pageable);
+    }
+
     public CareNotes getById(UUID id) {
         return repository.findById(id).orElseThrow();
     }
 
     public CareNotes create(CareNotes careNotes) {
         CareNotes saved = repository.save(careNotes);
-        noteSink.tryEmitNext(saved);
+        emitIfPresent(saved);
         return saved;
     }
 
@@ -41,7 +45,9 @@ public class CareNotesService {
         oldNotes.setNurseId(updatedNotes.getNurseId());
         oldNotes.setTimestamp(updatedNotes.getTimestamp());
 
-        return oldNotes;
+        CareNotes saved = repository.save(oldNotes);
+        emitIfPresent(saved);
+        return saved;
     }
 
     public boolean delete(UUID id) {
@@ -58,8 +64,19 @@ public class CareNotesService {
         return repository.findByPatientId(patientId);
     }
 
+    public long countByPatientId(UUID patientId) {
+        return repository.countByPatientId(patientId);
+    }
+
     public Flux<CareNotes> getNoteStream(UUID patientId) {
         return noteSink.asFlux()
                 .filter(n -> patientId == null || n.getPatientId().equals(patientId));
+    }
+
+    private void emitIfPresent(CareNotes notes) {
+        if (notes == null) {
+            return;
+        }
+        noteSink.tryEmitNext(notes);
     }
 }

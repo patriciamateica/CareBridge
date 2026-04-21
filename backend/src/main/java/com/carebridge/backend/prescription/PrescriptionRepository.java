@@ -18,7 +18,7 @@ public class PrescriptionRepository {
     private final Map<UUID, Prescription> records = new ConcurrentHashMap<>();
 
     public Page<Prescription> findAll(Pageable pageable) {
-        List<Prescription> allRecords = new ArrayList<>(records.values());
+        List<Prescription> allRecords = sortByIdAscending(new ArrayList<>(records.values()));
 
         int start = (int) pageable.getOffset();
         int end = Math.min((start + pageable.getPageSize()), allRecords.size());
@@ -45,10 +45,34 @@ public class PrescriptionRepository {
         return Optional.ofNullable(records.get(id));
     }
 
+    public Page<Prescription> findByPatientId(UUID patientId, Pageable pageable) {
+        List<Prescription> allRecords = sortByIdAscending(records.values().stream()
+                .filter(p -> p.getPatientId().equals(patientId))
+                .toList());
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), allRecords.size());
+
+        List<Prescription> pageContent;
+        if (start > allRecords.size()) {
+            pageContent = new ArrayList<>();
+        } else {
+            pageContent = allRecords.subList(start, end);
+        }
+
+        return new PageImpl<>(pageContent, pageable, allRecords.size());
+    }
+
     public List<Prescription> findByPatientId(UUID patientId) {
+        return sortByIdAscending(records.values().stream()
+                .filter(p -> p.getPatientId().equals(patientId))
+                .toList());
+    }
+
+    public long countByPatientId(UUID patientId) {
         return records.values().stream()
                 .filter(p -> p.getPatientId().equals(patientId))
-                .toList();
+                .count();
     }
 
     public void deleteById(UUID id) {
@@ -57,5 +81,15 @@ public class PrescriptionRepository {
 
     public void deleteAll() {
         records.clear();
+    }
+
+    private List<Prescription> sortByIdAscending(List<Prescription> input) {
+        input.sort((a, b) -> {
+            if (a.getId() == null && b.getId() == null) return 0;
+            if (a.getId() == null) return 1;
+            if (b.getId() == null) return -1;
+            return a.getId().toString().compareTo(b.getId().toString());
+        });
+        return input;
     }
 }

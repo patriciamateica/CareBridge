@@ -32,8 +32,18 @@ public class PrescriptionGraphController {
     }
 
     @QueryMapping
-    public List<Prescription> getPrescriptionsByPatientId(@Argument UUID patientId) {
-        return prescriptionService.getByPatientId(patientId);
+    public List<Prescription> getPrescriptionsByPatientId(
+            @Argument UUID patientId,
+            @Argument Integer page,
+            @Argument Integer size) {
+        int resolvedPage = page != null ? page : 0;
+        int resolvedSize = size != null ? size : 5;
+        return prescriptionService.findByPatientId(patientId, PageRequest.of(resolvedPage, resolvedSize)).getContent();
+    }
+
+    @QueryMapping
+    public Integer getPrescriptionCountByPatientId(@Argument UUID patientId) {
+        return Math.toIntExact(prescriptionService.countByPatientId(patientId));
     }
 
     @MutationMapping

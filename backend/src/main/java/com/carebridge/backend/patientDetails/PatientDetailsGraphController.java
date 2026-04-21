@@ -1,10 +1,13 @@
 package com.carebridge.backend.patientDetails;
 
+import com.carebridge.backend.carenotes.CareNotesService;
+import com.carebridge.backend.carenotes.model.CareNotes;
 import com.carebridge.backend.patientDetails.model.PatientDetails;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.graphql.data.method.annotation.SubscriptionMapping;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
@@ -16,9 +19,11 @@ import java.util.UUID;
 public class PatientDetailsGraphController {
 
     private final PatientDetailsService patientDetailsService;
+    private final CareNotesService careNotesService;
 
-    public PatientDetailsGraphController(PatientDetailsService patientDetailsService) {
+    public PatientDetailsGraphController(PatientDetailsService patientDetailsService, CareNotesService careNotesService) {
         this.patientDetailsService = patientDetailsService;
+        this.careNotesService = careNotesService;
     }
 
     @QueryMapping
@@ -61,5 +66,10 @@ public class PatientDetailsGraphController {
     @SubscriptionMapping
     public Flux<PatientDetails> onPatientDiagnosisUpdated(@Argument UUID id) {
         return patientDetailsService.getDiagnosisStream(id);
+    }
+
+    @SchemaMapping(typeName = "PatientDetails", field = "careNotes")
+    public List<CareNotes> careNotes(PatientDetails patientDetails) {
+        return careNotesService.getByPatientId(patientDetails.getUserId());
     }
 }
