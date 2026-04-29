@@ -9,11 +9,14 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+
 import java.util.UUID;
 
 @Service
+@Transactional
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
@@ -27,8 +30,9 @@ public class UserService implements UserDetailsService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public User register(RegisterRequest request) {
-        if (userRepository.findByEmail(request.email()).isPresent()) {
+        if (userRepository.findByEmailIgnoreCase(request.email()).isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
 
@@ -41,19 +45,24 @@ public class UserService implements UserDetailsService {
         user.setRole(Role.PATIENT);
         user.setUserStatus(UserStatus.ACTIVE);
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        emitRegistration(savedUser);
+        return savedUser;
     }
 
+    @Transactional(readOnly = true)
     public User getByEmail(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmailIgnoreCase(email)
             .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
     }
 
+    @Transactional(readOnly = true)
     public User getUserById(UUID id) {
         return userRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
     }
 
+    @Transactional
     public User updateStatus(UUID id, UserStatus status) {
         User user = getUserById(id);
         user.setUserStatus(status);
@@ -63,33 +72,40 @@ public class UserService implements UserDetailsService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmailIgnoreCase(email)
             .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         return new CustomUserDetails(user);
     }
 
+    @Transactional(readOnly = true)
     public UserDetails loadUserByEmail(String emailFromToken) {
         return loadUserByUsername(emailFromToken);
     }
 
+    @Transactional(readOnly = true)
     public Page<User> getUsersPaginated(Pageable pageable) {
-        return userRepository.findAllPaginated(pageable);
+        return userRepository.findAll(pageable);
     }
 
+    @Transactional
     public void deleteAll(){
         userRepository.deleteAll();
     }
 
+    @Transactional
     public Flux<User> getUserRegistrationStream() {
         return registrationSink.asFlux();
     }
 
+    @Transactional
     public void emitRegistration(User user) {
         registrationSink.tryEmitNext(user);
     }
 
+    @Transactional
     public Flux<User> getUserStatusStream(UUID id) {
         return statusUpdateSink.asFlux()
             .filter(user -> id == null || user.getId().equals(id));
