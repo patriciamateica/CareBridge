@@ -5,8 +5,8 @@ services:
     env_file: "env.properties"
     restart: unless-stopped
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      POSTGRES_DB: carebridge_db
+      POSTGRES_PASSWORD: dbpassword
+      POSTGRES_USER: postgres
     ports:
-      - '5432'
+      - "5433:5432"

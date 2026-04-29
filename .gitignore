@@ -27,3 +27,4 @@ dist/
 # Docker & DB
 .docker/
 postgres_data/
+application.properties
