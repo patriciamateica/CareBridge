@@ -119,4 +119,41 @@ class RosterRepositoryTest {
 
         assertTrue(repository.findById(saved.getId()).isEmpty());
     }
+
+    @Test
+    void findByNurseId_ShouldReturnOnlyMatchingRosters() {
+        User otherNurse = new User();
+        otherNurse.setEmail("other-nurse@test.com");
+        otherNurse.setFirstName("Other");
+        otherNurse.setLastName("Nurse");
+        otherNurse.setPassword("password");
+        otherNurse.setRole(com.carebridge.backend.user.Role.NURSE);
+        otherNurse = userRepository.saveAndFlush(otherNurse);
+
+        User patient2 = new User();
+        patient2.setEmail("patient2@test.com");
+        patient2.setFirstName("Patient2");
+        patient2.setLastName("Test");
+        patient2.setPassword("password");
+        patient2.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient2 = userRepository.saveAndFlush(patient2);
+
+        repository.save(sampleRoster);
+        repository.save(new Roster(null, patient2, nurseUser, RosterStatus.ACTIVE));
+        repository.save(new Roster(null, patientUser, otherNurse, RosterStatus.PENDING));
+
+        java.util.List<Roster> results = repository.findByNurseId(nurseUser.getId());
+
+        assertEquals(2, results.size());
+        assertTrue(results.stream().allMatch(r -> r.getNurse().getId().equals(nurseUser.getId())));
+    }
+
+    @Test
+    void findByNurseId_ShouldReturnEmptyListForUnknownNurse() {
+        repository.save(sampleRoster);
+
+        java.util.List<Roster> results = repository.findByNurseId(java.util.UUID.randomUUID());
+
+        assertTrue(results.isEmpty());
+    }
 }

@@ -108,4 +108,33 @@ class HealthStatusRepositoryTest {
 
         assertTrue(repository.findById(saved.getId()).isEmpty());
     }
+
+    @Test
+    void findByPatientId_ShouldReturnOnlyMatchingStatuses() {
+        User otherPatient = new User();
+        otherPatient.setEmail("other-patient@test.com");
+        otherPatient.setFirstName("Other");
+        otherPatient.setLastName("Patient");
+        otherPatient.setPassword("password");
+        otherPatient.setRole(Role.PATIENT);
+        otherPatient = userRepository.saveAndFlush(otherPatient);
+
+        repository.save(sampleStatus);
+        repository.save(new HealthStatus(null, 3, Mood.Calm, List.of("Cough"), "Second entry", LocalDate.now(), patientUser));
+        repository.save(new HealthStatus(null, 7, Mood.Calm, List.of("Fever"), "Other", LocalDate.now(), otherPatient));
+
+        List<HealthStatus> results = repository.findByPatientId(patientUser.getId());
+
+        assertEquals(2, results.size());
+        assertTrue(results.stream().allMatch(h -> h.getPatient().getId().equals(patientUser.getId())));
+    }
+
+    @Test
+    void findByPatientId_ShouldReturnEmptyListForUnknownPatient() {
+        repository.save(sampleStatus);
+
+        List<HealthStatus> results = repository.findByPatientId(UUID.randomUUID());
+
+        assertTrue(results.isEmpty());
+    }
 }

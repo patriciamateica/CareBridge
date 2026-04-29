@@ -111,4 +111,35 @@ class ClinicalLogRepositoryTest {
 
         assertTrue(repository.findById(saved.getId()).isEmpty());
     }
+
+    @Test
+    void findByPatientId_ShouldReturnOnlyMatchingLogs() {
+        User otherPatient = new User();
+        otherPatient.setEmail("other-patient@test.com");
+        otherPatient.setFirstName("Other");
+        otherPatient.setLastName("Patient");
+        otherPatient.setPassword("password");
+        otherPatient.setRole(Role.PATIENT);
+        otherPatient = userRepository.saveAndFlush(otherPatient);
+
+        repository.save(sampleLog);
+        repository.save(new ClinicalLog(null, "MRI Scan", DocumentType.MRI, LocalDate.now(),
+            "url2", patientUser, nurseUser, LocalDateTime.now(), ClinicalLogStatus.ACTIVE));
+        repository.save(new ClinicalLog(null, "Other Log", DocumentType.BLOOD_WORK, LocalDate.now(),
+            "url3", otherPatient, nurseUser, LocalDateTime.now(), ClinicalLogStatus.ACTIVE));
+
+        java.util.List<ClinicalLog> results = repository.findByPatientId(patientUser.getId());
+
+        assertEquals(2, results.size());
+        assertTrue(results.stream().allMatch(l -> l.getPatient().getId().equals(patientUser.getId())));
+    }
+
+    @Test
+    void findByPatientId_ShouldReturnEmptyListForUnknownPatient() {
+        repository.save(sampleLog);
+
+        java.util.List<ClinicalLog> results = repository.findByPatientId(UUID.randomUUID());
+
+        assertTrue(results.isEmpty());
+    }
 }

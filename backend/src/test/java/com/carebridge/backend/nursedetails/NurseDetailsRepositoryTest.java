@@ -119,4 +119,22 @@ class NurseDetailsRepositoryTest {
 
         assertTrue(repository.findById(saved.getId()).isEmpty());
     }
+
+    @Test
+    void findByUserId_ShouldReturnNurseDetailsWhenExists() {
+        createNurseDetails(nurseUser, "Pediatrics", "Central Hospital", 5, true);
+
+        java.util.Optional<NurseDetails> found = repository.findByUserId(nurseUser.getId());
+
+        assertTrue(found.isPresent());
+        assertEquals("Pediatrics", found.get().getSpecialization());
+        assertEquals(nurseUser.getId(), found.get().getUser().getId());
+    }
+
+    @Test
+    void findByUserId_ShouldReturnEmptyWhenNotExists() {
+        java.util.Optional<NurseDetails> found = repository.findByUserId(UUID.randomUUID());
+
+        assertTrue(found.isEmpty());
+    }
 }

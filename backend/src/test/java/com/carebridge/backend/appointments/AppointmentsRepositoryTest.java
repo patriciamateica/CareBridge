@@ -116,4 +116,35 @@ class AppointmentsRepositoryTest {
 
         assertTrue(repository.findById(saved.getId()).isEmpty());
     }
+
+    @Test
+    void findByPatientId_ShouldReturnOnlyMatchingAppointments() {
+        User otherPatient = new User();
+        otherPatient.setEmail("other-patient@test.com");
+        otherPatient.setFirstName("Other");
+        otherPatient.setLastName("Patient");
+        otherPatient.setPassword("password");
+        otherPatient.setRole(Role.PATIENT);
+        otherPatient = userRepository.saveAndFlush(otherPatient);
+
+        repository.save(sampleAppointment);
+        repository.save(new Appointments(null, patientUser, nurseUser, "Follow-up",
+            LocalDateTime.now().plusDays(2), AppointmentsStatus.VALIDATED));
+        repository.save(new Appointments(null, otherPatient, nurseUser, "Other checkup",
+            LocalDateTime.now().plusDays(3), AppointmentsStatus.REQUESTED));
+
+        java.util.List<Appointments> results = repository.findByPatientId(patientUser.getId());
+
+        assertEquals(2, results.size());
+        assertTrue(results.stream().allMatch(a -> a.getPatient().getId().equals(patientUser.getId())));
+    }
+
+    @Test
+    void findByPatientId_ShouldReturnEmptyListForUnknownPatient() {
+        repository.save(sampleAppointment);
+
+        java.util.List<Appointments> results = repository.findByPatientId(UUID.randomUUID());
+
+        assertTrue(results.isEmpty());
+    }
 }

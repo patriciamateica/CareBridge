@@ -114,4 +114,91 @@ class PrescriptionRepositoryTest {
 
         assertTrue(repository.findById(saved.getId()).isEmpty());
     }
+
+    @Test
+    void findByPatientId_Pageable_ShouldReturnOnlyMatchingPrescriptions() {
+        User otherPatient = new User();
+        otherPatient.setEmail("other-patient@test.com");
+        otherPatient.setFirstName("Other");
+        otherPatient.setLastName("Patient");
+        otherPatient.setPassword("password");
+        otherPatient.setRole(Role.PATIENT);
+        otherPatient = userRepository.saveAndFlush(otherPatient);
+
+        repository.save(samplePrescription);
+        repository.save(new Prescription(null, "Ibuprofen", "200mg", "Twice daily", patientUser, nurseUser));
+        repository.save(new Prescription(null, "Metformin", "500mg", "Daily", otherPatient, nurseUser));
+
+        Page<Prescription> page = repository.findByPatientId(patientUser.getId(), PageRequest.of(0, 10));
+
+        assertEquals(2, page.getTotalElements());
+        assertTrue(page.getContent().stream().allMatch(p -> p.getPatient().getId().equals(patientUser.getId())));
+    }
+
+    @Test
+    void findByPatientId_Pageable_ShouldReturnEmptyForUnknownPatient() {
+        repository.save(samplePrescription);
+
+        Page<Prescription> page = repository.findByPatientId(UUID.randomUUID(), PageRequest.of(0, 10));
+
+        assertTrue(page.getContent().isEmpty());
+        assertEquals(0, page.getTotalElements());
+    }
+
+    @Test
+    void findByPatientIdOrderByIdAsc_ShouldReturnFilteredAndSortedByIdAscending() {
+        User otherPatient = new User();
+        otherPatient.setEmail("other-patient3@test.com");
+        otherPatient.setFirstName("Other3");
+        otherPatient.setLastName("Patient");
+        otherPatient.setPassword("password");
+        otherPatient.setRole(Role.PATIENT);
+        otherPatient = userRepository.saveAndFlush(otherPatient);
+
+        repository.save(new Prescription(null, "Drug A", "10mg", "Daily", patientUser, nurseUser));
+        repository.save(new Prescription(null, "Drug B", "20mg", "Daily", patientUser, nurseUser));
+        repository.save(new Prescription(null, "Drug C", "30mg", "Daily", otherPatient, nurseUser));
+
+        java.util.List<Prescription> results = repository.findByPatientIdOrderByIdAsc(patientUser.getId());
+
+        assertEquals(2, results.size());
+        assertTrue(results.stream().allMatch(p -> p.getPatient().getId().equals(patientUser.getId())));
+    }
+
+    @Test
+    void findByPatientIdOrderByIdAsc_ShouldReturnEmptyForUnknownPatient() {
+        repository.save(samplePrescription);
+
+        java.util.List<Prescription> results = repository.findByPatientIdOrderByIdAsc(UUID.randomUUID());
+
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    void countByPatientId_ShouldCountOnlyMatchingPatient() {
+        User otherPatient = new User();
+        otherPatient.setEmail("other-patient2@test.com");
+        otherPatient.setFirstName("Other2");
+        otherPatient.setLastName("Patient");
+        otherPatient.setPassword("password");
+        otherPatient.setRole(Role.PATIENT);
+        otherPatient = userRepository.saveAndFlush(otherPatient);
+
+        repository.save(samplePrescription);
+        repository.save(new Prescription(null, "Ibuprofen", "200mg", "Twice daily", patientUser, nurseUser));
+        repository.save(new Prescription(null, "Metformin", "500mg", "Daily", otherPatient, nurseUser));
+
+        long count = repository.countByPatientId(patientUser.getId());
+
+        assertEquals(2, count);
+    }
+
+    @Test
+    void countByPatientId_ShouldReturnZeroForUnknownPatient() {
+        repository.save(samplePrescription);
+
+        long count = repository.countByPatientId(UUID.randomUUID());
+
+        assertEquals(0, count);
+    }
 }

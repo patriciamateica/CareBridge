@@ -130,4 +130,24 @@ class PatientDetailsRepositoryTest {
 
         assertTrue(repository.findById(saved.getId()).isEmpty());
     }
+
+    @Test
+    void findByUserId_ShouldReturnPatientDetailsWhenExists() {
+        createPatientDetails(patientUser, "Hypertension",
+            List.of("Blood Test", "ECG"), List.of("/scans/ecg_01.png"),
+            "Wife: 0722123456", UUID.randomUUID());
+
+        java.util.Optional<PatientDetails> found = repository.findByUserId(patientUser.getId());
+
+        assertTrue(found.isPresent());
+        assertEquals("Hypertension", found.get().getPrimaryDiagnosis());
+        assertEquals(patientUser.getId(), found.get().getUser().getId());
+    }
+
+    @Test
+    void findByUserId_ShouldReturnEmptyWhenNotExists() {
+        java.util.Optional<PatientDetails> found = repository.findByUserId(UUID.randomUUID());
+
+        assertTrue(found.isEmpty());
+    }
 }
