@@ -4,12 +4,14 @@ import com.carebridge.backend.patientDetails.model.PatientDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import java.util.UUID;
 
 @Service
+@Transactional
 public class PatientDetailsService {
     private final PatientDetailsRepository repository;
     private final Sinks.Many<PatientDetails> createdSink = Sinks.many().multicast().onBackpressureBuffer();
@@ -19,10 +21,12 @@ public class PatientDetailsService {
         this.repository = repository;
     }
 
+    @Transactional(readOnly = true)
     public Page<PatientDetails> findAll(Pageable pageable) {
         return repository.findAll(pageable);
     }
 
+    @Transactional(readOnly = true)
     public PatientDetails getById(UUID id) {
         return repository.findById(id).orElseThrow();
     }
@@ -36,14 +40,14 @@ public class PatientDetailsService {
     public PatientDetails update(UUID id, PatientDetails updatedDetails) {
         PatientDetails oldDetails = repository.findById(id).orElseThrow();
 
-        oldDetails.setUserId(updatedDetails.getUserId());
+        oldDetails.setUser(updatedDetails.getUser());
         oldDetails.setPrimaryDiagnosis(updatedDetails.getPrimaryDiagnosis());
         oldDetails.setDiagnostics(updatedDetails.getDiagnostics());
         oldDetails.setScans(updatedDetails.getScans());
         oldDetails.setEmergencyContact(updatedDetails.getEmergencyContact());
         oldDetails.setAssignedNurseId(updatedDetails.getAssignedNurseId());
 
-        return oldDetails;
+        return repository.save(oldDetails);
     }
 
     public boolean delete(UUID id) {
@@ -56,6 +60,7 @@ public class PatientDetailsService {
         repository.deleteAll();
     }
 
+    @Transactional(readOnly = true)
     public PatientDetails getByUserId(UUID userId) {
         return repository.findByUserId(userId).orElseThrow();
     }
@@ -63,17 +68,19 @@ public class PatientDetailsService {
     public PatientDetails updateDiagnosis(UUID id, String primaryDiagnosis) {
         PatientDetails details = repository.findById(id).orElseThrow();
         details.setPrimaryDiagnosis(primaryDiagnosis);
-        diagnosisSink.tryEmitNext(details);
-        return details;
+
+        PatientDetails saved = repository.save(details);
+        diagnosisSink.tryEmitNext(saved);
+        return saved;
     }
 
     public Flux<PatientDetails> getCreatedStream(UUID userId) {
         return createdSink.asFlux()
-                .filter(pd -> userId == null || pd.getUserId().equals(userId));
+            .filter(pd -> userId == null || pd.getUser().getId().equals(userId));
     }
 
     public Flux<PatientDetails> getDiagnosisStream(UUID id) {
         return diagnosisSink.asFlux()
-                .filter(pd -> id == null || pd.getId().equals(id));
+            .filter(pd -> id == null || pd.getId().equals(id));
     }
 }

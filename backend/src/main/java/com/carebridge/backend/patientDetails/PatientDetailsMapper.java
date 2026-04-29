@@ -2,6 +2,7 @@ package com.carebridge.backend.patientDetails;
 
 import com.carebridge.backend.patientDetails.model.PatientDetails;
 import com.carebridge.backend.patientDetails.model.PatientDetailsDto;
+import com.carebridge.backend.user.model.User;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -10,7 +11,7 @@ public class PatientDetailsMapper {
     public PatientDetailsDto toDto(PatientDetails details) {
         return new PatientDetailsDto(
             details.getId(),
-            details.getUserId(),
+            details.getUser().getId(),
             details.getPrimaryDiagnosis(),
             details.getDiagnostics(),
             details.getScans(),
@@ -19,10 +20,9 @@ public class PatientDetailsMapper {
         );
     }
 
-    public PatientDetails toEntity(PatientDetailsDto dto) {
+    public PatientDetails toEntity(PatientDetailsDto dto, User user) {
         return new PatientDetails(
-            dto.id(),
-            dto.userId(),
+            user,
             dto.primaryDiagnosis(),
             dto.diagnostics(),
             dto.scans(),

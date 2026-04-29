@@ -1,28 +1,55 @@
 package com.carebridge.backend.patientDetails.model;
 
+import com.carebridge.backend.user.model.User;
+import jakarta.persistence.*;
 import java.util.List;
 import java.util.UUID;
 
+@Entity
+@Table(name = "patient_details")
 public class PatientDetails {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private UUID userId; // Linked to Base User
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(name = "primary_diagnosis")
     private String primaryDiagnosis;
+
+    @ElementCollection
+    @CollectionTable(name = "patient_diagnostics", joinColumns = @JoinColumn(name = "patient_details_id"))
+    @Column(name = "diagnostic")
     private List<String> diagnostics;
-    private List<String> scans; // URLs or file paths
+
+    @ElementCollection
+    @CollectionTable(name = "patient_scans", joinColumns = @JoinColumn(name = "patient_details_id"))
+    @Column(name = "scan_url")
+    private List<String> scans;
+
+    @Column(name = "emergency_contact")
     private String emergencyContact;
+
+    @Column(name = "assigned_nurse_id")
     private UUID assignedNurseId;
 
+    public PatientDetails() {
+    }
+
     public PatientDetails(
-        UUID id,
-        UUID userId,
+        User user,
         String primaryDiagnosis,
         List<String> diagnostics,
         List<String> scans,
         String emergencyContact,
         UUID assignedNurseId
     ) {
-        this.id = id;
-        this.userId = userId;
+        this.id = user.getId();
+        this.user = user;
         this.primaryDiagnosis = primaryDiagnosis;
         this.diagnostics = diagnostics;
         this.scans = scans;
@@ -38,12 +65,12 @@ public class PatientDetails {
         this.id = id;
     }
 
-    public UUID getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(UUID userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getPrimaryDiagnosis() {
