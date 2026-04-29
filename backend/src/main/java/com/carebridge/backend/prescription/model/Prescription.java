@@ -1,22 +1,44 @@
 package com.carebridge.backend.prescription.model;
 
+import com.carebridge.backend.user.model.User;
+import jakarta.persistence.*;
 import java.util.UUID;
 
+@Entity
+@Table(name = "prescriptions")
 public class Prescription {
-    private UUID id;
-    private String name;
-    private String dose;
-    private String timing;
-    private UUID patientId;
-    private UUID nurseId;
 
-    public Prescription(UUID id, String name, String dose, String timing, UUID patientId, UUID nurseId) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String dose;
+
+    @Column(nullable = false)
+    private String timing;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private User patient;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nurse_id", nullable = false)
+    private User nurse;
+
+    public Prescription() {
+    }
+
+    public Prescription(UUID id, String name, String dose, String timing, User patient, User nurse) {
         this.id = id;
         this.name = name;
         this.dose = dose;
         this.timing = timing;
-        this.patientId = patientId;
-        this.nurseId = nurseId;
+        this.patient = patient;
+        this.nurse = nurse;
     }
 
     public UUID getId() {
@@ -51,19 +73,19 @@ public class Prescription {
         this.timing = timing;
     }
 
-    public UUID getPatientId() {
-        return patientId;
+    public User getPatient() {
+        return patient;
     }
 
-    public void setPatientId(UUID patientId) {
-        this.patientId = patientId;
+    public void setPatient(User patient) {
+        this.patient = patient;
     }
 
-    public UUID getNurseId() {
-        return nurseId;
+    public User getNurse() {
+        return nurse;
     }
 
-    public void setNurseId(UUID nurseId) {
-        this.nurseId = nurseId;
+    public void setNurse(User nurse) {
+        this.nurse = nurse;
     }
 }

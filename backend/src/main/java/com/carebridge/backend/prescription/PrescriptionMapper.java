@@ -2,6 +2,7 @@ package com.carebridge.backend.prescription;
 
 import com.carebridge.backend.prescription.model.Prescription;
 import com.carebridge.backend.prescription.model.PrescriptionDto;
+import com.carebridge.backend.user.model.User;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,19 +14,19 @@ public class PrescriptionMapper {
             prescription.getName(),
             prescription.getDose(),
             prescription.getTiming(),
-            prescription.getPatientId(),
-            prescription.getNurseId()
+            prescription.getPatient().getId(),
+            prescription.getNurse().getId()
         );
     }
 
-    public Prescription toEntity(PrescriptionDto dto) {
+    public Prescription toEntity(PrescriptionDto dto, User nurse, User patient) {
         return new Prescription(
             dto.id(),
             dto.name(),
             dto.dose(),
             dto.timing(),
-            dto.patientId(),
-            dto.nurseId()
+            patient,
+            nurse
         );
     }
 }
