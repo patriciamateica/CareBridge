@@ -1,6 +1,8 @@
 package com.carebridge.backend.prescription;
 
 import com.carebridge.backend.prescription.model.Prescription;
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,17 +32,30 @@ class PrescriptionServiceTest {
 
     private Prescription samplePrescription;
     private UUID prescriptionId;
+    private User patientUser;
+    private User nurseUser;
 
     @BeforeEach
     void setUp() {
         prescriptionId = UUID.randomUUID();
+
+        patientUser = new User();
+        patientUser.setId(UUID.randomUUID());
+        patientUser.setRole(Role.PATIENT);
+        patientUser.setEmail("patient@test.com");
+
+        nurseUser = new User();
+        nurseUser.setId(UUID.randomUUID());
+        nurseUser.setRole(Role.NURSE);
+        nurseUser.setEmail("nurse@test.com");
+
         samplePrescription = new Prescription(
             prescriptionId,
             "Ibuprofen",
             "400mg",
             "As needed for pain",
-            UUID.randomUUID(),
-            UUID.randomUUID()
+            patientUser,
+            nurseUser
         );
     }
 
@@ -86,8 +101,9 @@ class PrescriptionServiceTest {
     @Test
     void update_ShouldUpdateAndReturnPrescriptionWhenExists() {
         Prescription updatedData = new Prescription(null, "Ibuprofen",
-            "600mg", "Every 6 hours", UUID.randomUUID(), UUID.randomUUID());
+            "600mg", "Every 6 hours", patientUser, nurseUser);
         when(prescriptionRepository.findById(prescriptionId)).thenReturn(Optional.of(samplePrescription));
+        when(prescriptionRepository.save(any(Prescription.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Prescription result = prescriptionService.update(prescriptionId, updatedData);
 

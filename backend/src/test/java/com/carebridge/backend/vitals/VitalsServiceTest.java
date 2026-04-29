@@ -1,5 +1,7 @@
 package com.carebridge.backend.vitals;
 
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.User;
 import com.carebridge.backend.vitals.model.Vitals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,12 +33,19 @@ class VitalsServiceTest {
 
     private Vitals sampleVitals;
     private UUID vitalsId;
+    private User patientUser;
 
     @BeforeEach
     void setUp() {
         vitalsId = UUID.randomUUID();
+
+        patientUser = new User();
+        patientUser.setId(UUID.randomUUID());
+        patientUser.setRole(Role.PATIENT);
+        patientUser.setEmail("patient@test.com");
+
         sampleVitals = new Vitals(vitalsId, LocalDate.now(), 80, 120,
-            16, 98, UUID.randomUUID());
+            16, 98, patientUser);
     }
 
     @Test
@@ -81,7 +90,7 @@ class VitalsServiceTest {
     @Test
     void update_ShouldUpdateAndReturnVitalsWhenExists() {
         Vitals updatedData = new Vitals(null, null, 90, 130,
-            18, 99, null);
+            18, 99, patientUser);
         when(vitalsRepository.findById(vitalsId)).thenReturn(Optional.of(sampleVitals));
         when(vitalsRepository.save(any(Vitals.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

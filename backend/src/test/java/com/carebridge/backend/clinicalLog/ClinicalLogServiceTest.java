@@ -3,6 +3,8 @@ package com.carebridge.backend.clinicalLog;
 import com.carebridge.backend.clinicalLog.model.ClinicalLog;
 import com.carebridge.backend.clinicalLog.model.ClinicalLogStatus;
 import com.carebridge.backend.clinicalLog.model.DocumentType;
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,18 +35,31 @@ class ClinicalLogServiceTest {
 
     private ClinicalLog sampleLog;
     private UUID logId;
+    private User patientUser;
+    private User nurseUser;
 
     @BeforeEach
     void setUp() {
         logId = UUID.randomUUID();
+
+        patientUser = new User();
+        patientUser.setId(UUID.randomUUID());
+        patientUser.setRole(Role.PATIENT);
+        patientUser.setEmail("patient@test.com");
+
+        nurseUser = new User();
+        nurseUser.setId(UUID.randomUUID());
+        nurseUser.setRole(Role.NURSE);
+        nurseUser.setEmail("nurse@test.com");
+
         sampleLog = new ClinicalLog(
             logId,
             "Head CT Scan",
             DocumentType.CT_SCAN,
             LocalDate.now(),
             "https://storage.carebridge.com/ct.pdf",
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            patientUser,
+            nurseUser,
             LocalDateTime.now(),
             ClinicalLogStatus.ACTIVE
         );
@@ -74,7 +89,7 @@ class ClinicalLogServiceTest {
 
     @Test
     void create_ShouldSetStatusActiveAndSave() {
-        ClinicalLog newLog = new ClinicalLog(null, "Test", DocumentType.MRI, LocalDate.now(), "url", UUID.randomUUID(), UUID.randomUUID(), LocalDateTime.now(), null);
+        ClinicalLog newLog = new ClinicalLog(null, "Test", DocumentType.MRI, LocalDate.now(), "url", patientUser, nurseUser, LocalDateTime.now(), null);
         when(repository.save(newLog)).thenReturn(newLog);
 
         ClinicalLog result = service.create(newLog);
@@ -86,6 +101,7 @@ class ClinicalLogServiceTest {
     @Test
     void delete_ShouldPerformSoftDelete() {
         when(repository.findById(logId)).thenReturn(Optional.of(sampleLog));
+        when(repository.save(any(ClinicalLog.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         boolean result = service.delete(logId);
 

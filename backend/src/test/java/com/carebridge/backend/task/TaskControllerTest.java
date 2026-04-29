@@ -4,6 +4,7 @@ import com.carebridge.backend.task.model.Task;
 import com.carebridge.backend.task.model.TaskDto;
 import com.carebridge.backend.task.model.TaskStatus;
 import com.carebridge.backend.task.model.TaskType;
+import com.carebridge.backend.user.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,15 +58,20 @@ class TaskControllerTest {
     private TaskDto sampleTaskDto;
     private UUID taskId;
     private UUID patientId;
+    private User patient;
 
     @BeforeEach
     void setUp() {
         taskId = UUID.randomUUID();
         patientId = UUID.randomUUID();
+        patient = new User();
+        patient.setId(patientId);
+        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+
 
         objectMapper.registerModule(new JavaTimeModule());
 
-        sampleTask = new Task(taskId, "Read a book together", "Chapter 4", TaskType.COMPANIONSHIP, LocalDateTime.now(), TaskStatus.OPEN, patientId, null);
+        sampleTask = new Task(taskId, "Read a book together", "Chapter 4", TaskType.COMPANIONSHIP, LocalDateTime.now(), TaskStatus.OPEN, patient, null);
         sampleTaskDto = new TaskDto(taskId, "Read a book together", "Chapter 4", TaskType.COMPANIONSHIP, LocalDateTime.now(), TaskStatus.OPEN, patientId, null);
     }
 
@@ -99,7 +105,8 @@ class TaskControllerTest {
 
     @Test
     void create_ShouldReturnCreatedDto() throws Exception {
-        when(mapper.toEntity(any(TaskDto.class))).thenReturn(sampleTask);
+        when(userService.getUserById(any())).thenReturn(patient);
+        when(mapper.toEntity(any(TaskDto.class), any(), any())).thenReturn(sampleTask);
         when(service.create(any(Task.class))).thenReturn(sampleTask);
         when(mapper.toDto(any(Task.class))).thenReturn(sampleTaskDto);
 
@@ -112,7 +119,8 @@ class TaskControllerTest {
 
     @Test
     void update_ShouldReturnUpdatedDto() throws Exception {
-        when(mapper.toEntity(any(TaskDto.class))).thenReturn(sampleTask);
+        when(userService.getUserById(any())).thenReturn(patient);
+        when(mapper.toEntity(any(TaskDto.class), any(), any())).thenReturn(sampleTask);
         when(service.update(eq(taskId), any(Task.class))).thenReturn(sampleTask);
         when(mapper.toDto(any(Task.class))).thenReturn(sampleTaskDto);
 

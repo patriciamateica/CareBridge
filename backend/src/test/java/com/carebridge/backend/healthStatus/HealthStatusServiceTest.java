@@ -1,6 +1,8 @@
 package com.carebridge.backend.healthStatus;
 
 import com.carebridge.backend.healthStatus.model.HealthStatus;
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,10 +33,17 @@ class HealthStatusServiceTest {
 
     private HealthStatus sampleStatus;
     private UUID statusId;
+    private User patientUser;
 
     @BeforeEach
     void setUp() {
         statusId = UUID.randomUUID();
+
+        patientUser = new User();
+        patientUser.setId(UUID.randomUUID());
+        patientUser.setRole(Role.PATIENT);
+        patientUser.setEmail("patient@test.com");
+
         sampleStatus = new HealthStatus(
             statusId,
             3,
@@ -42,7 +51,7 @@ class HealthStatusServiceTest {
             List.of("Fatigue"),
             "Resting well",
             LocalDate.now(),
-            UUID.randomUUID()
+            patientUser
         );
     }
 
@@ -88,8 +97,9 @@ class HealthStatusServiceTest {
     @Test
     void update_ShouldUpdateAndReturnHealthStatusWhenExists() {
         HealthStatus updatedData = new HealthStatus(null, 8, null,
-            List.of("Fever", "Chills"), "Getting worse", null, null);
+            List.of("Fever", "Chills"), "Getting worse", null, patientUser);
         when(healthStatusRepository.findById(statusId)).thenReturn(Optional.of(sampleStatus));
+        when(healthStatusRepository.save(any(HealthStatus.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         HealthStatus result = healthStatusService.update(statusId, updatedData);
 

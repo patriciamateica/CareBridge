@@ -63,7 +63,17 @@ class AppointmentsControllerTest {
         patientId = UUID.randomUUID();
         nurseId = UUID.randomUUID();
 
-        sampleAppointment = new Appointments(appointmentId, patientId, nurseId, "Physiotherapy", LocalDateTime.now(), AppointmentsStatus.REQUESTED);
+        com.carebridge.backend.user.model.User patient = new com.carebridge.backend.user.model.User();
+        patient.setId(patientId);
+        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.setEmail("patient@test.com");
+
+        com.carebridge.backend.user.model.User nurse = new com.carebridge.backend.user.model.User();
+        nurse.setId(nurseId);
+        nurse.setRole(com.carebridge.backend.user.Role.NURSE);
+        nurse.setEmail("nurse@test.com");
+
+        sampleAppointment = new Appointments(appointmentId, patient, nurse, "Physiotherapy", LocalDateTime.now(), AppointmentsStatus.REQUESTED);
         sampleAppointmentDto = new AppointmentsDto(appointmentId, patientId, nurseId, "Physiotherapy", LocalDateTime.now(), AppointmentsStatus.REQUESTED);
     }
 
@@ -98,7 +108,9 @@ class AppointmentsControllerTest {
 
     @Test
     void create_ShouldReturnCreatedDto() throws Exception {
-        when(mapper.toEntity(any(AppointmentsDto.class))).thenReturn(sampleAppointment);
+        when(userService.getUserById(patientId)).thenReturn((com.carebridge.backend.user.model.User) sampleAppointment.getPatient());
+        when(userService.getUserById(nurseId)).thenReturn((com.carebridge.backend.user.model.User) sampleAppointment.getNurse());
+        when(mapper.toEntity(any(AppointmentsDto.class), any(com.carebridge.backend.user.model.User.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(sampleAppointment);
         when(appointmentsService.create(any(Appointments.class))).thenReturn(sampleAppointment);
         when(mapper.toDto(any(Appointments.class))).thenReturn(sampleAppointmentDto);
 
@@ -111,7 +123,9 @@ class AppointmentsControllerTest {
 
     @Test
     void update_ShouldReturnUpdatedDto() throws Exception {
-        when(mapper.toEntity(any(AppointmentsDto.class))).thenReturn(sampleAppointment);
+        when(userService.getUserById(patientId)).thenReturn((com.carebridge.backend.user.model.User) sampleAppointment.getPatient());
+        when(userService.getUserById(nurseId)).thenReturn((com.carebridge.backend.user.model.User) sampleAppointment.getNurse());
+        when(mapper.toEntity(any(AppointmentsDto.class), any(com.carebridge.backend.user.model.User.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(sampleAppointment);
         when(appointmentsService.update(eq(appointmentId), any(Appointments.class))).thenReturn(sampleAppointment);
         when(mapper.toDto(any(Appointments.class))).thenReturn(sampleAppointmentDto);
 

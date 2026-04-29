@@ -1,8 +1,13 @@
 package com.carebridge.backend.vitals;
 
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.model.User;
 import com.carebridge.backend.vitals.model.Vitals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -12,15 +17,29 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 class VitalsRepositoryTest {
 
+    @Autowired
     private com.carebridge.backend.vitals.VitalsRepository repository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     private Vitals sampleVitals;
+    private User patientUser;
 
     @BeforeEach
     void setUp() {
-        repository = new VitalsRepository();
-        sampleVitals = new Vitals(null, LocalDate.now(), 80, 120, 16, 98, UUID.randomUUID());
+        patientUser = new User();
+        patientUser.setEmail("patient@test.com");
+        patientUser.setFirstName("Patient");
+        patientUser.setLastName("Test");
+        patientUser.setPassword("password");
+        patientUser.setRole(Role.PATIENT);
+        patientUser = userRepository.saveAndFlush(patientUser);
+
+        sampleVitals = new Vitals(null, LocalDate.now(), 80, 120, 16, 98, patientUser);
     }
 
     @Test
@@ -52,7 +71,7 @@ class VitalsRepositoryTest {
     @Test
     void findAllPaginated_ShouldReturnCorrectPage() {
         for (int i = 0; i < 5; i++) {
-            repository.save(new Vitals(null, LocalDate.now(), 80 + i, 120, 16, 98, UUID.randomUUID()));
+            repository.save(new Vitals(null, LocalDate.now(), 80 + i, 120, 16, 98, patientUser));
         }
 
         Page<Vitals> page = repository.findAll(PageRequest.of(0, 2));

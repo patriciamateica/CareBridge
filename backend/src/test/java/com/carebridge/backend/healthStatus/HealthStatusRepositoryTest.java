@@ -1,8 +1,14 @@
 package com.carebridge.backend.healthStatus;
 
 import com.carebridge.backend.healthStatus.model.HealthStatus;
+import com.carebridge.backend.healthStatus.model.Mood;
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -13,22 +19,36 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 class HealthStatusRepositoryTest {
 
+    @Autowired
     private HealthStatusRepository repository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     private HealthStatus sampleStatus;
+    private User patientUser;
 
     @BeforeEach
     void setUp() {
-        repository = new com.carebridge.backend.healthStatus.HealthStatusRepository();
+        patientUser = new User();
+        patientUser.setEmail("patient@test.com");
+        patientUser.setFirstName("Patient");
+        patientUser.setLastName("Test");
+        patientUser.setPassword("password");
+        patientUser.setRole(Role.PATIENT);
+        patientUser = userRepository.saveAndFlush(patientUser);
+
         sampleStatus = new HealthStatus(
             null,
             5,
-            null,
+            Mood.Calm,
             List.of("Headache", "Nausea"),
             "Patient feels a bit dizzy",
             LocalDate.now(),
-            UUID.randomUUID()
+            patientUser
         );
     }
 
@@ -61,7 +81,7 @@ class HealthStatusRepositoryTest {
     @Test
     void findAll_ShouldReturnCorrectPage() {
         for (int i = 0; i < 5; i++) {
-            repository.save(new HealthStatus(null, i, null, List.of("Cough"), "Notes", LocalDate.now(), UUID.randomUUID()));
+            repository.save(new HealthStatus(null, i, Mood.Calm, List.of("Cough"), "Notes", LocalDate.now(), patientUser));
         }
 
         Page<HealthStatus> page = repository.findAll(PageRequest.of(0, 2));

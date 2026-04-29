@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CareNotesController.class)
+@WebMvcTest(com.carebridge.backend.carenotes.CareNotesController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ContextConfiguration(classes = {CareNotesController.class})
 class CareNotesControllerTest {
@@ -57,6 +57,8 @@ class CareNotesControllerTest {
     private UUID patientId;
     private UUID nurseId;
     private LocalDateTime timestamp;
+    private com.carebridge.backend.user.model.User patientUser;
+    private com.carebridge.backend.user.model.User nurseUser;
 
     @BeforeEach
     void setUp() {
@@ -67,7 +69,17 @@ class CareNotesControllerTest {
 
         objectMapper.registerModule(new JavaTimeModule());
 
-        sampleNotes = new CareNotes(notesId, "Vitals are stable.", patientId, nurseId, timestamp);
+        patientUser = new com.carebridge.backend.user.model.User();
+        patientUser.setId(patientId);
+        patientUser.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patientUser.setEmail("patient@test.com");
+
+        nurseUser = new com.carebridge.backend.user.model.User();
+        nurseUser.setId(nurseId);
+        nurseUser.setRole(com.carebridge.backend.user.Role.NURSE);
+        nurseUser.setEmail("nurse@test.com");
+
+        sampleNotes = new CareNotes(notesId, "Vitals are stable.", patientUser, nurseUser, timestamp);
         sampleNotesDto = new CareNotesDto(notesId, "Vitals are stable.", patientId, nurseId, timestamp);
     }
 
@@ -101,7 +113,9 @@ class CareNotesControllerTest {
 
     @Test
     void create_ShouldReturnCreatedDto() throws Exception {
-        when(mapper.toEntity(any(CareNotesDto.class))).thenReturn(sampleNotes);
+        when(userService.getUserById(patientId)).thenReturn(patientUser);
+        when(userService.getUserById(nurseId)).thenReturn(nurseUser);
+        when(mapper.toEntity(any(CareNotesDto.class), any(com.carebridge.backend.user.model.User.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(sampleNotes);
         when(service.create(any(CareNotes.class))).thenReturn(sampleNotes);
         when(mapper.toDto(any(CareNotes.class))).thenReturn(sampleNotesDto);
 
@@ -114,7 +128,9 @@ class CareNotesControllerTest {
 
     @Test
     void update_ShouldReturnUpdatedDto() throws Exception {
-        when(mapper.toEntity(any(CareNotesDto.class))).thenReturn(sampleNotes);
+        when(userService.getUserById(patientId)).thenReturn(patientUser);
+        when(userService.getUserById(nurseId)).thenReturn(nurseUser);
+        when(mapper.toEntity(any(CareNotesDto.class), any(com.carebridge.backend.user.model.User.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(sampleNotes);
         when(service.update(eq(notesId), any(CareNotes.class))).thenReturn(sampleNotes);
         when(mapper.toDto(any(CareNotes.class))).thenReturn(sampleNotesDto);
 

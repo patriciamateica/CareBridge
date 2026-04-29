@@ -12,16 +12,22 @@ class SecurityModelRecordsTest {
     void cookieProperties_ShouldReadAndWriteAllFields() {
         CookieProperties properties = new CookieProperties();
 
+        assertFalse(properties.isHttpOnly());
+        assertTrue(properties.isSecure());
+        assertEquals("Strict", properties.getSameSite());
+        assertEquals("/", properties.getPath());
+        assertEquals(24, properties.getMaxAgeHours());
+
         properties.setHttpOnly(true);
         properties.setSecure(false);
         properties.setSameSite("Lax");
-        properties.setPath("/graphql");
+        properties.setPath("/api");
         properties.setMaxAgeHours(12);
 
         assertTrue(properties.isHttpOnly());
         assertFalse(properties.isSecure());
         assertEquals("Lax", properties.getSameSite());
-        assertEquals("/graphql", properties.getPath());
+        assertEquals("/api", properties.getPath());
         assertEquals(12, properties.getMaxAgeHours());
     }
 

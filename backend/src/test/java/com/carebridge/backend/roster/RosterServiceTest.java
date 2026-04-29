@@ -2,6 +2,7 @@ package com.carebridge.backend.roster;
 
 import com.carebridge.backend.roster.model.Roster;
 import com.carebridge.backend.roster.model.RosterStatus;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,14 +32,25 @@ class RosterServiceTest {
 
     private Roster sampleRoster;
     private UUID rosterId;
+    private User patientUser;
+    private User nurseUser;
 
     @BeforeEach
     void setUp() {
         rosterId = UUID.randomUUID();
+
+        patientUser = new User();
+        patientUser.setId(UUID.randomUUID());
+        patientUser.setEmail("patient@test.com");
+
+        nurseUser = new User();
+        nurseUser.setId(UUID.randomUUID());
+        nurseUser.setEmail("nurse@test.com");
+
         sampleRoster = new Roster(
             rosterId,
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            patientUser,
+            nurseUser,
             RosterStatus.PENDING
         );
     }
@@ -84,13 +96,25 @@ class RosterServiceTest {
 
     @Test
     void update_ShouldUpdateAndReturnRosterWhenExists() {
-        Roster updatedData = new Roster(null, UUID.randomUUID(), UUID.randomUUID(), RosterStatus.ACTIVE);
+        User another_patient = new User();
+        another_patient.setId(UUID.randomUUID());
+        another_patient.setEmail("patient2@test.com");
+
+        User another_nurse = new User();
+        another_nurse.setId(UUID.randomUUID());
+        another_nurse.setEmail("nurse2@test.com");
+
+        Roster updatedData = new Roster(null, another_patient, another_nurse, RosterStatus.ACTIVE);
         when(rosterRepository.findById(rosterId)).thenReturn(Optional.of(sampleRoster));
+        when(rosterRepository.save(any(Roster.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
 
         Roster result = rosterService.update(rosterId, updatedData);
 
         assertEquals(RosterStatus.ACTIVE, result.getStatus());
         assertEquals(rosterId, result.getId());
+        assertEquals(another_patient, result.getPatient());
+        assertEquals(another_nurse, result.getNurse());
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.carebridge.backend.roster;
 import com.carebridge.backend.roster.model.Roster;
 import com.carebridge.backend.roster.model.RosterDto;
 import com.carebridge.backend.roster.model.RosterStatus;
+import com.carebridge.backend.user.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,6 +56,8 @@ class RosterControllerTest {
     private UUID rosterId;
     private UUID patientId;
     private UUID nurseId;
+    private User patient;
+    private User nurse;
 
     @BeforeEach
     void setUp() {
@@ -62,7 +65,15 @@ class RosterControllerTest {
         patientId = UUID.randomUUID();
         nurseId = UUID.randomUUID();
 
-        sampleRoster = new Roster(rosterId, patientId, nurseId, RosterStatus.PENDING);
+        patient = new User();
+        patient.setId(patientId);
+        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+
+        nurse = new User();
+        nurse.setId(nurseId);
+        nurse.setRole(com.carebridge.backend.user.Role.NURSE);
+
+        sampleRoster = new Roster(rosterId, patient, nurse, RosterStatus.PENDING);
         sampleRosterDto = new RosterDto(rosterId, patientId, nurseId, RosterStatus.PENDING);
     }
 
@@ -96,7 +107,9 @@ class RosterControllerTest {
 
     @Test
     void create_ShouldReturnCreatedDto() throws Exception {
-        when(mapper.toEntity(any(RosterDto.class))).thenReturn(sampleRoster);
+        when(userService.getUserById(patientId)).thenReturn(patient);
+        when(userService.getUserById(nurseId)).thenReturn(nurse);
+        when(mapper.toEntity(any(RosterDto.class), any(User.class), any(User.class))).thenReturn(sampleRoster);
         when(rosterService.create(any(Roster.class))).thenReturn(sampleRoster);
         when(mapper.toDto(any(Roster.class))).thenReturn(sampleRosterDto);
 
@@ -109,7 +122,9 @@ class RosterControllerTest {
 
     @Test
     void update_ShouldReturnUpdatedDto() throws Exception {
-        when(mapper.toEntity(any(RosterDto.class))).thenReturn(sampleRoster);
+        when(userService.getUserById(patientId)).thenReturn(patient);
+        when(userService.getUserById(nurseId)).thenReturn(nurse);
+        when(mapper.toEntity(any(RosterDto.class), any(User.class), any(User.class))).thenReturn(sampleRoster);
         when(rosterService.update(eq(rosterId), any(Roster.class))).thenReturn(sampleRoster);
         when(mapper.toDto(any(Roster.class))).thenReturn(sampleRosterDto);
 

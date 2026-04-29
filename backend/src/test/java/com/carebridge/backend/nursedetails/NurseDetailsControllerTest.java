@@ -2,6 +2,7 @@ package com.carebridge.backend.nursedetails;
 
 import com.carebridge.backend.nursedetails.model.NurseDetails;
 import com.carebridge.backend.nursedetails.model.NurseDetailsDto;
+import com.carebridge.backend.user.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +60,11 @@ class NurseDetailsControllerTest {
         detailsId = UUID.randomUUID();
         userId = UUID.randomUUID();
 
-        sampleDetails = new NurseDetails(detailsId, userId, "Oncology", "City Hospital", 8, true);
+        User testUser = new User();
+        testUser.setId(userId);
+        testUser.setEmail("nurse@test.com");
+
+        sampleDetails = new NurseDetails(testUser, "Oncology", "City Hospital", 8, true);
         sampleDetailsDto = new NurseDetailsDto(detailsId, userId, "Oncology", "City Hospital", 8, true);
     }
 
@@ -93,7 +98,13 @@ class NurseDetailsControllerTest {
 
     @Test
     void create_ShouldReturnCreatedDto() throws Exception {
-        when(mapper.toEntity(any(NurseDetailsDto.class))).thenReturn(sampleDetails);
+        User testUser = new User();
+        testUser.setId(userId);
+        testUser.setEmail("nurse@test.com");
+        testUser.setRole(com.carebridge.backend.user.Role.NURSE);
+
+        when(userService.getUserById(userId)).thenReturn(testUser);
+        when(mapper.toEntity(any(NurseDetailsDto.class), any(User.class))).thenReturn(sampleDetails);
         when(service.create(any(NurseDetails.class))).thenReturn(sampleDetails);
         when(mapper.toDto(any(NurseDetails.class))).thenReturn(sampleDetailsDto);
 
@@ -106,7 +117,13 @@ class NurseDetailsControllerTest {
 
     @Test
     void update_ShouldReturnUpdatedDto() throws Exception {
-        when(mapper.toEntity(any(NurseDetailsDto.class))).thenReturn(sampleDetails);
+        User testUser = new User();
+        testUser.setId(userId);
+        testUser.setEmail("nurse@test.com");
+        testUser.setRole(com.carebridge.backend.user.Role.NURSE);
+
+        when(userService.getUserById(userId)).thenReturn(testUser);
+        when(mapper.toEntity(any(NurseDetailsDto.class), any(User.class))).thenReturn(sampleDetails);
         when(service.update(eq(detailsId), any(NurseDetails.class))).thenReturn(sampleDetails);
         when(mapper.toDto(any(NurseDetails.class))).thenReturn(sampleDetailsDto);
 

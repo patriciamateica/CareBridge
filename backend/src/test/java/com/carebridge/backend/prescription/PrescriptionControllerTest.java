@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(PrescriptionController.class)
+@WebMvcTest(com.carebridge.backend.prescription.PrescriptionController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ContextConfiguration(classes = {PrescriptionController.class})
 class PrescriptionControllerTest {
@@ -61,7 +61,17 @@ class PrescriptionControllerTest {
         patientId = UUID.randomUUID();
         nurseId = UUID.randomUUID();
 
-        samplePrescription = new Prescription(prescriptionId, "Lisinopril", "10mg", "Once daily", patientId, nurseId);
+        com.carebridge.backend.user.model.User patient = new com.carebridge.backend.user.model.User();
+        patient.setId(patientId);
+        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.setEmail("patient@test.com");
+
+        com.carebridge.backend.user.model.User nurse = new com.carebridge.backend.user.model.User();
+        nurse.setId(nurseId);
+        nurse.setRole(com.carebridge.backend.user.Role.NURSE);
+        nurse.setEmail("nurse@test.com");
+
+        samplePrescription = new Prescription(prescriptionId, "Lisinopril", "10mg", "Once daily", patient, nurse);
         samplePrescriptionDto = new PrescriptionDto(prescriptionId, "Lisinopril", "10mg", "Once daily", patientId, nurseId);
     }
 
@@ -96,7 +106,9 @@ class PrescriptionControllerTest {
 
     @Test
     void create_ShouldReturnCreatedDto() throws Exception {
-        when(mapper.toEntity(any(PrescriptionDto.class))).thenReturn(samplePrescription);
+        when(userService.getUserById(patientId)).thenReturn((com.carebridge.backend.user.model.User) samplePrescription.getPatient());
+        when(userService.getUserById(nurseId)).thenReturn((com.carebridge.backend.user.model.User) samplePrescription.getNurse());
+        when(mapper.toEntity(any(PrescriptionDto.class), any(com.carebridge.backend.user.model.User.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(samplePrescription);
         when(prescriptionService.create(any(Prescription.class))).thenReturn(samplePrescription);
         when(mapper.toDto(any(Prescription.class))).thenReturn(samplePrescriptionDto);
 
@@ -109,7 +121,9 @@ class PrescriptionControllerTest {
 
     @Test
     void update_ShouldReturnUpdatedDto() throws Exception {
-        when(mapper.toEntity(any(PrescriptionDto.class))).thenReturn(samplePrescription);
+        when(userService.getUserById(patientId)).thenReturn((com.carebridge.backend.user.model.User) samplePrescription.getPatient());
+        when(userService.getUserById(nurseId)).thenReturn((com.carebridge.backend.user.model.User) samplePrescription.getNurse());
+        when(mapper.toEntity(any(PrescriptionDto.class), any(com.carebridge.backend.user.model.User.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(samplePrescription);
         when(prescriptionService.update(eq(prescriptionId), any(Prescription.class))).thenReturn(samplePrescription);
         when(mapper.toDto(any(Prescription.class))).thenReturn(samplePrescriptionDto);
 

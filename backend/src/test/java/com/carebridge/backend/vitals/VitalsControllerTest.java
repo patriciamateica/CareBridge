@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 
-@WebMvcTest(VitalsController.class)
+@WebMvcTest(com.carebridge.backend.vitals.VitalsController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ContextConfiguration(classes = {VitalsController.class})
 class VitalsControllerTest {
@@ -60,7 +60,13 @@ class VitalsControllerTest {
     void setUp() {
         vitalsId = UUID.randomUUID();
         patientId = UUID.randomUUID();
-        sampleVitals = new Vitals(vitalsId, LocalDate.now(), 80, 120, 16, 98, patientId);
+
+        com.carebridge.backend.user.model.User patient = new com.carebridge.backend.user.model.User();
+        patient.setId(patientId);
+        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.setEmail("patient@test.com");
+
+        sampleVitals = new Vitals(vitalsId, LocalDate.now(), 80, 120, 16, 98, patient);
         sampleVitalsDto = new VitalsDto(vitalsId, LocalDate.now(), 80, 120, 16, 98, patientId);
     }
 
@@ -94,7 +100,8 @@ class VitalsControllerTest {
 
     @Test
     void create_ShouldReturnCreatedVitalsDto() throws Exception {
-        when(vitalsMapper.toEntity(any(VitalsDto.class))).thenReturn(sampleVitals);
+        when(userService.getUserById(patientId)).thenReturn(sampleVitals.getPatient());
+        when(vitalsMapper.toEntity(any(VitalsDto.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(sampleVitals);
         when(vitalsService.create(any(Vitals.class))).thenReturn(sampleVitals);
         when(vitalsMapper.toDto(any(Vitals.class))).thenReturn(sampleVitalsDto);
 
@@ -107,7 +114,8 @@ class VitalsControllerTest {
 
     @Test
     void update_ShouldReturnUpdatedVitalsDto() throws Exception {
-        when(vitalsMapper.toEntity(any(VitalsDto.class))).thenReturn(sampleVitals);
+        when(userService.getUserById(patientId)).thenReturn(sampleVitals.getPatient());
+        when(vitalsMapper.toEntity(any(VitalsDto.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(sampleVitals);
         when(vitalsService.update(eq(vitalsId), any(Vitals.class))).thenReturn(sampleVitals);
         when(vitalsMapper.toDto(any(Vitals.class))).thenReturn(sampleVitalsDto);
 

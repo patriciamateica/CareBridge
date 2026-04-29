@@ -2,6 +2,7 @@ package com.carebridge.backend.patientDetails;
 
 import com.carebridge.backend.patientDetails.model.PatientDetails;
 import com.carebridge.backend.patientDetails.model.PatientDetailsDto;
+import com.carebridge.backend.user.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(PatientDetailsController.class)
+@WebMvcTest(com.carebridge.backend.patientDetails.PatientDetailsController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ContextConfiguration(classes = {PatientDetailsController.class})
 class PatientDetailsControllerTest {
@@ -59,7 +60,11 @@ class PatientDetailsControllerTest {
         detailsId = UUID.randomUUID();
         userId = UUID.randomUUID();
 
-        sampleDetails = new PatientDetails(detailsId, userId, "Asthma", List.of("Spirometry"), List.of(), "Brother: 0755123123", UUID.randomUUID());
+        User testUser = new User();
+        testUser.setId(userId);
+        testUser.setEmail("patient@test.com");
+
+        sampleDetails = new PatientDetails(testUser, "Asthma", List.of("Spirometry"), List.of(), "Brother: 0755123123", UUID.randomUUID());
         sampleDetailsDto = new PatientDetailsDto(detailsId, userId, "Asthma", List.of("Spirometry"), List.of(), "Brother: 0755123123", UUID.randomUUID());
     }
 
@@ -93,7 +98,13 @@ class PatientDetailsControllerTest {
 
     @Test
     void create_ShouldReturnCreatedDto() throws Exception {
-        when(mapper.toEntity(any(PatientDetailsDto.class))).thenReturn(sampleDetails);
+        User testUser = new User();
+        testUser.setId(userId);
+        testUser.setEmail("patient@test.com");
+        testUser.setRole(com.carebridge.backend.user.Role.PATIENT);
+
+        when(userService.getUserById(userId)).thenReturn(testUser);
+        when(mapper.toEntity(any(PatientDetailsDto.class), any(User.class))).thenReturn(sampleDetails);
         when(service.create(any(PatientDetails.class))).thenReturn(sampleDetails);
         when(mapper.toDto(any(PatientDetails.class))).thenReturn(sampleDetailsDto);
 
@@ -106,7 +117,13 @@ class PatientDetailsControllerTest {
 
     @Test
     void update_ShouldReturnUpdatedDto() throws Exception {
-        when(mapper.toEntity(any(PatientDetailsDto.class))).thenReturn(sampleDetails);
+        User testUser = new User();
+        testUser.setId(userId);
+        testUser.setEmail("patient@test.com");
+        testUser.setRole(com.carebridge.backend.user.Role.PATIENT);
+
+        when(userService.getUserById(userId)).thenReturn(testUser);
+        when(mapper.toEntity(any(PatientDetailsDto.class), any(User.class))).thenReturn(sampleDetails);
         when(service.update(eq(detailsId), any(PatientDetails.class))).thenReturn(sampleDetails);
         when(mapper.toDto(any(PatientDetails.class))).thenReturn(sampleDetailsDto);
 

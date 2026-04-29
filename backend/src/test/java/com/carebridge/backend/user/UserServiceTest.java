@@ -48,7 +48,7 @@ class UserServiceTest {
 
     @Test
     void register_ShouldSaveAndReturnUser() {
-        when(userRepository.findByEmail(validRequest.email())).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase(validRequest.email())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(anyString())).thenReturn("hashedPass");
         when(userRepository.save(any(User.class))).thenReturn(sampleUser);
 
@@ -61,7 +61,7 @@ class UserServiceTest {
 
     @Test
     void register_ShouldThrowExceptionIfEmailExists() {
-        when(userRepository.findByEmail(validRequest.email())).thenReturn(Optional.of(sampleUser));
+        when(userRepository.findByEmailIgnoreCase(validRequest.email())).thenReturn(Optional.of(sampleUser));
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
             () -> userService.register(validRequest));

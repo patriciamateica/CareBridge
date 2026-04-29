@@ -51,7 +51,7 @@ class AuthServiceTest {
 
     @Test
     void register_ShouldSaveAndReturnUser() {
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
 
         User user = new User();
@@ -68,7 +68,7 @@ class AuthServiceTest {
 
     @Test
     void register_ShouldThrowException_WhenEmailExists() {
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(new User()));
+        when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.of(new User()));
 
         assertThrows(IllegalArgumentException.class, () -> authService.register(registerRequest));
         verify(userRepository, never()).save(any(User.class));

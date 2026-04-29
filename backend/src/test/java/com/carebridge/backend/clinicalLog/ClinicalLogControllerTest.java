@@ -63,8 +63,18 @@ class ClinicalLogControllerTest {
 
         objectMapper.registerModule(new JavaTimeModule());
 
-        sampleLog = new ClinicalLog(logId, "Chest X-Ray", DocumentType.X_RAY, LocalDate.now(), "url", UUID.randomUUID(), UUID.randomUUID(), LocalDateTime.now(), ClinicalLogStatus.ACTIVE);
-        sampleLogDto = new ClinicalLogDto(logId, "Chest X-Ray", DocumentType.X_RAY, LocalDate.now(), "url", UUID.randomUUID(), UUID.randomUUID(), LocalDateTime.now(), ClinicalLogStatus.ACTIVE);
+        com.carebridge.backend.user.model.User patient = new com.carebridge.backend.user.model.User();
+        patient.setId(UUID.randomUUID());
+        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.setEmail("patient@test.com");
+
+        com.carebridge.backend.user.model.User nurse = new com.carebridge.backend.user.model.User();
+        nurse.setId(UUID.randomUUID());
+        nurse.setRole(com.carebridge.backend.user.Role.NURSE);
+        nurse.setEmail("nurse@test.com");
+
+        sampleLog = new ClinicalLog(logId, "Chest X-Ray", DocumentType.X_RAY, LocalDate.now(), "url", patient, nurse, LocalDateTime.now(), ClinicalLogStatus.ACTIVE);
+        sampleLogDto = new ClinicalLogDto(logId, "Chest X-Ray", DocumentType.X_RAY, LocalDate.now(), "url", patient.getId(), nurse.getId(), LocalDateTime.now(), ClinicalLogStatus.ACTIVE);
     }
 
     @Test
@@ -97,7 +107,9 @@ class ClinicalLogControllerTest {
 
     @Test
     void create_ShouldReturnCreatedDto() throws Exception {
-        when(mapper.toEntity(any(ClinicalLogDto.class))).thenReturn(sampleLog);
+        when(userService.getUserById(sampleLogDto.patientId())).thenReturn(sampleLog.getPatient());
+        when(userService.getUserById(sampleLogDto.nurseId())).thenReturn(sampleLog.getNurse());
+        when(mapper.toEntity(any(ClinicalLogDto.class), any(com.carebridge.backend.user.model.User.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(sampleLog);
         when(service.create(any(ClinicalLog.class))).thenReturn(sampleLog);
         when(mapper.toDto(any(ClinicalLog.class))).thenReturn(sampleLogDto);
 

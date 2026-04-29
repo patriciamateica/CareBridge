@@ -1,8 +1,14 @@
 package com.carebridge.backend.nursedetails;
 
 import com.carebridge.backend.nursedetails.model.NurseDetails;
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -11,27 +17,46 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 class NurseDetailsRepositoryTest {
 
+    @Autowired
     private NurseDetailsRepository repository;
-    private NurseDetails sampleDetails;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
+
+    private User nurseUser;
 
     @BeforeEach
     void setUp() {
-        repository = new NurseDetailsRepository();
-        sampleDetails = new NurseDetails(
-            null,
-            UUID.randomUUID(),
-            "Pediatrics",
-            "Central Hospital",
-            5,
-            true
-        );
+        nurseUser = new User();
+        nurseUser.setEmail("nurse@test.com");
+        nurseUser.setFirstName("Test");
+        nurseUser.setLastName("Nurse");
+        nurseUser.setPassword("password");
+        nurseUser.setRole(Role.NURSE);
+        nurseUser = userRepository.saveAndFlush(nurseUser);
+    }
+
+    private NurseDetails createNurseDetails(User user, String spec, String hospital, int years, boolean hire) {
+        NurseDetails details = new NurseDetails();
+        details.setUser(user);
+        details.setSpecialization(spec);
+        details.setHospitalAffiliation(hospital);
+        details.setExperienceYears(years);
+        details.setHireMeStatus(hire);
+        entityManager.persist(details);
+        entityManager.flush();
+        return details;
     }
 
     @Test
     void save_ShouldGenerateIdAndStoreNurseDetails() {
-        NurseDetails saved = repository.save(sampleDetails);
+        NurseDetails saved = createNurseDetails(nurseUser, "Pediatrics", "Central Hospital", 5, true);
 
         assertNotNull(saved.getId());
         assertEquals("Pediatrics", saved.getSpecialization());
@@ -40,7 +65,7 @@ class NurseDetailsRepositoryTest {
 
     @Test
     void findById_ShouldReturnNurseDetailsWhenExists() {
-        NurseDetails saved = repository.save(sampleDetails);
+        NurseDetails saved = createNurseDetails(nurseUser, "Pediatrics", "Central Hospital", 5, true);
 
         Optional<NurseDetails> found = repository.findById(saved.getId());
 
@@ -58,7 +83,14 @@ class NurseDetailsRepositoryTest {
     @Test
     void findAll_ShouldReturnCorrectPage() {
         for (int i = 0; i < 5; i++) {
-            repository.save(new NurseDetails(null, UUID.randomUUID(), "Spec " + i, "Hospital", 2, false));
+            User user = new User();
+            user.setEmail("nurse" + i + "@test.com");
+            user.setFirstName("Nurse");
+            user.setLastName("Test" + i);
+            user.setPassword("password");
+            user.setRole(Role.NURSE);
+            user = userRepository.saveAndFlush(user);
+            createNurseDetails(user, "Spec " + i, "Hospital", 2, false);
         }
 
         Page<NurseDetails> page = repository.findAll(PageRequest.of(0, 2));
@@ -70,7 +102,7 @@ class NurseDetailsRepositoryTest {
 
     @Test
     void findAll_ShouldReturnEmptyIfOutOfBounds() {
-        repository.save(sampleDetails);
+        createNurseDetails(nurseUser, "Pediatrics", "Central Hospital", 5, true);
 
         Page<NurseDetails> page = repository.findAll(PageRequest.of(5, 10));
 
@@ -79,9 +111,11 @@ class NurseDetailsRepositoryTest {
 
     @Test
     void deleteById_ShouldRemoveNurseDetails() {
-        NurseDetails saved = repository.save(sampleDetails);
+        NurseDetails saved = createNurseDetails(nurseUser, "Pediatrics", "Central Hospital", 5, true);
 
         repository.deleteById(saved.getId());
+        entityManager.flush();
+        entityManager.clear();
 
         assertTrue(repository.findById(saved.getId()).isEmpty());
     }

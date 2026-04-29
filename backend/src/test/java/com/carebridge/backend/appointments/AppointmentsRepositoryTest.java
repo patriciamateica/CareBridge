@@ -2,8 +2,13 @@ package com.carebridge.backend.appointments;
 
 import com.carebridge.backend.appointments.model.Appointments;
 import com.carebridge.backend.appointments.model.AppointmentsStatus;
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -13,18 +18,41 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 class AppointmentsRepositoryTest {
 
-    private com.carebridge.backend.appointments.AppointmentsRepository repository;
+    @Autowired
+    private AppointmentsRepository repository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     private Appointments sampleAppointment;
+    private User patientUser;
+    private User nurseUser;
 
     @BeforeEach
     void setUp() {
-        repository = new AppointmentsRepository();
+        patientUser = new User();
+        patientUser.setEmail("patient@test.com");
+        patientUser.setFirstName("Patient");
+        patientUser.setLastName("Test");
+        patientUser.setPassword("password");
+        patientUser.setRole(Role.PATIENT);
+        patientUser = userRepository.saveAndFlush(patientUser);
+
+        nurseUser = new User();
+        nurseUser.setEmail("nurse@test.com");
+        nurseUser.setFirstName("Nurse");
+        nurseUser.setLastName("Test");
+        nurseUser.setPassword("password");
+        nurseUser.setRole(Role.NURSE);
+        nurseUser = userRepository.saveAndFlush(nurseUser);
+
         sampleAppointment = new Appointments(
             null,
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            patientUser,
+            nurseUser,
             "Routine checkup",
             LocalDateTime.now().plusDays(1),
             AppointmentsStatus.REQUESTED
@@ -60,7 +88,7 @@ class AppointmentsRepositoryTest {
     @Test
     void findAll_ShouldReturnCorrectPage() {
         for (int i = 0; i < 5; i++) {
-            repository.save(new Appointments(null, UUID.randomUUID(), UUID.randomUUID(),
+            repository.save(new Appointments(null, patientUser, nurseUser,
                 "Desc " + i, LocalDateTime.now(), AppointmentsStatus.VALIDATED));
         }
 

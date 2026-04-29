@@ -2,6 +2,8 @@ package com.carebridge.backend.appointments;
 
 import com.carebridge.backend.appointments.model.Appointments;
 import com.carebridge.backend.appointments.model.AppointmentsStatus;
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,14 +34,27 @@ class AppointmentsServiceTest {
 
     private Appointments sampleAppointment;
     private UUID appointmentId;
+    private User patientUser;
+    private User nurseUser;
 
     @BeforeEach
     void setUp() {
         appointmentId = UUID.randomUUID();
+
+        patientUser = new User();
+        patientUser.setId(UUID.randomUUID());
+        patientUser.setRole(Role.PATIENT);
+        patientUser.setEmail("patient@test.com");
+
+        nurseUser = new User();
+        nurseUser.setId(UUID.randomUUID());
+        nurseUser.setRole(Role.NURSE);
+        nurseUser.setEmail("nurse@test.com");
+
         sampleAppointment = new Appointments(
             appointmentId,
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            patientUser,
+            nurseUser,
             "Blood test",
             LocalDateTime.now().plusDays(2),
             AppointmentsStatus.REQUESTED
@@ -87,9 +102,18 @@ class AppointmentsServiceTest {
 
     @Test
     void update_ShouldUpdateAndReturnAppointmentsWhenExists() {
-        Appointments updatedData = new Appointments(null, UUID.randomUUID(), UUID.randomUUID(),
+        User otherPatient = new User();
+        otherPatient.setId(UUID.randomUUID());
+        otherPatient.setRole(Role.PATIENT);
+
+        User otherNurse = new User();
+        otherNurse.setId(UUID.randomUUID());
+        otherNurse.setRole(Role.NURSE);
+
+        Appointments updatedData = new Appointments(null, otherPatient, otherNurse,
             "Updated desc", LocalDateTime.now(), AppointmentsStatus.VALIDATED);
         when(appointmentsRepository.findById(appointmentId)).thenReturn(Optional.of(sampleAppointment));
+        when(appointmentsRepository.save(any(Appointments.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Appointments result = appointmentsService.update(appointmentId, updatedData);
 

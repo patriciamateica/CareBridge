@@ -42,7 +42,7 @@ class HealthStatusControllerTest {
     private HealthStatusService healthStatusService;
 
     @MockitoBean
-    private HealthStatusMapper mapper;
+    private com.carebridge.backend.healthStatus.HealthStatusMapper mapper;
 
     @MockitoBean
     private com.carebridge.backend.user.UserService userService;
@@ -60,7 +60,12 @@ class HealthStatusControllerTest {
         statusId = UUID.randomUUID();
         patientId = UUID.randomUUID();
 
-        sampleStatus = new HealthStatus(statusId, 2, null, List.of("Cough"), "Mild symptoms", LocalDate.now(), patientId);
+        com.carebridge.backend.user.model.User patient = new com.carebridge.backend.user.model.User();
+        patient.setId(patientId);
+        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.setEmail("patient@test.com");
+
+        sampleStatus = new HealthStatus(statusId, 2, null, List.of("Cough"), "Mild symptoms", LocalDate.now(), patient);
         sampleStatusDto = new HealthStatusDto(statusId, 2, null, List.of("Cough"), "Mild symptoms", LocalDate.now(), patientId);
     }
 
@@ -95,7 +100,8 @@ class HealthStatusControllerTest {
 
     @Test
     void create_ShouldReturnCreatedDto() throws Exception {
-        when(mapper.toEntity(any(HealthStatusDto.class))).thenReturn(sampleStatus);
+        when(userService.getUserById(patientId)).thenReturn(sampleStatus.getPatient());
+        when(mapper.toEntity(any(HealthStatusDto.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(sampleStatus);
         when(healthStatusService.create(any(HealthStatus.class))).thenReturn(sampleStatus);
         when(mapper.toDto(any(HealthStatus.class))).thenReturn(sampleStatusDto);
 
@@ -108,7 +114,8 @@ class HealthStatusControllerTest {
 
     @Test
     void update_ShouldReturnUpdatedDto() throws Exception {
-        when(mapper.toEntity(any(HealthStatusDto.class))).thenReturn(sampleStatus);
+        when(userService.getUserById(patientId)).thenReturn(sampleStatus.getPatient());
+        when(mapper.toEntity(any(HealthStatusDto.class), any(com.carebridge.backend.user.model.User.class))).thenReturn(sampleStatus);
         when(healthStatusService.update(eq(statusId), any(HealthStatus.class))).thenReturn(sampleStatus);
         when(mapper.toDto(any(HealthStatus.class))).thenReturn(sampleStatusDto);
 

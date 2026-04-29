@@ -3,8 +3,12 @@ package com.carebridge.backend.task;
 import com.carebridge.backend.task.model.Task;
 import com.carebridge.backend.task.model.TaskStatus;
 import com.carebridge.backend.task.model.TaskType;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -14,23 +18,37 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 class TaskRepositoryTest {
 
+    @Autowired
     private TaskRepository repository;
+
+    @Autowired
+    private TestEntityManager entityManager;
+
     private Task sampleTask;
+    private User patient;
 
     @BeforeEach
     void setUp() {
-        repository = new TaskRepository();
+        patient = new User();
+        patient.setFirstName("John");
+        patient.setLastName("Doe");
+        patient.setEmail("john.doe@example.com");
+        patient.setPassword("password");
+        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        entityManager.persist(patient);
+
         sampleTask = new Task(
-            null,
-            "Grocery Run for Tuesday",
-            "Need milk, eggs, and soft bread.",
-            TaskType.ERRAND,
-            LocalDateTime.now().plusDays(1),
-            TaskStatus.OPEN,
-            UUID.randomUUID(),
-            null // claimerId is null because it's open
+                null,
+                "Grocery Run for Tuesday",
+                "Need milk, eggs, and soft bread.",
+                TaskType.ERRAND,
+                LocalDateTime.now().plusDays(1),
+                TaskStatus.OPEN,
+                patient,
+                null
         );
     }
 
@@ -63,7 +81,14 @@ class TaskRepositoryTest {
     @Test
     void findAll_ShouldReturnCorrectPage() {
         for (int i = 0; i < 5; i++) {
-            repository.save(new Task(null, "Task " + i, "Desc", TaskType.MEAL_PREP, LocalDateTime.now(), TaskStatus.OPEN, UUID.randomUUID(), null));
+            User user = new User();
+            user.setFirstName("User" + i);
+            user.setLastName("Test" + i);
+            user.setEmail("user" + i + "@example.com");
+            user.setPassword("password");
+            user.setRole(com.carebridge.backend.user.Role.PATIENT);
+            entityManager.persist(user);
+            repository.save(new Task(null, "Task " + i, "Desc", TaskType.MEAL_PREP, LocalDateTime.now(), TaskStatus.OPEN, user, null));
         }
 
         Page<Task> page = repository.findAll(PageRequest.of(0, 2));

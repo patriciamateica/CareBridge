@@ -1,6 +1,8 @@
 package com.carebridge.backend.carenotes;
 
 import com.carebridge.backend.carenotes.model.CareNotes;
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,15 +36,27 @@ class CareNotesServiceTest {
 
     private CareNotes sampleNotes;
     private UUID notesId;
+    private User patientUser;
+    private User nurseUser;
 
     @BeforeEach
     void setUp() {
         notesId = UUID.randomUUID();
+        patientUser = new User();
+        patientUser.setId(UUID.randomUUID());
+        patientUser.setRole(Role.PATIENT);
+        patientUser.setEmail("patient@test.com");
+
+        nurseUser = new User();
+        nurseUser.setId(UUID.randomUUID());
+        nurseUser.setRole(Role.NURSE);
+        nurseUser.setEmail("nurse@test.com");
+
         sampleNotes = new CareNotes(
             notesId,
             "Patient had trouble sleeping.",
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            patientUser,
+            nurseUser,
             LocalDateTime.now()
         );
     }
@@ -88,7 +102,7 @@ class CareNotesServiceTest {
 
     @Test
     void update_ShouldUpdateAndReturnCareNotesWhenExists() {
-        CareNotes updatedData = new CareNotes(null, "Patient slept well after medication.", UUID.randomUUID(), UUID.randomUUID(), LocalDateTime.now());
+        CareNotes updatedData = new CareNotes(null, "Patient slept well after medication.", patientUser, nurseUser, LocalDateTime.now());
         when(repository.findById(notesId)).thenReturn(Optional.of(sampleNotes));
         when(repository.save(any(CareNotes.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -111,31 +125,31 @@ class CareNotesServiceTest {
 
     @Test
     void findByPatientId_Pageable_ShouldDelegateToRepository() {
-        UUID patientId = UUID.randomUUID();
+        UUID patientId = patientUser.getId();
         PageRequest pageRequest = PageRequest.of(0, 5);
         Page<CareNotes> mockPage = new PageImpl<>(List.of(sampleNotes));
-        when(repository.findByPatientId(patientId, pageRequest)).thenReturn(mockPage);
+        when(repository.findByPatientIdOrderByTimestampDesc(patientId, pageRequest)).thenReturn(mockPage);
 
         Page<CareNotes> result = service.findByPatientId(patientId, pageRequest);
 
         assertEquals(1, result.getTotalElements());
-        verify(repository, times(1)).findByPatientId(patientId, pageRequest);
+        verify(repository, times(1)).findByPatientIdOrderByTimestampDesc(patientId, pageRequest);
     }
 
     @Test
     void getByPatientId_ShouldDelegateToRepository() {
-        UUID patientId = UUID.randomUUID();
-        when(repository.findByPatientId(patientId)).thenReturn(List.of(sampleNotes));
+        UUID patientId = patientUser.getId();
+        when(repository.findByPatientIdOrderByTimestampDesc(patientId)).thenReturn(List.of(sampleNotes));
 
         List<CareNotes> result = service.getByPatientId(patientId);
 
         assertEquals(1, result.size());
-        verify(repository, times(1)).findByPatientId(patientId);
+        verify(repository, times(1)).findByPatientIdOrderByTimestampDesc(patientId);
     }
 
     @Test
     void countByPatientId_ShouldDelegateToRepository() {
-        UUID patientId = UUID.randomUUID();
+        UUID patientId = patientUser.getId();
         when(repository.countByPatientId(patientId)).thenReturn(3L);
 
         long count = service.countByPatientId(patientId);
@@ -163,32 +177,41 @@ class CareNotesServiceTest {
 
     @Test
     void getNoteStream_ShouldEmitOnlyMatchingPatientNotes() throws InterruptedException {
-        UUID watchedPatientId = UUID.randomUUID();
-        UUID otherPatientId = UUID.randomUUID();
-        UUID nurseId = UUID.randomUUID();
+        User watchedPatient = new User();
+        watchedPatient.setId(UUID.randomUUID());
+        watchedPatient.setRole(Role.PATIENT);
+
+        User otherPatient = new User();
+        otherPatient.setId(UUID.randomUUID());
+        otherPatient.setRole(Role.PATIENT);
+
         when(repository.save(any(CareNotes.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         List<CareNotes> received = new ArrayList<>();
         CountDownLatch latch = new CountDownLatch(1);
-        service.getNoteStream(watchedPatientId)
+        service.getNoteStream(watchedPatient.getId())
             .subscribe(note -> {
                 received.add(note);
                 latch.countDown();
             });
 
-        service.create(new CareNotes(UUID.randomUUID(), "other", otherPatientId, nurseId, LocalDateTime.now()));
-        CareNotes matching = new CareNotes(UUID.randomUUID(), "matching", watchedPatientId, nurseId, LocalDateTime.now());
+        service.create(new CareNotes(UUID.randomUUID(), "other", otherPatient, nurseUser, LocalDateTime.now()));
+        CareNotes matching = new CareNotes(UUID.randomUUID(), "matching", watchedPatient, nurseUser, LocalDateTime.now());
         service.create(matching);
 
         assertTrue(latch.await(2, TimeUnit.SECONDS));
         assertEquals(1, received.size());
-        assertEquals(matching.getPatientId(), received.getFirst().getPatientId());
+        assertEquals(matching.getPatient().getId(), received.getFirst().getPatient().getId());
     }
 
     @Test
     void getNoteStream_WhenPatientIdNull_ShouldEmitAnyPatientNote() throws InterruptedException {
         UUID patientId = UUID.randomUUID();
-        UUID nurseId = UUID.randomUUID();
+
+        User testPatient = new User();
+        testPatient.setId(patientId);
+        testPatient.setRole(Role.PATIENT);
+
         when(repository.save(any(CareNotes.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         List<CareNotes> received = new ArrayList<>();
@@ -199,7 +222,7 @@ class CareNotesServiceTest {
                 latch.countDown();
             });
 
-        CareNotes created = new CareNotes(UUID.randomUUID(), "broadcast", patientId, nurseId, LocalDateTime.now());
+        CareNotes created = new CareNotes(UUID.randomUUID(), "broadcast", testPatient, nurseUser, LocalDateTime.now());
         service.create(created);
 
         assertTrue(latch.await(2, TimeUnit.SECONDS));

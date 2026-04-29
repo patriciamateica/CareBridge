@@ -3,8 +3,13 @@ package com.carebridge.backend.clinicalLog;
 import com.carebridge.backend.clinicalLog.model.ClinicalLog;
 import com.carebridge.backend.clinicalLog.model.ClinicalLogStatus;
 import com.carebridge.backend.clinicalLog.model.DocumentType;
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -15,22 +20,45 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 class ClinicalLogRepositoryTest {
 
+    @Autowired
     private ClinicalLogRepository repository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     private ClinicalLog sampleLog;
+    private User patientUser;
+    private User nurseUser;
 
     @BeforeEach
     void setUp() {
-        repository = new ClinicalLogRepository();
+        patientUser = new User();
+        patientUser.setEmail("patient@test.com");
+        patientUser.setFirstName("Patient");
+        patientUser.setLastName("Test");
+        patientUser.setPassword("password");
+        patientUser.setRole(Role.PATIENT);
+        patientUser = userRepository.saveAndFlush(patientUser);
+
+        nurseUser = new User();
+        nurseUser.setEmail("nurse@test.com");
+        nurseUser.setFirstName("Nurse");
+        nurseUser.setLastName("Test");
+        nurseUser.setPassword("password");
+        nurseUser.setRole(Role.NURSE);
+        nurseUser = userRepository.saveAndFlush(nurseUser);
+
         sampleLog = new ClinicalLog(
             null,
             "Annual Blood Work",
             DocumentType.BLOOD_WORK,
             LocalDate.now(),
             "https://storage.carebridge.com/blood_work_123.pdf",
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            patientUser,
+            nurseUser,
             LocalDateTime.now(),
             ClinicalLogStatus.ACTIVE
         );
@@ -65,7 +93,7 @@ class ClinicalLogRepositoryTest {
     @Test
     void findAll_ShouldReturnCorrectPage() {
         for (int i = 0; i < 5; i++) {
-            repository.save(new ClinicalLog(null, "Log " + i, DocumentType.MRI, LocalDate.now(), "url", UUID.randomUUID(), UUID.randomUUID(), LocalDateTime.now(), ClinicalLogStatus.ACTIVE));
+            repository.save(new ClinicalLog(null, "Log " + i, DocumentType.MRI, LocalDate.now(), "url", patientUser, nurseUser, LocalDateTime.now(), ClinicalLogStatus.ACTIVE));
         }
 
         Page<ClinicalLog> page = repository.findAll(PageRequest.of(0, 2));

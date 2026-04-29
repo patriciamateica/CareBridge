@@ -1,6 +1,8 @@
 package com.carebridge.backend.nursedetails;
 
 import com.carebridge.backend.nursedetails.model.NurseDetails;
+import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,13 +32,17 @@ class NurseDetailsServiceTest {
 
     private NurseDetails sampleDetails;
     private UUID detailsId;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
         detailsId = UUID.randomUUID();
+        testUser = new User();
+        testUser.setId(detailsId);
+        testUser.setEmail("nurse@test.com");
+
         sampleDetails = new NurseDetails(
-            detailsId,
-            UUID.randomUUID(),
+            testUser,
             "Cardiology",
             "Heart Care Center",
             10,
@@ -85,8 +91,13 @@ class NurseDetailsServiceTest {
 
     @Test
     void update_ShouldUpdateAndReturnNurseDetailsWhenExists() {
-        NurseDetails updatedData = new NurseDetails(null, UUID.randomUUID(), "Neurology", "Brain Institute", 12, false);
+        User updatedUser = new User();
+        updatedUser.setId(detailsId);
+        updatedUser.setEmail("nurse@test.com");
+
+        NurseDetails updatedData = new NurseDetails(updatedUser, "Neurology", "Brain Institute", 12, false);
         when(repository.findById(detailsId)).thenReturn(Optional.of(sampleDetails));
+        when(repository.save(any(NurseDetails.class))).thenAnswer(i -> i.getArguments()[0]);
 
         NurseDetails result = service.update(detailsId, updatedData);
 

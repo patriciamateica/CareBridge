@@ -2,8 +2,12 @@ package com.carebridge.backend.roster;
 
 import com.carebridge.backend.roster.model.Roster;
 import com.carebridge.backend.roster.model.RosterStatus;
+import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
@@ -12,18 +16,41 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DataJpaTest
 class RosterRepositoryTest {
 
+    @Autowired
     private RosterRepository repository;
+
+    @Autowired
+    private UserRepository userRepository;
+
     private Roster sampleRoster;
+    private User patientUser;
+    private User nurseUser;
 
     @BeforeEach
     void setUp() {
-        repository = new RosterRepository();
+        patientUser = new User();
+        patientUser.setEmail("patient@test.com");
+        patientUser.setFirstName("Patient");
+        patientUser.setLastName("Test");
+        patientUser.setPassword("password");
+        patientUser.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patientUser = userRepository.saveAndFlush(patientUser);
+
+        nurseUser = new User();
+        nurseUser.setEmail("nurse@test.com");
+        nurseUser.setFirstName("Nurse");
+        nurseUser.setLastName("Test");
+        nurseUser.setPassword("password");
+        nurseUser.setRole(com.carebridge.backend.user.Role.NURSE);
+        nurseUser = userRepository.saveAndFlush(nurseUser);
+
         sampleRoster = new Roster(
             null,
-            UUID.randomUUID(),
-            UUID.randomUUID(),
+            patientUser,
+            nurseUser,
             RosterStatus.PENDING
         );
     }
@@ -57,7 +84,15 @@ class RosterRepositoryTest {
     @Test
     void findAll_ShouldReturnCorrectPage() {
         for (int i = 0; i < 5; i++) {
-            repository.save(new Roster(null, UUID.randomUUID(), UUID.randomUUID(), RosterStatus.ACTIVE));
+            User patient = new User();
+            patient.setEmail("patient" + i + "@test.com");
+            patient.setFirstName("Patient");
+            patient.setLastName("Test" + i);
+            patient.setPassword("password");
+            patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+            patient = userRepository.saveAndFlush(patient);
+
+            repository.save(new Roster(null, patient, nurseUser, RosterStatus.ACTIVE));
         }
 
         Page<Roster> page = repository.findAll(PageRequest.of(0, 2));

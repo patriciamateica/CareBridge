@@ -1,6 +1,7 @@
 package com.carebridge.backend.patientDetails;
 
 import com.carebridge.backend.patientDetails.model.PatientDetails;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,20 +24,24 @@ import static org.mockito.Mockito.*;
 class PatientDetailsServiceTest {
 
     @Mock
-    private PatientDetailsRepository repository;
+    private com.carebridge.backend.patientDetails.PatientDetailsRepository repository;
 
     @InjectMocks
     private PatientDetailsService service;
 
     private PatientDetails sampleDetails;
     private UUID detailsId;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
         detailsId = UUID.randomUUID();
+        testUser = new User();
+        testUser.setId(detailsId);
+        testUser.setEmail("patient@test.com");
+
         sampleDetails = new PatientDetails(
-            detailsId,
-            UUID.randomUUID(),
+            testUser,
             "Diabetes Type 2",
             List.of("A1C Test"),
             List.of(),
@@ -86,8 +91,13 @@ class PatientDetailsServiceTest {
 
     @Test
     void update_ShouldUpdateAndReturnPatientDetailsWhenExists() {
-        PatientDetails updatedData = new PatientDetails(null, UUID.randomUUID(), "Updated Diagnosis", List.of("MRI"), List.of("/scans/mri.png"), "Updated Contact", UUID.randomUUID());
+        User updatedUser = new User();
+        updatedUser.setId(detailsId);
+        updatedUser.setEmail("patient@test.com");
+
+        PatientDetails updatedData = new PatientDetails(updatedUser, "Updated Diagnosis", List.of("MRI"), List.of("/scans/mri.png"), "Updated Contact", UUID.randomUUID());
         when(repository.findById(detailsId)).thenReturn(Optional.of(sampleDetails));
+        when(repository.save(any(PatientDetails.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         PatientDetails result = service.update(detailsId, updatedData);
 

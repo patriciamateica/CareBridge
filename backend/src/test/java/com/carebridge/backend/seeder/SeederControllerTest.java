@@ -21,21 +21,21 @@ class SeederControllerTest {
     private SeederController controller;
 
     @Test
-    void seedRepository_ShouldReturnMessageAndCallService() {
-        ResponseEntity<String> response = controller.seedRepository();
+    void seedDatabase_ShouldReturnMessageAndCallService() {
+        ResponseEntity<String> response = controller.seedDatabase();
 
         assertEquals(200, response.getStatusCode().value());
-        assertEquals("Repository successfully seeded with 15 fully assigned patients.", response.getBody());
-        verify(seederService, times(1)).seedRepository();
+        assertEquals("Repository successfully seeded with initial data.", response.getBody());
+        verify(seederService, times(1)).seedDatabase();
     }
 
     @Test
-    void unseedRepository_ShouldReturnMessageAndCallService() {
-        ResponseEntity<String> response = controller.unseedRepository();
+    void unseedDatabase_ShouldReturnMessageAndCallService() {
+        ResponseEntity<String> response = controller.unseedDatabase();
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals("All data has been cleared from the repository.", response.getBody());
-        verify(seederService, times(1)).unseedRepository();
+        verify(seederService, times(1)).clearDatabase();
     }
 
     @Test
@@ -56,4 +56,3 @@ class SeederControllerTest {
         verify(seederService, times(1)).stopLoop();
     }
 }
-

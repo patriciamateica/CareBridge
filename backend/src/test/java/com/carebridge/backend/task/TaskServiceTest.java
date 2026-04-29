@@ -3,6 +3,7 @@ package com.carebridge.backend.task;
 import com.carebridge.backend.task.model.Task;
 import com.carebridge.backend.task.model.TaskStatus;
 import com.carebridge.backend.task.model.TaskType;
+import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,10 +34,14 @@ class TaskServiceTest {
 
     private Task sampleTask;
     private UUID taskId;
+    private User patient;
 
     @BeforeEach
     void setUp() {
         taskId = UUID.randomUUID();
+        patient = new User();
+        patient.setId(UUID.randomUUID());
+
         sampleTask = new Task(
             taskId,
             "Drive to Clinic",
@@ -44,7 +49,7 @@ class TaskServiceTest {
             TaskType.TRANSPORTATION,
             LocalDateTime.now(),
             TaskStatus.OPEN,
-            UUID.randomUUID(),
+            patient,
             null
         );
     }
@@ -80,7 +85,9 @@ class TaskServiceTest {
 
     @Test
     void create_ShouldSetStatusOpenIfNullAndSave() {
-        Task newTask = new Task(null, "Cook Dinner", "Pasta", TaskType.MEAL_PREP, LocalDateTime.now(), null, UUID.randomUUID(), null);
+        User newPatient = new User();
+        newPatient.setId(UUID.randomUUID());
+        Task newTask = new Task(null, "Cook Dinner", "Pasta", TaskType.MEAL_PREP, LocalDateTime.now(), null, newPatient, null);
         when(repository.save(newTask)).thenReturn(newTask);
 
         Task result = service.create(newTask);
@@ -91,8 +98,9 @@ class TaskServiceTest {
 
     @Test
     void update_ShouldUpdateAndReturnTaskWhenExists() {
-        UUID newClaimerId = UUID.randomUUID();
-        Task updatedData = new Task(null, "Drive to Clinic", "Needs a ride at 2 PM.", TaskType.TRANSPORTATION, LocalDateTime.now(), TaskStatus.CLAIMED, sampleTask.getPatientId(), newClaimerId);
+        User newClaimer = new User();
+        newClaimer.setId(UUID.randomUUID());
+        Task updatedData = new Task(null, "Drive to Clinic", "Needs a ride at 2 PM.", TaskType.TRANSPORTATION, LocalDateTime.now(), TaskStatus.CLAIMED, patient, newClaimer);
         when(repository.findById(taskId)).thenReturn(Optional.of(sampleTask));
         when(repository.save(any(Task.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -100,7 +108,7 @@ class TaskServiceTest {
 
         assertNotNull(result);
         assertEquals(TaskStatus.CLAIMED, result.getStatus());
-        assertEquals(newClaimerId, result.getClaimerId());
+        assertEquals(newClaimer, result.getClaimer());
         assertEquals(taskId, result.getId());
     }
 

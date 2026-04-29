@@ -43,7 +43,7 @@ class SecurityBeansConfigTest {
 
         assertTrue(source instanceof UrlBasedCorsConfigurationSource);
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/graphql");
+        request.setRequestURI("/**");
         CorsConfiguration cors = source.getCorsConfiguration(request);
 
         assertNotNull(cors);
@@ -52,6 +52,9 @@ class SecurityBeansConfigTest {
         assertEquals("*", cors.getAllowedOriginPatterns().get(0));
         assertTrue(cors.getAllowedMethods().contains("GET"));
         assertTrue(cors.getAllowedMethods().contains("POST"));
+        assertTrue(cors.getAllowedMethods().contains("PUT"));
+        assertTrue(cors.getAllowedMethods().contains("DELETE"));
+        assertTrue(cors.getAllowedMethods().contains("OPTIONS"));
     }
 
     @Test
