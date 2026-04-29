@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Repository
 public interface CareNotesRepository extends JpaRepository<CareNotes, UUID> {
-    Page<CareNotes> findByPatientId(UUID patientId, Pageable pageable);
+    Page<CareNotes> findByPatientIdOrderByTimestampDesc(UUID patientId, Pageable pageable);
     List<CareNotes> findByPatientIdOrderByTimestampDesc(UUID patientId);
     long countByPatientId(UUID patientId);
 }

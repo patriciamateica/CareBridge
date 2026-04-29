@@ -36,12 +36,12 @@ public class TaskController {
     @PostMapping
     public TaskDto create(@RequestBody TaskDto dto) {
         User patient = userService.getUserById(dto.patientId());
-        User claimer = userService.getUserById(dto.claimerId());
+        User claimer = dto.claimerId() != null ? userService.getUserById(dto.claimerId()) : null;
 
         if (patient.getRole() != Role.PATIENT) {
             throw new IllegalArgumentException("The provided patient ID does not belong to a patient.");
         }
-        if (claimer.getRole() != Role.NURSE || claimer.getRole() != Role.FAMILY) {
+        if (claimer != null && claimer.getRole() != Role.NURSE && claimer.getRole() != Role.FAMILY) {
             throw new IllegalArgumentException("The provided claimer ID does not belong to a nurse or family.");
         }
         return mapper.toDto(service.create(mapper.toEntity(dto, claimer, patient)));
@@ -50,12 +50,12 @@ public class TaskController {
     @PutMapping("/{id}")
     public TaskDto update(@PathVariable UUID id, @RequestBody TaskDto dto) {
         User patient = userService.getUserById(dto.patientId());
-        User claimer = userService.getUserById(dto.claimerId());
+        User claimer = dto.claimerId() != null ? userService.getUserById(dto.claimerId()) : null;
 
         if (patient.getRole() != Role.PATIENT) {
             throw new IllegalArgumentException("The provided patient ID does not belong to a patient.");
         }
-        if (claimer.getRole() != Role.NURSE || claimer.getRole() != Role.FAMILY) {
+        if (claimer != null && claimer.getRole() != Role.NURSE && claimer.getRole() != Role.FAMILY) {
             throw new IllegalArgumentException("The provided claimer ID does not belong to a nurse or family.");
         }
         return mapper.toDto(service.update(id, mapper.toEntity(dto, claimer, patient)));

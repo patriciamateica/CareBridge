@@ -28,7 +28,7 @@ public class CareNotesService {
 
     @Transactional(readOnly = true)
     public Page<CareNotes> findByPatientId(UUID patientId, Pageable pageable) {
-        return repository.findByPatientId(patientId, pageable);
+        return repository.findByPatientIdOrderByTimestampDesc(patientId, pageable);
     }
 
     @Transactional(readOnly = true)
