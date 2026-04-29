@@ -1,6 +1,9 @@
 package com.carebridge.backend.healthStatus;
 
 import com.carebridge.backend.healthStatus.model.HealthStatusDto;
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.UserService;
+import com.carebridge.backend.user.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
@@ -12,10 +15,14 @@ import java.util.UUID;
 public class HealthStatusController {
     private final HealthStatusService healthStatusService;
     private final HealthStatusMapper mapper;
+    private final UserService userService;
 
-    public HealthStatusController(HealthStatusService healthStatusService, HealthStatusMapper mapper) {
+    public HealthStatusController(HealthStatusService healthStatusService, HealthStatusMapper mapper,
+                                  UserService userService
+    ) {
         this.healthStatusService = healthStatusService;
         this.mapper = mapper;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -30,12 +37,20 @@ public class HealthStatusController {
 
     @PostMapping
     public HealthStatusDto create(@RequestBody HealthStatusDto dto) {
-        return mapper.toDto(healthStatusService.create(mapper.toEntity(dto)));
+        User patient = userService.getUserById(dto.patientId());
+        if (patient.getRole() != Role.PATIENT) {
+            throw new IllegalArgumentException("The provided patient ID does not belong to a patient.");
+        }
+        return mapper.toDto(healthStatusService.create(mapper.toEntity(dto, patient)));
     }
 
     @PutMapping("/{id}")
     public HealthStatusDto update(@PathVariable UUID id, @RequestBody HealthStatusDto dto) {
-        return mapper.toDto(healthStatusService.update(id, mapper.toEntity(dto)));
+        User patient = userService.getUserById(dto.patientId());
+        if (patient.getRole() != Role.PATIENT) {
+            throw new IllegalArgumentException("The provided patient ID does not belong to a patient.");
+        }
+        return mapper.toDto(healthStatusService.update(id, mapper.toEntity(dto, patient)));
     }
 
     @DeleteMapping("/{id}")

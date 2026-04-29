@@ -2,6 +2,7 @@ package com.carebridge.backend.healthStatus;
 
 import com.carebridge.backend.healthStatus.model.HealthStatus;
 import com.carebridge.backend.healthStatus.model.HealthStatusDto;
+import com.carebridge.backend.user.model.User;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,11 +16,11 @@ public class HealthStatusMapper {
             status.getSymptoms(),
             status.getNotes(),
             status.getTimestamp(),
-            status.getPatientId()
+            status.getPatient().getId()
         );
     }
 
-    public HealthStatus toEntity(HealthStatusDto dto) {
+    public HealthStatus toEntity(HealthStatusDto dto, User patient) {
         return new HealthStatus(
             dto.id(),
             dto.painScale(),
@@ -27,7 +28,7 @@ public class HealthStatusMapper {
             dto.symptoms(),
             dto.notes(),
             dto.timestamp(),
-            dto.patientId()
+            patient
         );
     }
 }

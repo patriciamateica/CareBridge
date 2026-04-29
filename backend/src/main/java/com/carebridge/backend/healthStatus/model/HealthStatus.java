@@ -1,26 +1,52 @@
 package com.carebridge.backend.healthStatus.model;
 
+import com.carebridge.backend.user.model.User;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+@Entity
+@Table(name = "healthstatus")
 public class HealthStatus {
-    private UUID id;
-    private int painScale;
-    private Mood mood;
-    private List<String> symptoms;
-    private String notes;
-    private LocalDate timestamp;
-    private UUID patientId;
 
-    public HealthStatus(UUID id, int painScale, Mood mood, List<String> symptoms, String notes, LocalDate timestamp, UUID patientId) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @Column(name = "pain_scale", nullable = false)
+    private int painScale;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Mood mood;
+
+    @ElementCollection
+    @CollectionTable(name = "health_status_symptoms", joinColumns = @JoinColumn(name = "health_status_id"))
+    @Column(name = "symptom")
+    private List<String> symptoms;
+
+    @Column(length = 1000)
+    private String notes;
+
+    @Column(nullable = false)
+    private LocalDate timestamp;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private User patient;
+
+    public HealthStatus() {
+    }
+
+    public HealthStatus(UUID id, int painScale, Mood mood, List<String> symptoms, String notes, LocalDate timestamp, User patient) {
         this.id = id;
         this.painScale = painScale;
         this.mood = mood;
         this.symptoms = symptoms;
         this.notes = notes;
         this.timestamp = timestamp;
-        this.patientId = patientId;
+        this.patient = patient;
     }
 
     public UUID getId() {
@@ -71,11 +97,11 @@ public class HealthStatus {
         this.timestamp = timestamp;
     }
 
-    public UUID getPatientId() {
-        return patientId;
+    public User getPatient() {
+        return patient;
     }
 
-    public void setPatientId(UUID patientId) {
-        this.patientId = patientId;
+    public void setPatient(User patient) {
+        this.patient = patient;
     }
 }
