@@ -1,25 +1,46 @@
 package com.carebridge.backend.nursedetails.model;
 
+import com.carebridge.backend.user.model.User;
+import jakarta.persistence.*;
 import java.util.UUID;
 
+@Entity
+@Table(name = "nurse_details")
 public class NurseDetails {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private UUID userId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @MapsId
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(nullable = false)
     private String specialization;
+
+    @Column(name = "hospital_affiliation")
     private String hospitalAffiliation;
+
+    @Column(name = "experience_years", nullable = false)
     private int experienceYears;
+
+    @Column(name = "hire_me_status", nullable = false)
     private boolean hireMeStatus;
 
+    public NurseDetails() {
+    }
+
     public NurseDetails(
-        UUID id,
-        UUID userId,
+        User user,
         String specialization,
         String hospitalAffiliation,
         int experienceYears,
         boolean hireMeStatus
     ) {
-        this.id = id;
-        this.userId = userId;
+        this.id = user.getId();
+        this.user = user;
         this.specialization = specialization;
         this.hospitalAffiliation = hospitalAffiliation;
         this.experienceYears = experienceYears;
@@ -34,12 +55,12 @@ public class NurseDetails {
         this.id = id;
     }
 
-    public UUID getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(UUID userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getSpecialization() {
