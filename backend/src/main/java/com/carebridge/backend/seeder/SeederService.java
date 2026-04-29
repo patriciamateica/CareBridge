@@ -1,6 +1,5 @@
 package com.carebridge.backend.seeder;
 
-import jakarta.annotation.PostConstruct;
 import com.carebridge.backend.appointments.AppointmentsService;
 import com.carebridge.backend.appointments.model.Appointments;
 import com.carebridge.backend.appointments.model.AppointmentsStatus;
@@ -13,52 +12,42 @@ import com.carebridge.backend.clinicalLog.model.DocumentType;
 import com.carebridge.backend.healthStatus.HealthStatusService;
 import com.carebridge.backend.healthStatus.model.HealthStatus;
 import com.carebridge.backend.healthStatus.model.Mood;
+import com.carebridge.backend.nursedetails.NurseDetailsService;
+import com.carebridge.backend.nursedetails.model.NurseDetails;
+import com.carebridge.backend.patientDetails.PatientDetailsService;
+import com.carebridge.backend.patientDetails.model.PatientDetails;
+import com.carebridge.backend.prescription.PrescriptionService;
+import com.carebridge.backend.prescription.model.Prescription;
+import com.carebridge.backend.roster.RosterService;
+import com.carebridge.backend.roster.model.Roster;
+import com.carebridge.backend.roster.model.RosterStatus;
 import com.carebridge.backend.task.TaskService;
 import com.carebridge.backend.task.model.Task;
 import com.carebridge.backend.task.model.TaskStatus;
 import com.carebridge.backend.task.model.TaskType;
-import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.UserService;
 import com.carebridge.backend.user.UserStatus;
 import com.carebridge.backend.user.model.User;
 import com.carebridge.backend.vitals.VitalsService;
 import com.carebridge.backend.vitals.model.Vitals;
-
-import com.carebridge.backend.prescription.PrescriptionService;
-import com.carebridge.backend.prescription.model.Prescription;
-import com.carebridge.backend.patientDetails.PatientDetailsService;
-import com.carebridge.backend.patientDetails.model.PatientDetails;
-import com.carebridge.backend.nursedetails.NurseDetailsService;
-import com.carebridge.backend.nursedetails.model.NurseDetails;
-import com.carebridge.backend.roster.RosterService;
-import com.carebridge.backend.roster.model.Roster;
-import com.carebridge.backend.roster.model.RosterStatus;
-
 import com.github.javafaker.Faker;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@Transactional
 public class SeederService {
-
-    private static final int MIN_NURSE_USERS = 6;
-    private static final int PATIENTS_PER_SEED = 15;
-    private static final int PRESCRIPTIONS_PER_PATIENT = 2;
-    private static final String ADMIN_EMAIL = "admin@carebridge.local";
-    private static final String ADMIN_PASSWORD = "Admin123!";
-    private static final String ADMIN_FIRST_NAME = "System";
-    private static final String ADMIN_LAST_NAME = "Admin";
 
     private final AppointmentsService appointmentsService;
     private final CareNotesService careNotesService;
@@ -67,22 +56,24 @@ public class SeederService {
     private final TaskService taskService;
     private final VitalsService vitalsService;
     private final UserRepository userRepository;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final PrescriptionService prescriptionService;
     private final PatientDetailsService patientDetailsService;
     private final NurseDetailsService nurseDetailsService;
     private final RosterService rosterService;
 
-    private final Faker faker = new Faker();
-    private final Random random = new Random();
+    private final Faker faker = new Faker(new Random(123));
+    private final Random random = new Random(123);
 
     private ScheduledExecutorService scheduler;
+    private static final int LIVE_UPDATE_INTERVAL_SECONDS = 5;
 
     public SeederService(
         AppointmentsService appointmentsService, CareNotesService careNotesService,
         ClinicalLogService clinicalLogService, HealthStatusService healthStatusService,
         TaskService taskService, VitalsService vitalsService, UserRepository userRepository,
-        PasswordEncoder passwordEncoder,
+        UserService userService, PasswordEncoder passwordEncoder,
         PrescriptionService prescriptionService, PatientDetailsService patientDetailsService,
         NurseDetailsService nurseDetailsService, RosterService rosterService
     ) {
@@ -93,6 +84,7 @@ public class SeederService {
         this.taskService = taskService;
         this.vitalsService = vitalsService;
         this.userRepository = userRepository;
+        this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.prescriptionService = prescriptionService;
         this.patientDetailsService = patientDetailsService;
@@ -100,28 +92,26 @@ public class SeederService {
         this.rosterService = rosterService;
     }
 
-    @PostConstruct
-    public void initAdminUser() {
-        ensureAdminUser();
-    }
-
-
-    public void seedRepository() {
-        ensureNursesExist();
-
-        List<User> nurseUsers = getNurseUsers();
-        if (nurseUsers.isEmpty()) {
+    public void seedDatabase() {
+        if (!userRepository.findAll().isEmpty()) {
             return;
         }
 
-        for (int i = 0; i < PATIENTS_PER_SEED; i++) {
-            User patient = userRepository.save(buildUser(Role.PATIENT));
-            User assignedNurse = nurseUsers.get(i % nurseUsers.size());
-            createPatientBundle(patient.getId(), assignedNurse.getId());
-        }
+        seedUsersTable();
+        seedNurseDetailsTable();
+        seedPatientDetailsTable();
+        seedRosterTable();
+
+        seedVitalsTable();
+        seedTasksTable();
+        seedAppointmentsTable();
+        seedHealthStatusTable();
+        seedClinicalLogTable();
+        seedCareNotesTable();
+        seedPrescriptionsTable();
     }
 
-    public void unseedRepository() {
+    public void clearDatabase() {
         appointmentsService.deleteAll();
         careNotesService.deleteAll();
         clinicalLogService.deleteAll();
@@ -129,19 +119,192 @@ public class SeederService {
         taskService.deleteAll();
         vitalsService.deleteAll();
         prescriptionService.deleteAll();
+        rosterService.deleteAll();
         patientDetailsService.deleteAll();
         nurseDetailsService.deleteAll();
-        rosterService.deleteAll();
         userRepository.deleteAll();
-        ensureAdminUser();
     }
+
+    private void seedUsersTable() {
+        createUser("admin@carebridge.local", Role.ADMIN);
+        createUser("nurse@carebridge.local", Role.NURSE);
+        createUser("family@carebridge.local", Role.FAMILY);
+
+        for (int i = 1; i <= 10; i++) {
+            createUser("patient" + i + "@carebridge.local", Role.PATIENT);
+        }
+    }
+
+    private void seedNurseDetailsTable() {
+        User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
+
+        NurseDetails details = new NurseDetails();
+        details.setUser(nurse); // Updated to pass User object
+        details.setSpecialization("Geriatrics");
+        details.setHospitalAffiliation(faker.medical().hospitalName());
+        details.setExperienceYears(random.nextInt(5, 20));
+        details.setHireMeStatus(true);
+        nurseDetailsService.create(details);
+    }
+
+    private void seedPatientDetailsTable() {
+        List<User> patients = getByRole(Role.PATIENT);
+        User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
+
+        for (User patient : patients) {
+            PatientDetails pd = new PatientDetails();
+            pd.setUser(patient);
+            pd.setPrimaryDiagnosis(faker.medical().diseaseName());
+            pd.setDiagnostics(List.of(faker.medical().symptoms()));
+            pd.setScans(List.of("scan_baseline.png"));
+            pd.setEmergencyContact(faker.phoneNumber().phoneNumber());
+            pd.setAssignedNurseId(nurse.getId());
+
+            patientDetailsService.create(pd);
+        }
+    }
+
+    private void seedRosterTable() {
+        List<User> patients = getByRole(Role.PATIENT);
+        User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
+
+        for (User patient : patients) {
+            Roster roster = new Roster();
+            roster.setPatient(patient);
+            roster.setNurse(nurse);
+            roster.setStatus(RosterStatus.ACTIVE);
+            rosterService.create(roster);
+        }
+    }
+
+    private void seedVitalsTable() {
+        List<User> patients = getByRole(Role.PATIENT);
+        for (int i = 0; i < 15; i++) {
+            User patient = patients.get(random.nextInt(patients.size()));
+            vitalsService.create(new Vitals(null,
+                LocalDate.now().minusDays(random.nextInt(10)),
+                random.nextInt(60, 100),
+                random.nextInt(90, 140),
+                random.nextInt(12, 20),
+                random.nextInt(95, 100),
+                patient));
+        }
+    }
+
+    private void seedTasksTable() {
+        List<User> patients = getByRole(Role.PATIENT);
+        for (int i = 0; i < 15; i++) {
+            User patient = patients.get(random.nextInt(patients.size()));
+            taskService.create(new Task(null,
+                truncate(faker.lorem().sentence(3)),
+                truncate(faker.lorem().paragraph()),
+                TaskType.values()[random.nextInt(TaskType.values().length)],
+                LocalDateTime.now().plusHours(random.nextInt(1, 48)),
+                TaskStatus.OPEN,
+                patient,
+                null));
+        }
+    }
+
+    private void seedAppointmentsTable() {
+        List<User> patients = getByRole(Role.PATIENT);
+        User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
+        for (int i = 0; i < 10; i++) {
+            User patient = patients.get(random.nextInt(patients.size()));
+            appointmentsService.create(new Appointments(null,
+                patient,
+                nurse,
+                truncate(faker.lorem().sentence()),
+                LocalDateTime.now().plusDays(random.nextInt(1, 14)),
+                AppointmentsStatus.REQUESTED));
+        }
+    }
+
+    private void seedHealthStatusTable() {
+        List<User> patients = getByRole(Role.PATIENT);
+        for (int i = 0; i < 15; i++) {
+            User patient = patients.get(random.nextInt(patients.size()));
+            healthStatusService.create(new HealthStatus(null,
+                random.nextInt(0, 10),
+                Mood.values()[random.nextInt(Mood.values().length)],
+                List.of("Fatigue", "Headache"),
+                truncate(faker.lorem().sentence()),
+                LocalDate.now().minusDays(random.nextInt(5)),
+                patient));
+        }
+    }
+
+    private void seedClinicalLogTable() {
+        List<User> patients = getByRole(Role.PATIENT);
+        User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
+        for (int i = 0; i < 10; i++) {
+            User patient = patients.get(random.nextInt(patients.size()));
+            clinicalLogService.create(new ClinicalLog(null,
+                truncate(faker.medical().medicineName() + " Report"),
+                DocumentType.values()[random.nextInt(DocumentType.values().length)],
+                LocalDate.now(),
+                "https://example.com/log",
+                patient,
+                nurse,
+                LocalDateTime.now(),
+                ClinicalLogStatus.ACTIVE));
+        }
+    }
+
+    private void seedCareNotesTable() {
+        List<User> patients = getByRole(Role.PATIENT);
+        User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
+        for (int i = 0; i < 15; i++) {
+            User patient = patients.get(random.nextInt(patients.size()));
+            careNotesService.create(new CareNotes(null,
+                truncate(faker.lorem().paragraph()),
+                patient,
+                nurse,
+                LocalDateTime.now().minusHours(random.nextInt(48))));
+        }
+    }
+
+    private void seedPrescriptionsTable() {
+        List<User> patients = getByRole(Role.PATIENT);
+        User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
+        for (int i = 0; i < 15; i++) {
+            User patient = patients.get(random.nextInt(patients.size()));
+            prescriptionService.create(new Prescription(null, truncate(faker.medical().medicineName()),
+                random.nextInt(100, 500) + "mg", "Twice daily", patient, nurse));
+        }
+    }
+
+    private void createUser(String email, Role role) {
+        User user = new User();
+        user.setFirstName(faker.name().firstName());
+        user.setLastName(faker.name().lastName());
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode("Password123!"));
+        user.setPhoneNumber(Integer.parseInt(faker.number().digits(9)));
+        user.setRole(role);
+        user.setUserStatus(UserStatus.ACTIVE);
+
+        User savedUser = userRepository.save(user);
+        userService.emitRegistration(savedUser);
+    }
+
+    private List<User> getByRole(Role role) {
+        return userRepository.findAll().stream().filter(u -> u.getRole() == role).toList();
+    }
+
+    private String truncate(String text) {
+        if (text == null) return null;
+        return text.length() > 250 ? text.substring(0, 245) + "..." : text;
+    }
+
 
     public synchronized void startLoop() {
         if (scheduler != null && !scheduler.isShutdown()) {
             return;
         }
         scheduler = Executors.newSingleThreadScheduledExecutor();
-        scheduler.scheduleAtFixedRate(this::generateLiveUpdateForExistingPatient, 0, 5, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::runLiveUpdateTick, LIVE_UPDATE_INTERVAL_SECONDS,
+            LIVE_UPDATE_INTERVAL_SECONDS, TimeUnit.SECONDS);
     }
 
     public synchronized void stopLoop() {
@@ -151,101 +314,33 @@ public class SeederService {
         }
     }
 
-    private void ensureNursesExist() {
-        List<User> users = userRepository.findAll();
-        long nurseCount = users.stream().filter(user -> user.getRole() == Role.NURSE).count();
+    private void runLiveUpdateTick() {
+        List<User> patients = getByRole(Role.PATIENT);
+        User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElse(null);
 
-        for (int i = (int) nurseCount; i < MIN_NURSE_USERS; i++) {
-            userRepository.save(buildUser(Role.NURSE));
-        }
-    }
+        if (patients.isEmpty() || nurse == null) return;
 
-    private void generateLiveUpdateForExistingPatient() {
-        List<Roster> rosters = rosterService.findAll(PageRequest.of(0, 1000)).getContent();
-        if (rosters.isEmpty()) {
-            seedRepository();
-            rosters = rosterService.findAll(PageRequest.of(0, 1000)).getContent();
-        }
+        User randomPatient = patients.get(random.nextInt(patients.size()));
 
-        if (rosters.isEmpty()) {
-            return;
-        }
-
-        Roster target = rosters.get(random.nextInt(rosters.size()));
-        UUID patientId = target.getPatientId();
-        UUID nurseId = target.getNurseId();
-
-        vitalsService.create(new Vitals(UUID.randomUUID(), LocalDate.now(), random.nextInt(60, 100), random.nextInt(90, 140), random.nextInt(12, 20), random.nextInt(95, 100), patientId));
-        taskService.create(new Task(UUID.randomUUID(), faker.lorem().sentence(3), faker.lorem().paragraph(), TaskType.values()[random.nextInt(TaskType.values().length)], LocalDateTime.now().plusHours(random.nextInt(1, 24)), TaskStatus.OPEN, patientId, null));
-        appointmentsService.create(new Appointments(UUID.randomUUID(), patientId, nurseId, faker.lorem().sentence(), LocalDateTime.now().plusDays(random.nextInt(1, 7)), AppointmentsStatus.REQUESTED));
-        healthStatusService.create(new HealthStatus(UUID.randomUUID(), random.nextInt(0, 10), Mood.values()[random.nextInt(Mood.values().length)], List.of("Fever", "Cough", "Fatigue"), faker.lorem().sentence(), LocalDate.now(), patientId));
-        clinicalLogService.create(new ClinicalLog(UUID.randomUUID(), faker.medical().medicineName() + " Report", DocumentType.values()[random.nextInt(DocumentType.values().length)], LocalDate.now(), faker.internet().url(), patientId, nurseId, LocalDateTime.now(), ClinicalLogStatus.ACTIVE));
-        careNotesService.create(new CareNotes(UUID.randomUUID(), faker.lorem().paragraph(), patientId, nurseId, LocalDateTime.now()));
-        for (int i = 0; i < PRESCRIPTIONS_PER_PATIENT; i++) {
-            prescriptionService.create(new Prescription(
-                UUID.randomUUID(),
-                faker.medical().medicineName(),
-                random.nextInt(100, 500) + "mg",
-                "Twice a day",
-                patientId,
-                nurseId
-            ));
-        }
-    }
-
-    private void createPatientBundle(UUID patientId, UUID nurseId) {
-        vitalsService.create(new Vitals(UUID.randomUUID(), LocalDate.now(), random.nextInt(60, 100), random.nextInt(90, 140), random.nextInt(12, 20), random.nextInt(95, 100), patientId));
-        taskService.create(new Task(UUID.randomUUID(), faker.lorem().sentence(3), faker.lorem().paragraph(), TaskType.values()[random.nextInt(TaskType.values().length)], LocalDateTime.now().plusHours(random.nextInt(1, 24)), TaskStatus.OPEN, patientId, null));
-        appointmentsService.create(new Appointments(UUID.randomUUID(), patientId, nurseId, faker.lorem().sentence(), LocalDateTime.now().plusDays(random.nextInt(1, 7)), AppointmentsStatus.REQUESTED));
-        healthStatusService.create(new HealthStatus(UUID.randomUUID(), random.nextInt(0, 10), Mood.values()[random.nextInt(Mood.values().length)], List.of("Fever", "Cough", "Fatigue"), faker.lorem().sentence(), LocalDate.now(), patientId));
-        clinicalLogService.create(new ClinicalLog(UUID.randomUUID(), faker.medical().medicineName() + " Report", DocumentType.values()[random.nextInt(DocumentType.values().length)], LocalDate.now(), faker.internet().url(), patientId, nurseId, LocalDateTime.now(), ClinicalLogStatus.ACTIVE));
-        careNotesService.create(new CareNotes(UUID.randomUUID(), faker.lorem().paragraph(), patientId, nurseId, LocalDateTime.now()));
-        for (int i = 0; i < PRESCRIPTIONS_PER_PATIENT; i++) {
-            prescriptionService.create(new Prescription(UUID.randomUUID(), faker.medical().medicineName(), random.nextInt(100, 500) + "mg", "Twice a day", patientId, nurseId));
-        }
-        rosterService.create(new Roster(UUID.randomUUID(), patientId, nurseId, RosterStatus.ACTIVE));
-        patientDetailsService.create(new PatientDetails(UUID.randomUUID(), patientId, faker.medical().diseaseName(), List.of(faker.medical().symptoms()), List.of("scan_1.png"), faker.phoneNumber().phoneNumber(), nurseId));
-        ensureNurseDetailsExists(nurseId);
-    }
-
-    private void ensureNurseDetailsExists(UUID nurseId) {
-        boolean exists = nurseDetailsService.findAll(PageRequest.of(0, 1000)).getContent().stream()
-            .anyMatch(details -> details.getUserId().equals(nurseId));
-        if (!exists) {
-            nurseDetailsService.create(new NurseDetails(UUID.randomUUID(), nurseId, "Emergency", faker.medical().hospitalName(), random.nextInt(1, 20), random.nextBoolean()));
-        }
-    }
-
-    private List<User> getNurseUsers() {
-        return new ArrayList<>(userRepository.findAll().stream().filter(user -> user.getRole() == Role.NURSE).toList());
-    }
-
-    private User buildUser(Role role) {
-        return new User(
-            UUID.randomUUID(),
-            faker.idNumber().valid(),
-            faker.name().firstName(),
-            faker.name().lastName(),
-            faker.internet().emailAddress(),
-            "password123",
-            Integer.parseInt(faker.number().digits(9)),
-            role
-        );
-    }
-
-    private void ensureAdminUser() {
-        if (userRepository.findByEmail(ADMIN_EMAIL).isPresent()) {
-            return;
-        }
-
-        User admin = new User();
-        admin.setFirstName(ADMIN_FIRST_NAME);
-        admin.setLastName(ADMIN_LAST_NAME);
-        admin.setEmail(ADMIN_EMAIL);
-        admin.setPassword(passwordEncoder.encode(ADMIN_PASSWORD));
-        admin.setPhoneNumber(1000000000);
-        admin.setRole(Role.ADMIN);
-        admin.setUserStatus(UserStatus.ACTIVE);
-        userRepository.save(admin);
+        vitalsService.create(new Vitals(null,
+            LocalDate.now(),
+            random.nextInt(60, 100),
+            random.nextInt(90, 140),
+            random.nextInt(12, 20),
+            random.nextInt(95, 100),
+            randomPatient));
+        taskService.create(new Task(null,
+            truncate(faker.lorem().sentence(3)),
+            truncate(faker.lorem().paragraph()),
+            TaskType.values()[random.nextInt(TaskType.values().length)],
+            LocalDateTime.now().plusHours(24),
+            TaskStatus.OPEN,
+            randomPatient,
+            null));
+        careNotesService.create(new CareNotes(null,
+            truncate(faker.lorem().paragraph()),
+            randomPatient,
+            nurse,
+            LocalDateTime.now()));
     }
 }

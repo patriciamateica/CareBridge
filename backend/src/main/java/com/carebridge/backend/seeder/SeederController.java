@@ -16,14 +16,14 @@ public class SeederController {
     }
 
     @PostMapping("/seed")
-    public ResponseEntity<String> seedRepository() {
-        seederService.seedRepository();
-        return ResponseEntity.ok("Repository successfully seeded with 15 fully assigned patients.");
+    public ResponseEntity<String> seedDatabase() {
+        seederService.seedDatabase();
+        return ResponseEntity.ok("Repository successfully seeded with initial data.");
     }
 
     @PostMapping("/unseed")
-    public ResponseEntity<String> unseedRepository() {
-        seederService.unseedRepository();
+    public ResponseEntity<String> unseedDatabase() {
+        seederService.clearDatabase();
         return ResponseEntity.ok("All data has been cleared from the repository.");
     }
 
