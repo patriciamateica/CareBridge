@@ -1,17 +1,36 @@
 package com.carebridge.backend.roster.model;
 
+import com.carebridge.backend.user.model.User;
+import jakarta.persistence.*;
 import java.util.UUID;
 
+@Entity
+@Table(name = "roster")
 public class Roster {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    private UUID patientId;
-    private UUID nurseId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private User patient;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nurse_id", nullable = false)
+    private User nurse;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RosterStatus status;
 
-    public Roster(UUID id, UUID patientId, UUID nurseId, RosterStatus status) {
+    public Roster() {
+    }
+
+    public Roster(UUID id, User patient, User nurse, RosterStatus status) {
         this.id = id;
-        this.patientId = patientId;
-        this.nurseId = nurseId;
+        this.patient = patient;
+        this.nurse = nurse;
         this.status = status;
     }
 
@@ -23,20 +42,20 @@ public class Roster {
         this.id = id;
     }
 
-    public UUID getPatientId() {
-        return patientId;
+    public User getPatient() {
+        return patient;
     }
 
-    public void setPatientId(UUID patientId) {
-        this.patientId = patientId;
+    public void setPatient(User patient) {
+        this.patient = patient;
     }
 
-    public UUID getNurseId() {
-        return nurseId;
+    public User getNurse() {
+        return nurse;
     }
 
-    public void setNurseId(UUID nurseId) {
-        this.nurseId = nurseId;
+    public void setNurse(User nurse) {
+        this.nurse = nurse;
     }
 
     public RosterStatus getStatus() {
