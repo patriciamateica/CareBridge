@@ -1,17 +1,39 @@
 package com.carebridge.backend.vitals.model;
 
+import com.carebridge.backend.user.model.User;
+import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.UUID;
 
+@Entity
+@Table(name = "vitals")
 public class Vitals {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(name = "heart_rate", nullable = false)
     private int heartRate;
+
+    @Column(name = "blood_pressure", nullable = false)
     private int bloodPressure;
+
+    @Column(name = "respiratory_rate", nullable = false)
     private int respiratoryRate;
+
+    @Column(nullable = false)
     private int spO2;
 
-    private UUID patientId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private User patient;
+
+    @Column(nullable = false)
     private LocalDate timestamp;
+
+    public Vitals() {
+    }
 
     public Vitals(
         UUID id,
@@ -20,7 +42,7 @@ public class Vitals {
         int bloodPressure,
         int respiratoryRate,
         int spO2,
-        UUID patientId
+        User patient
     ) {
         this.id = id;
         this.timestamp = timestamp;
@@ -28,7 +50,7 @@ public class Vitals {
         this.bloodPressure = bloodPressure;
         this.respiratoryRate = respiratoryRate;
         this.spO2 = spO2;
-        this.patientId = patientId;
+        this.patient = patient;
     }
 
     public UUID getId() {
@@ -47,12 +69,12 @@ public class Vitals {
         this.timestamp = timestamp;
     }
 
-    public UUID getPatientId() {
-        return patientId;
+    public User getPatient() {
+        return patient;
     }
 
-    public void setPatientId(UUID patientId) {
-        this.patientId = patientId;
+    public void setPatient(User patient) {
+        this.patient = patient;
     }
 
     public int getRespiratoryRate() {

@@ -1,5 +1,8 @@
 package com.carebridge.backend.vitals;
 
+import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.UserService;
+import com.carebridge.backend.user.model.User;
 import com.carebridge.backend.vitals.model.VitalsDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,10 +15,12 @@ import java.util.UUID;
 public class VitalsController {
     private final VitalsService vitalsService;
     private final VitalsMapper mapper;
+    private final UserService userService;
 
-    public VitalsController(VitalsService vitalsService, VitalsMapper mapper) {
+    public VitalsController(VitalsService vitalsService, VitalsMapper mapper, UserService userService) {
         this.vitalsService = vitalsService;
         this.mapper = mapper;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -30,12 +35,20 @@ public class VitalsController {
 
     @PostMapping
     public VitalsDto create(@RequestBody VitalsDto vitalsDto) {
-        return mapper.toDto(vitalsService.create(mapper.toEntity(vitalsDto)));
+        User patient = userService.getUserById(vitalsDto.patientId());
+        if (patient.getRole() != Role.PATIENT) {
+            throw new IllegalArgumentException("The provided patient ID does not belong to a patient.");
+        }
+        return mapper.toDto(vitalsService.create(mapper.toEntity(vitalsDto, patient)));
     }
 
     @PutMapping("/{id}")
     public VitalsDto update(@PathVariable UUID id, @RequestBody VitalsDto vitalsDto) {
-        return mapper.toDto(vitalsService.update(id, mapper.toEntity(vitalsDto)));
+        User patient = userService.getUserById(vitalsDto.patientId());
+        if (patient.getRole() != Role.PATIENT) {
+            throw new IllegalArgumentException("The provided patient ID does not belong to a patient.");
+        }
+        return mapper.toDto(vitalsService.update(id, mapper.toEntity(vitalsDto, patient)));
     }
 
     @DeleteMapping("/{id}")
