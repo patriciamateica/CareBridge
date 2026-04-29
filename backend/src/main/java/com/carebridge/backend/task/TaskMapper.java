@@ -2,6 +2,7 @@ package com.carebridge.backend.task;
 
 import com.carebridge.backend.task.model.Task;
 import com.carebridge.backend.task.model.TaskDto;
+import com.carebridge.backend.user.model.User;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,12 +16,12 @@ public class TaskMapper {
             task.getTaskType(),
             task.getNeededBy(),
             task.getStatus(),
-            task.getPatientId(),
-            task.getClaimerId()
+            task.getPatient().getId(),
+            task.getClaimer().getId()
         );
     }
 
-    public Task toEntity(TaskDto dto) {
+    public Task toEntity(TaskDto dto, User claimer, User patient) {
         return new Task(
             dto.id(),
             dto.title(),
@@ -28,8 +29,8 @@ public class TaskMapper {
             dto.taskType(),
             dto.neededBy(),
             dto.status(),
-            dto.patientId(),
-            dto.claimerId()
+            patient,
+            claimer
         );
     }
 }

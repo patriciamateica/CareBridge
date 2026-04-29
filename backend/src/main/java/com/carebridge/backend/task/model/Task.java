@@ -1,17 +1,46 @@
 package com.carebridge.backend.task.model;
 
+import com.carebridge.backend.user.model.User;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "tasks")
 public class Task {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(nullable = false)
     private String title;
+
+    @Column(length = 1000)
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "task_type", nullable = false)
     private TaskType taskType;
+
+    @Column(name = "needed_by")
     private LocalDateTime neededBy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TaskStatus status;
-    private UUID patientId;
-    private UUID claimerId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private User patient;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "claimer_id")
+    private User claimer;
+
+    public Task() {
+    }
 
     public Task(
         UUID id,
@@ -20,8 +49,8 @@ public class Task {
         TaskType taskType,
         LocalDateTime neededBy,
         TaskStatus status,
-        UUID patientId,
-        UUID claimerId
+        User patient,
+        User claimer
     ) {
         this.id = id;
         this.title = title;
@@ -29,8 +58,8 @@ public class Task {
         this.taskType = taskType;
         this.neededBy = neededBy;
         this.status = status;
-        this.patientId = patientId;
-        this.claimerId = claimerId;
+        this.patient = patient;
+        this.claimer= claimer;
     }
 
     public UUID getId() {
@@ -81,19 +110,19 @@ public class Task {
         this.status = status;
     }
 
-    public UUID getPatientId() {
-        return patientId;
+    public User getPatient() {
+        return patient;
     }
 
-    public void setPatientId(UUID patientId) {
-        this.patientId = patientId;
+    public void setPatient(User patient) {
+        this.patient = patient;
     }
 
-    public UUID getClaimerId() {
-        return claimerId;
+    public User getClaimer() {
+        return claimer;
     }
 
-    public void setClaimerId(UUID claimerId) {
-        this.claimerId = claimerId;
+    public void setClaimer(User claimer) {
+        this.claimer= claimer;
     }
 }
