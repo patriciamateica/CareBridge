@@ -1,19 +1,50 @@
 package com.carebridge.backend.clinicalLog.model;
 
+import com.carebridge.backend.user.model.User;
+import jakarta.persistence.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "clinical_logs")
 public class ClinicalLog {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(length = 255)
     private String documentTitle;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private DocumentType documentType;
+
+    @Column(name = "date_performed", nullable = false)
     private LocalDate datePerformed;
+
+    @Column(name = "file_url", nullable = false)
     private String fileUrl;
-    private UUID patientId;
-    private UUID nurseId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private User patient;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nurse_id", nullable = false)
+    private User nurse;
+
+    @Column(name = "upload_timestamp", nullable = false)
     private LocalDateTime uploadTimestamp;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ClinicalLogStatus status;
+
+    public ClinicalLog() {
+    }
 
     public ClinicalLog(
         UUID id,
@@ -21,8 +52,8 @@ public class ClinicalLog {
         DocumentType documentType,
         LocalDate datePerformed,
         String fileUrl,
-        UUID patientId,
-        UUID nurseId,
+        User patient,
+        User nurse,
         LocalDateTime uploadTimestamp,
         ClinicalLogStatus status
     ) {
@@ -31,8 +62,8 @@ public class ClinicalLog {
         this.documentType = documentType;
         this.datePerformed = datePerformed;
         this.fileUrl = fileUrl;
-        this.patientId = patientId;
-        this.nurseId = nurseId;
+        this.patient = patient;
+        this.nurse = nurse;
         this.uploadTimestamp = uploadTimestamp;
         this.status = status;
     }
@@ -77,20 +108,20 @@ public class ClinicalLog {
         this.fileUrl = fileUrl;
     }
 
-    public UUID getPatientId() {
-        return patientId;
+    public User getPatient() {
+        return patient;
     }
 
-    public void setPatientId(UUID patientId) {
-        this.patientId = patientId;
+    public void setPatient(User patient) {
+        this.patient = patient;
     }
 
-    public UUID getNurseId() {
-        return nurseId;
+    public User getNurse() {
+        return nurse;
     }
 
-    public void setNurseId(UUID nurseId) {
-        this.nurseId = nurseId;
+    public void setNurse(User nurse) {
+        this.nurse = nurse;
     }
 
     public LocalDateTime getUploadTimestamp() {
