@@ -1,20 +1,40 @@
 package com.carebridge.backend.carenotes.model;
 
+import com.carebridge.backend.user.model.User;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "carenotes")
 public class CareNotes {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @Column(length = 500)
     private String content;
-    private UUID patientId;
-    private UUID nurseId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "patient_id", nullable = false)
+    private User patient;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "nurse_id", nullable = false)
+    private User nurse;
+
+    @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp;
 
-    public CareNotes(UUID id, String content, UUID patientId, UUID nurseId, LocalDateTime timestamp) {
+    public CareNotes() {
+    }
+
+    public CareNotes(UUID id, String content, User patient, User nurse, LocalDateTime timestamp) {
         this.id = id;
         this.content = content;
-        this.patientId = patientId;
-        this.nurseId = nurseId;
+        this.patient = patient;
+        this.nurse = nurse;
         this.timestamp = timestamp;
     }
 
@@ -34,20 +54,20 @@ public class CareNotes {
         this.content = content;
     }
 
-    public UUID getPatientId() {
-        return patientId;
+    public User getPatient() {
+        return patient;
     }
 
-    public void setPatientId(UUID patientId) {
-        this.patientId = patientId;
+    public void setPatient(User patient) {
+        this.patient = patient;
     }
 
-    public UUID getNurseId() {
-        return nurseId;
+    public User getNurse() {
+        return nurse;
     }
 
-    public void setNurseId(UUID nurseId) {
-        this.nurseId = nurseId;
+    public void setNurse(User nurse) {
+        this.nurse = nurse;
     }
 
     public LocalDateTime getTimestamp() {
