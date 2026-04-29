@@ -60,7 +60,7 @@ public class AppointmentsController {
             throw new IllegalArgumentException("The provided nurse ID does not belong to a nurse.");
         }
 
-        return mapper.toDto(appointmentsService.update(id, mapper.toEntity(dto, patient, nurse)));
+        return mapper.toDto(appointmentsService.update(id, mapper.toEntity(dto, nurse, patient)));
     }
 
     @DeleteMapping("/{id}")

@@ -139,7 +139,7 @@ public class SeederService {
         User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
 
         NurseDetails details = new NurseDetails();
-        details.setUser(nurse); // Updated to pass User object
+        details.setUser(nurse);
         details.setSpecialization("Geriatrics");
         details.setHospitalAffiliation(faker.medical().hospitalName());
         details.setExperienceYears(random.nextInt(5, 20));
