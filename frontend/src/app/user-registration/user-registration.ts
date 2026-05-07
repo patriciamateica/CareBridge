@@ -1,6 +1,6 @@
-import {Component, inject} from '@angular/core';
-import {CheckboxModule} from "primeng/checkbox";
-import {CommonModule} from "@angular/common";
+import { Component, inject } from '@angular/core';
+import { CheckboxModule } from "primeng/checkbox";
+import { CommonModule } from "@angular/common";
 import {
   AbstractControl,
   FormControl,
@@ -10,14 +10,14 @@ import {
   ValidationErrors,
   Validators
 } from "@angular/forms";
-import {ButtonModule} from "primeng/button";
-import {InputTextModule} from "primeng/inputtext";
-import {Password} from "primeng/password";
-import {Message} from "primeng/message";
-import {Router} from "@angular/router";
-import {ToastService} from "../toast-service/toast-service";
-import {AuthService, RegisterRequest} from '../../auth-service/auth.service';
-import {CookiesService} from '../../cookies/cookieservice';
+import { ButtonModule } from "primeng/button";
+import { InputTextModule } from "primeng/inputtext";
+import { Password } from "primeng/password";
+import { Message } from "primeng/message";
+import { Router } from "@angular/router";
+import { ToastService } from "../toast-service/toast-service";
+import { AuthService, RegisterRequest } from '../../auth-service/auth.service';
+import { CookiesService } from '../../cookies/cookieservice';
 
 const passwordValidators = [
   Validators.required,
@@ -51,7 +51,7 @@ export class UserRegistration {
     const password = control.get('password');
     const confirmPassword = control.get('confirmPassword');
     if (password && confirmPassword && password.value !== confirmPassword.value) {
-      return {passwordMismatch: true};
+      return { passwordMismatch: true };
     }
     return null;
   }
@@ -96,7 +96,7 @@ export class UserRegistration {
     });
   }
 
-  onSignIn(){
+  onSignIn() {
     this.router.navigate(['/user-login']);
   }
 }

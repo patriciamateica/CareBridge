@@ -1,4 +1,4 @@
-import {Component, inject, signal} from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from "@angular/common";
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
@@ -7,9 +7,9 @@ import { CheckboxModule } from "primeng/checkbox";
 import { InputTextModule } from "primeng/inputtext";
 import { Password } from "primeng/password";
 import { Message } from "primeng/message";
-import {ToastService} from '../toast-service/toast-service';
-import {AuthService} from '../../auth-service/auth.service';
-import {CookiesService} from '../../cookies/cookieservice';
+import { ToastService } from '../toast-service/toast-service';
+import { AuthService } from '../../auth-service/auth.service';
+import { CookiesService } from '../../cookies/cookieservice';
 
 @Component({
   selector: 'app-login',
@@ -33,7 +33,7 @@ export class UserLogin {
   private readonly cookiesService = inject(CookiesService);
 
   loginError = signal<string>('');
-  isLoading  = signal(false);
+  isLoading = signal(false);
 
   loginForm = new FormGroup({
     email: new FormControl('', [Validators.required, Validators.email]),
@@ -55,9 +55,13 @@ export class UserLogin {
     const password = this.loginForm.value.password ?? '';
 
     this.authService.login({ email, password }).subscribe({
-      next: (role) => {
+      next: () => {
         this.cookiesService.logActivity('login_success', email);
-        const targetRoute = role === 'patient' ? '/dashboard/home-patient' : '/dashboard/home-nurse';
+        const role = this.authService.currentRole();
+        let targetRoute = '/dashboard/home-nurse';
+        if (role === 'Patient') targetRoute = '/dashboard/home-patient';
+        else if (role === 'Admin') targetRoute = '/dashboard/home-nurse';
+        else if (role === 'Family') targetRoute = '/dashboard/home-patient';
         this.toastService.showSuccess('Logged in successfully.');
         this.router.navigate([targetRoute]);
         this.isLoading.set(false);
@@ -73,11 +77,11 @@ export class UserLogin {
 
   }
 
-  onRegister(){
+  onRegister() {
     this.router.navigate(['/user-registration']);
   }
 
-  onForgotPassword(){
+  onForgotPassword() {
     this.router.navigate(['/forgot-password-flow']);
   }
 }
