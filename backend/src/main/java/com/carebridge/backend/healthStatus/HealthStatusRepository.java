@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface HealthStatusRepository extends JpaRepository<HealthStatus, UUID> {
     List<HealthStatus> findByPatientId(UUID patientId);
+    void deleteByPatientId(UUID patientId);
 }
