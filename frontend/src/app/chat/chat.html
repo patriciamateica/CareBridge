@@ -1,0 +1,33 @@
+<div class="chat-wrapper">
+  <div class="chat-header">
+    <div class="header-info">
+      <i class="pi pi-comments mr-2"></i>
+      <span>CareBridge Community</span>
+    </div>
+    <div class="online-dot"></div>
+  </div>
+
+  <div class="messages-container" #scrollMe>
+    @for (msg of messages(); track msg.timestamp) {
+      <div class="message-row" [ngClass]="{'own-message': msg.senderId === currentUserId}">
+        <div class="message-bubble">
+          <span class="sender-name">{{ msg.senderName }}</span>
+          <p class="message-content">{{ msg.content }}</p>
+          <span class="message-time">{{ msg.timestamp | date:'HH:mm' }}</span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="input-area">
+    <input
+      pInputText
+      type="text"
+      [(ngModel)]="newMessage"
+      (keyup.enter)="send()"
+      placeholder="Type your message..."
+      class="chat-input"
+    />
+    <button pButton icon="pi pi-send" (click)="send()" class="send-btn"></button>
+  </div>
+</div>
