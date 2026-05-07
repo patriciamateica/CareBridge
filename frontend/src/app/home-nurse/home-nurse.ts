@@ -1,53 +1,87 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { ChartModule } from 'primeng/chart';
-import {PatientService} from '../patient/patient-crud/patient-service';
+import { forkJoin } from 'rxjs';
+
+import { AuthService } from '../../auth-service/auth.service';
+import { UserService } from '../cruds/services/userService';
+import { PatientDetailsService } from '../cruds/services/patientDetailsService';
+import { TaskService } from '../cruds/services/taskService';
+
+import { User } from '../cruds/models/user';
+import { PatientDetails } from '../cruds/models/patientDetails';
+import { Task } from '../cruds/models/task';
 
 @Component({
   selector: 'app-home-nurse',
   standalone: true,
-  imports: [CommonModule, ChartModule],
+  imports: [CommonModule, ChartModule, DatePipe],
   templateUrl: './home-nurse.html',
   styleUrl: './home-nurse.css'
 })
-export class HomeNurse {
-  private readonly patientService = inject(PatientService);
+export class HomeNurse implements OnInit {
+  private readonly authService = inject(AuthService);
+  private readonly userSvc = inject(UserService);
+  private readonly detailsSvc = inject(PatientDetailsService);
+  private readonly taskSvc = inject(TaskService);
 
-  nurseName = signal('Sara M.');
-  currentDate = signal('Mar 12, 2026');
+  private readonly _localUsers = signal<User[]>([]);
+  private readonly _localDetails = signal<PatientDetails[]>([]);
+  private readonly _localTasks = signal<Task[]>([]);
 
-  tasks = signal([
-    { id: 1, time: '10:00 am', type: 'Check Up', patientName: 'Maria Vaida' },
-    { id: 2, time: '10:00 am', type: 'Check Up', patientName: 'Maria Vaida' },
-    { id: 3, time: '10:00 am', type: 'Check Up', patientName: 'Maria Vaida' },
-    { id: 1, time: '10:00 am', type: 'Check Up', patientName: 'Maria Vaida' },
-    { id: 2, time: '10:00 am', type: 'Check Up', patientName: 'Maria Vaida' },
-    { id: 3, time: '10:00 am', type: 'Check Up', patientName: 'Maria Vaida' },
-    { id: 1, time: '10:00 am', type: 'Check Up', patientName: 'Maria Vaida' },
-    { id: 2, time: '10:00 am', type: 'Check Up', patientName: 'Maria Vaida' },
-    { id: 3, time: '10:00 am', type: 'Check Up', patientName: 'Maria Vaida' },
-    { id: 4, time: '10:00 am', type: 'Check Up', patientName: 'Maria Vaida' }
-  ]);
+  readonly nurseName = computed(() => this.authService.currentUserName());
+  readonly currentDate = new Date();
 
-  criticalCount = computed(() =>
-    this.patientService.patients().filter(p => p.status === 'Critical').length
+  ngOnInit() {
+    forkJoin({
+      users: this.userSvc.getAll(),
+      details: this.detailsSvc.getAll(),
+      tasks: this.taskSvc.getAll()
+    }).subscribe((res: any) => {
+      this._localUsers.set(res.users.content || []);
+      this._localDetails.set(res.details.content || []);
+      this._localTasks.set(res.tasks.content || []);
+    });
+
+    this.taskSvc.listenToUpdates('/topic/tasks').subscribe((t: Task) => {
+        this._localTasks.update(list => [...list, t]);
+    });
+  }
+
+  readonly tasks = computed(() => this._localTasks().slice(0, 10));
+
+  readonly patients = computed(() => {
+    const users = this._localUsers().filter(u => u.roles?.includes('PATIENT'));
+    const details = this._localDetails();
+    return users.map(u => {
+      const d = details.find(det => det.userId === u.id);
+      return {
+        id: u.id,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        status: 'Active'
+      };
+    });
+  });
+
+  readonly criticalCount = computed(() =>
+    this.patients().filter((p) => p.status === 'Critical').length
   );
 
-  totalCount = computed(() => this.patientService.patients().length);
+  readonly totalCount = computed(() => this.patients().length);
+  readonly normalCount = computed(() => this.totalCount() - this.criticalCount());
 
-  normalCount = computed(() => this.totalCount() - this.criticalCount());
-
-  alerts = computed(() =>
-    this.patientService.patients()
-      .filter(p => p.status === 'Critical')
-      .map(p => ({
+  readonly alerts = computed(() =>
+    this.patients()
+      .filter((p) => p.status === 'Critical')
+      .map((p) => ({
         id: p.id,
         patientName: `${p.firstName} ${p.lastName}`,
-        description: 'Low SpO2 (92%) - Vitals Alert'
+        description: 'Realtime alert: elevated pain score or vitals threshold exceeded',
       }))
   );
 
-  chartData = computed(() => ({
+  readonly chartData = computed(() => ({
     labels: ['Critical', 'Normal'],
     datasets: [
       {
@@ -61,17 +95,14 @@ export class HomeNurse {
 
   readonly chartOptions = {
     cutout: '80%',
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: true }
-    },
+    plugins: { legend: { display: false }, tooltip: { enabled: true } },
     maintainAspectRatio: false,
     responsive: true
   };
 
-  criticalPercent = computed(() =>
+  readonly criticalPercent = computed(() =>
     this.totalCount() ? Math.round((this.criticalCount() / this.totalCount()) * 100) : 0
   );
 
-  normalPercent = computed(() => 100 - this.criticalPercent());
+  readonly normalPercent = computed(() => 100 - this.criticalPercent());
 }
