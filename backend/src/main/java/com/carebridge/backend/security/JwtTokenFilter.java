@@ -32,14 +32,25 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         HttpServletResponse response,
         FilterChain filterChain
     ) throws ServletException, IOException {
-        final String header = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header == null || !header.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+        String token = null;
+
+        if (request.getCookies() != null) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("jwt".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
         }
 
-        final String token = header.split(" ")[1].trim();
-        if (!jwtService.validate(token)) {
+        if (token == null) {
+            final String header = request.getHeader(HttpHeaders.AUTHORIZATION);
+            if (header != null && header.startsWith("Bearer ")) {
+                token = header.split(" ")[1].trim();
+            }
+        }
+
+        if (token == null || !jwtService.validate(token)) {
             filterChain.doFilter(request, response);
             return;
         }

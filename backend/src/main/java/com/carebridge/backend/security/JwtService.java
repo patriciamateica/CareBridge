@@ -1,15 +1,12 @@
 package com.carebridge.backend.security;
 
-import com.carebridge.backend.user.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import java.security.NoSuchAlgorithmException;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Date;
@@ -17,16 +14,17 @@ import java.util.Date;
 @Component
 public class JwtService {
     public static final long TOKEN_EXPIRATION_TIME = ChronoUnit.HOURS.getDuration().toMillis();
-    private final SecretKey SECRET = KeyGenerator.getInstance("HmacSHA256").generateKey();
+    private static final String SECRET_STRING = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    private final SecretKey SECRET = io.jsonwebtoken.security.Keys.hmacShaKeyFor(SECRET_STRING.getBytes());
 
-    public JwtService() throws NoSuchAlgorithmException {
+    public JwtService() {
     }
 
     public String generateToken(String username, Collection<? extends GrantedAuthority> authorities) {
         String userRole = authorities.stream()
             .map(GrantedAuthority::getAuthority)
             .findFirst()
-            .orElse(Role.PATIENT.toString());
+            .orElse("PATIENT");
 
         Date now = new Date(System.currentTimeMillis());
         return Jwts.builder()

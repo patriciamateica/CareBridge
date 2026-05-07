@@ -11,6 +11,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
+@org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtTokenFilter jwtTokenFilter;
@@ -35,7 +36,11 @@ public class SecurityConfig {
                 -> resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, ex.getMessage())));
 
         http.authorizeHttpRequests((authorize)
-            -> authorize.anyRequest().permitAll());
+            -> authorize
+                .requestMatchers("/api/login", "/api/logout", "/api/register", "/api/users/register",
+                    "/api/users/register-patient", "/api/seeder/**", "/ws/**", "/api/health").permitAll()
+                .requestMatchers("/api/**").authenticated()
+                .anyRequest().permitAll());
 
         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -35,6 +35,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @com.carebridge.backend.audit.LogAction("User Login")
     public ResponseEntity<HttpStatus> login(@RequestBody LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
@@ -60,6 +61,8 @@ public class AuthController {
             return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).build();
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -67,5 +70,18 @@ public class AuthController {
     public ResponseEntity<HttpStatus> register(@RequestBody RegisterRequest registerRequest) {
         authService.register(registerRequest);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/logout")
+    @com.carebridge.backend.audit.LogAction("User Logout")
+    public ResponseEntity<HttpStatus> logout() {
+        ResponseCookie clearCookie = ResponseCookie.from("jwt", "")
+            .httpOnly(cookieProperties.isHttpOnly())
+            .secure(cookieProperties.isSecure())
+            .sameSite(cookieProperties.getSameSite())
+            .path(cookieProperties.getPath())
+            .maxAge(0)
+            .build();
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, clearCookie.toString()).build();
     }
 }

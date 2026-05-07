@@ -1,8 +1,8 @@
 package com.carebridge.backend.security;
 
-import com.carebridge.backend.user.Role;
 import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.UserService;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.UserStatus;
 import com.carebridge.backend.user.model.User;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,19 +19,22 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UserService userService;
+    private final RoleRepository roleRepository;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager,
             JwtService jwtService,
-            UserService userService
+            UserService userService,
+            RoleRepository roleRepository
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userService = userService;
+        this.roleRepository = roleRepository;
     }
 
     public User register(RegisterRequest request) {
@@ -43,13 +46,11 @@ public class AuthService {
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setEmail(request.email());
-        try {
-            user.setPhoneNumber(Integer.parseInt(request.phoneNumber()));
-        } catch (NumberFormatException e) {
-            user.setPhoneNumber(0);
-        }
+        user.setPhoneNumber(request.phoneNumber() != null ? request.phoneNumber() : "");
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setRole(Role.PATIENT);
+        
+        roleRepository.findByName("PATIENT").ifPresent(user::addRole);
+        
         user.setUserStatus(UserStatus.ACTIVE);
 
         User savedUser = userRepository.save(user);
