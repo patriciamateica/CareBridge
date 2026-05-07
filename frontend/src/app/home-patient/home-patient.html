@@ -1,7 +1,7 @@
 <div class="h-full flex flex-col font-sans text-surface-900 gap-4">
 
   <div class="flex justify-between items-center shrink-0">
-    <h1 class="hp-title text-2xl font-bold m-0">Welcome Back: {{ patientName }}</h1>
+    <h1 class="hp-title text-2xl font-bold m-0">Welcome Back: {{ patientName() }}</h1>
     <div class="flex items-center gap-4">
       <div class="w-10 h-10 rounded-full border border-surface-300 flex items-center justify-center bg-white cursor-pointer hover:bg-surface-50 transition-colors"
            (click)="profileDialogVisible.set(true)">
@@ -9,7 +9,7 @@
       </div>
 
       <div class="px-4 py-1.5 border border-surface-300 rounded-lg bg-white font-medium text-sm">
-        {{ currentDate }}
+        {{ currentDate | date: 'MMM d, y' }}
       </div>
     </div>
   </div>
@@ -19,25 +19,37 @@
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
       <div class="grid grid-cols-2 gap-3">
-        <div class="bg-[#C06C66] text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1">
+        <div class="text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1" [ngClass]="metricCardClass('hr')">
           <span class="text-xs tracking-wide w-full text-left">Heart Rate</span>
-          <span class="text-2xl font-medium">103 bpm</span>
-          <span class="text-xs">Abnormal</span>
+          <span class="text-2xl font-medium">{{ latestVital()?.heartRate ?? '-' }} bpm</span>
+          <span class="text-xs">{{ metricLabel('hr') }}</span>
+          @if (isMetricAbnormal('hr')) {
+            <span class="text-[10px] uppercase tracking-wide opacity-90">Read only</span>
+          }
         </div>
-        <div class="bg-[#C06C66] text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1">
+        <div class="text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1" [ngClass]="metricCardClass('bp')">
           <span class="text-xs tracking-wide w-full text-left">Blood Pressure</span>
-          <span class="text-2xl font-medium">111/80 mmHg</span>
-          <span class="text-xs">Abnormal</span>
+          <span class="text-2xl font-medium">{{ latestVital()?.bloodPressure ?? '-' }} mmHg</span>
+          <span class="text-xs">{{ metricLabel('bp') }}</span>
+          @if (isMetricAbnormal('bp')) {
+            <span class="text-[10px] uppercase tracking-wide opacity-90">Read only</span>
+          }
         </div>
-        <div class="bg-[#C06C66] text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1">
+        <div class="text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1" [ngClass]="metricCardClass('rr')">
           <span class="text-xs tracking-wide w-full text-left">Respiratory Rate</span>
-          <span class="text-2xl font-medium">11 bpm</span>
-          <span class="text-xs">Abnormal</span>
+          <span class="text-2xl font-medium">{{ latestVital()?.respiratoryRate ?? '-' }} bpm</span>
+          <span class="text-xs">{{ metricLabel('rr') }}</span>
+          @if (isMetricAbnormal('rr')) {
+            <span class="text-[10px] uppercase tracking-wide opacity-90">Read only</span>
+          }
         </div>
-        <div class="bg-[#78A17D] text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1">
+        <div class="text-white rounded-xl p-4 flex flex-col items-center justify-center gap-1" [ngClass]="metricCardClass('spo2')">
           <span class="text-xs tracking-wide w-full text-left">SpO2</span>
-          <span class="text-2xl font-medium">98%</span>
-          <span class="text-xs">Normal</span>
+          <span class="text-2xl font-medium">{{ latestVital()?.spO2 ?? '-' }}%</span>
+          <span class="text-xs">{{ metricLabel('spo2') }}</span>
+          @if (isMetricAbnormal('spo2')) {
+            <span class="text-[10px] uppercase tracking-wide opacity-90">Read only</span>
+          }
         </div>
       </div>
 
@@ -53,7 +65,7 @@
         </div>
         <div class="flex-1 relative min-h-[140px]">
           <div class="absolute inset-0">
-            <p-chart type="line" [data]="chartData" [options]="chartOptions" height="100%"></p-chart>
+            <p-chart type="line" [data]="chartData()" [options]="chartOptions" height="100%"></p-chart>
           </div>
         </div>
       </div>
