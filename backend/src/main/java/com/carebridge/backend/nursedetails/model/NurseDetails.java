@@ -1,5 +1,6 @@
 package com.carebridge.backend.nursedetails.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.carebridge.backend.user.model.User;
 import jakarta.persistence.*;
 import java.util.UUID;
@@ -12,9 +13,9 @@ public class NurseDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(nullable = false)
@@ -39,7 +40,6 @@ public class NurseDetails {
         int experienceYears,
         boolean hireMeStatus
     ) {
-        this.id = user.getId();
         this.user = user;
         this.specialization = specialization;
         this.hospitalAffiliation = hospitalAffiliation;

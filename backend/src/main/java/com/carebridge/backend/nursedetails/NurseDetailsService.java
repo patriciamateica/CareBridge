@@ -1,6 +1,7 @@
 package com.carebridge.backend.nursedetails;
 
 import com.carebridge.backend.nursedetails.model.NurseDetails;
+import com.carebridge.backend.user.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,28 @@ public class NurseDetailsService {
 
     @Transactional
     public NurseDetails create(NurseDetails nurseDetails) {
+        if (nurseDetails.getUser() != null) {
+            UUID userId = nurseDetails.getUser().getId();
+            
+            return repository.findByUserId(userId)
+                .map(existing -> {
+                    existing.setSpecialization(nurseDetails.getSpecialization());
+                    existing.setHospitalAffiliation(nurseDetails.getHospitalAffiliation());
+                    existing.setExperienceYears(nurseDetails.getExperienceYears());
+                    existing.setHireMeStatus(nurseDetails.isHireMeStatus());
+                    return repository.save(existing);
+                })
+                .orElseGet(() -> {
+                    User user = nurseDetails.getUser();
+                    if (user != null) {
+                        user.setNurseDetails(nurseDetails);
+                    }
+                    NurseDetails saved = repository.save(nurseDetails);
+                    createdSink.tryEmitNext(saved);
+                    return saved;
+                });
+        }
+        
         NurseDetails saved = repository.save(nurseDetails);
         createdSink.tryEmitNext(saved);
         return saved;
