@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PatientDetailsMapper {
 
-    public PatientDetailsDto toDto(PatientDetails details) {
+    public PatientDetailsDto toDto(PatientDetails details, String assignedNurseName) {
         return new PatientDetailsDto(
             details.getId(),
             details.getUser().getId(),
@@ -16,7 +16,9 @@ public class PatientDetailsMapper {
             details.getDiagnostics(),
             details.getScans(),
             details.getEmergencyContact(),
-            details.getAssignedNurseId()
+            details.getAssignedNurseId(),
+            assignedNurseName != null ? assignedNurseName : "Not Assigned",
+            details.getStatus()
         );
     }
 
@@ -27,7 +29,8 @@ public class PatientDetailsMapper {
             dto.diagnostics(),
             dto.scans(),
             dto.emergencyContact(),
-            dto.assignedNurseId()
+            dto.assignedNurseId(),
+            dto.status()
         );
     }
 }

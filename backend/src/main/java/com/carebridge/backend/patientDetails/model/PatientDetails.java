@@ -1,5 +1,6 @@
 package com.carebridge.backend.patientDetails.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.carebridge.backend.user.model.User;
 import jakarta.persistence.*;
 import java.util.List;
@@ -13,29 +14,32 @@ public class PatientDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(name = "primary_diagnosis")
     private String primaryDiagnosis;
 
-    @ElementCollection
-    @CollectionTable(name = "patient_diagnostics", joinColumns = @JoinColumn(name = "patient_details_id"))
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "patient_diagnostics", joinColumns = @JoinColumn(name = "patient_details_id", referencedColumnName = "id"))
     @Column(name = "diagnostic")
-    private List<String> diagnostics;
+    private List<String> diagnostics = new java.util.ArrayList<>();
 
-    @ElementCollection
-    @CollectionTable(name = "patient_scans", joinColumns = @JoinColumn(name = "patient_details_id"))
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "patient_scans", joinColumns = @JoinColumn(name = "patient_details_id", referencedColumnName = "id"))
     @Column(name = "scan_url")
-    private List<String> scans;
+    private List<String> scans = new java.util.ArrayList<>();
 
     @Column(name = "emergency_contact")
     private String emergencyContact;
 
     @Column(name = "assigned_nurse_id")
     private UUID assignedNurseId;
+
+    @Column(name = "status")
+    private String status;
 
     public PatientDetails() {
     }
@@ -46,15 +50,16 @@ public class PatientDetails {
         List<String> diagnostics,
         List<String> scans,
         String emergencyContact,
-        UUID assignedNurseId
+        UUID assignedNurseId,
+        String status
     ) {
-        this.id = user.getId();
         this.user = user;
         this.primaryDiagnosis = primaryDiagnosis;
-        this.diagnostics = diagnostics;
-        this.scans = scans;
+        this.diagnostics = diagnostics != null ? diagnostics : new java.util.ArrayList<>();
+        this.scans = scans != null ? scans : new java.util.ArrayList<>();
         this.emergencyContact = emergencyContact;
         this.assignedNurseId = assignedNurseId;
+        this.status = status;
     }
 
     public UUID getId() {
@@ -86,7 +91,7 @@ public class PatientDetails {
     }
 
     public void setDiagnostics(List<String> diagnostics) {
-        this.diagnostics = diagnostics;
+        this.diagnostics = diagnostics != null ? diagnostics : new java.util.ArrayList<>();
     }
 
     public List<String> getScans() {
@@ -94,7 +99,7 @@ public class PatientDetails {
     }
 
     public void setScans(List<String> scans) {
-        this.scans = scans;
+        this.scans = scans != null ? scans : new java.util.ArrayList<>();
     }
 
     public String getEmergencyContact() {
@@ -111,5 +116,13 @@ public class PatientDetails {
 
     public void setAssignedNurseId(UUID assignedNurseId) {
         this.assignedNurseId = assignedNurseId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

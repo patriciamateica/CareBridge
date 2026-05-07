@@ -21,5 +21,14 @@ public record PatientDetailsDto(
     @NotBlank(message = "Emergency contact information is mandatory")
     String emergencyContact,
 
-    UUID assignedNurseId
-) {}
+    UUID assignedNurseId,
+
+    String assignedNurseName,
+
+    String status
+) {
+    public PatientDetailsDto {
+        if (diagnostics == null) diagnostics = List.of();
+        if (scans == null) scans = List.of();
+    }
+}
