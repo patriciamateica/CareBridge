@@ -82,6 +82,16 @@ public class AppointmentsService {
     }
 
     @Transactional(readOnly = true)
+    public Page<Appointments> findByPatientId(UUID patientId, Pageable pageable) {
+        return appointmentsRepository.findByPatientIdOrderByTimeSlotDesc(patientId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Appointments> findByNurseId(UUID nurseId, Pageable pageable) {
+        return appointmentsRepository.findByNurseIdOrderByTimeSlotDesc(nurseId, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public Flux<Appointments> getScheduledStream(UUID patientId, UUID nurseId) {
         return scheduledSink.asFlux()
             .filter(a -> (patientId == null || a.getPatient().getId().equals(patientId))
