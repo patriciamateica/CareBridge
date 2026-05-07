@@ -1,0 +1,58 @@
+<div class="p-6">
+  <div class="flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Security Observation List</h1>
+      <p class="text-gray-500">Users flagged by the automated malevolent behavior detection system</p>
+    </div>
+  </div>
+
+  <p-table [value]="suspiciousUsers()" [rows]="10" [paginator]="true"
+           responsiveLayout="scroll" styleClass="p-datatable-sm shadow-sm rounded-lg overflow-hidden">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Flagged At</th>
+        <th>User</th>
+        <th>Reason</th>
+        <th>Severity</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-user>
+      <tr>
+        <td>{{ user.flaggedAt | date:'short' }}</td>
+        <td>
+          <div class="flex flex-col">
+            <span class="font-semibold">{{ user.username }}</span>
+            <span class="text-xs text-gray-400">{{ user.userId }}</span>
+          </div>
+        </td>
+        <td class="max-w-xs overflow-hidden text-ellipsis">{{ user.reason }}</td>
+        <td>
+          <p-tag [value]="user.severity" [severity]="getSeverity(user.severity)"></p-tag>
+        </td>
+        <td>
+          <p-tag [value]="user.resolved ? 'RESOLVED' : 'ACTIVE'"
+                 [severity]="user.resolved ? 'success' : 'danger'"></p-tag>
+        </td>
+        <td>
+          @if (!user.resolved) {
+            <p-button label="Resolve" icon="pi pi-check" severity="success" [text]="true"
+                      (click)="resolve(user.id)"></p-button>
+          } @else {
+            <span class="text-gray-400 italic text-sm">No action needed</span>
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="text-center p-8 text-gray-500">
+          <i class="pi pi-shield text-4xl mb-2 text-green-500"></i>
+          <p>No suspicious activities detected. The system is clean.</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
