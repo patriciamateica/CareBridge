@@ -79,6 +79,11 @@ public class RosterService {
         return rosterRepository.findByNurseId(nurseId);
     }
 
+    @Transactional(readOnly = true)
+    public Page<Roster> findByNurseId(UUID nurseId, Pageable pageable) {
+        return rosterRepository.findByNurseIdOrderByIdDesc(nurseId, pageable);
+    }
+
     @Transactional
     public Flux<Roster> getUpdateStream(UUID nurseId) {
         return updateSink.asFlux()
