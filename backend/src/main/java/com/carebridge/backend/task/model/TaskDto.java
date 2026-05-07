@@ -29,6 +29,5 @@ public record TaskDto(
     @NotNull(message = "Patient ID is mandatory")
     UUID patientId,
 
-    @NotNull(message = "Claimer ID is mandatory")
     UUID claimerId
 ) {}

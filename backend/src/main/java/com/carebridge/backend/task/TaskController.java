@@ -1,11 +1,11 @@
 package com.carebridge.backend.task;
 
 import com.carebridge.backend.task.model.TaskDto;
-import com.carebridge.backend.user.Role;
 import com.carebridge.backend.user.UserService;
 import com.carebridge.backend.user.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -16,11 +16,13 @@ public class TaskController {
     private final TaskService service;
     private final TaskMapper mapper;
     private final UserService userService;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public TaskController(TaskService service, TaskMapper mapper, UserService userService) {
+    public TaskController(TaskService service, TaskMapper mapper, UserService userService, SimpMessagingTemplate messagingTemplate) {
         this.service = service;
         this.mapper = mapper;
         this.userService = userService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @GetMapping
@@ -38,13 +40,15 @@ public class TaskController {
         User patient = userService.getUserById(dto.patientId());
         User claimer = dto.claimerId() != null ? userService.getUserById(dto.claimerId()) : null;
 
-        if (patient.getRole() != Role.PATIENT) {
+        if (!patient.hasRole("PATIENT")) {
             throw new IllegalArgumentException("The provided patient ID does not belong to a patient.");
         }
-        if (claimer != null && claimer.getRole() != Role.NURSE && claimer.getRole() != Role.FAMILY) {
+        if (claimer != null && !claimer.hasRole("NURSE") && !claimer.hasRole("FAMILY")) {
             throw new IllegalArgumentException("The provided claimer ID does not belong to a nurse or family.");
         }
-        return mapper.toDto(service.create(mapper.toEntity(dto, claimer, patient)));
+        TaskDto savedDto = mapper.toDto(service.create(mapper.toEntity(dto, claimer, patient)));
+        messagingTemplate.convertAndSend("/topic/tasks", savedDto);
+        return savedDto;
     }
 
     @PutMapping("/{id}")
@@ -52,17 +56,23 @@ public class TaskController {
         User patient = userService.getUserById(dto.patientId());
         User claimer = dto.claimerId() != null ? userService.getUserById(dto.claimerId()) : null;
 
-        if (patient.getRole() != Role.PATIENT) {
+        if (!patient.hasRole("PATIENT")) {
             throw new IllegalArgumentException("The provided patient ID does not belong to a patient.");
         }
-        if (claimer != null && claimer.getRole() != Role.NURSE && claimer.getRole() != Role.FAMILY) {
+        if (claimer != null && !claimer.hasRole("NURSE") && !claimer.hasRole("FAMILY")) {
             throw new IllegalArgumentException("The provided claimer ID does not belong to a nurse or family.");
         }
-        return mapper.toDto(service.update(id, mapper.toEntity(dto, claimer, patient)));
+        TaskDto updatedDto = mapper.toDto(service.update(id, mapper.toEntity(dto, claimer, patient)));
+        messagingTemplate.convertAndSend("/topic/tasks", updatedDto);
+        return updatedDto;
     }
 
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable UUID id) {
-        return service.delete(id);
+        boolean deleted = service.delete(id);
+        if (deleted) {
+            messagingTemplate.convertAndSend("/topic/tasks/deleted", id.toString());
+        }
+        return deleted;
     }
 }

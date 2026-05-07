@@ -16,8 +16,8 @@ public class TaskMapper {
             task.getTaskType(),
             task.getNeededBy(),
             task.getStatus(),
-            task.getPatient().getId(),
-            task.getClaimer().getId()
+            task.getPatient() != null ? task.getPatient().getId() : null,
+            task.getClaimer() != null ? task.getClaimer().getId() : null
         );
     }
 
