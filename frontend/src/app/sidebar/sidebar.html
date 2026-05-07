@@ -31,15 +31,13 @@
           @if (section.roles.includes(userRole)) {
             <div class="flex flex-col gap-2">
               <span class="menu-header">{{ section.label }}</span>
-
-              @for (route of section.items; track route.path) {
-                @if (route.roles.includes(userRole)) {
-                  <a (click)="visible = false"
-                     [routerLinkActiveOptions]="{ exact: true }"
-                     [routerLink]="route.path"
+              @for (item of section.items; track item.path) {
+                @if (item.roles.includes(userRole)) {
+                  <a [routerLink]="item.path"
+                     routerLinkActive="active-link"
                      class="menu-item"
-                     routerLinkActive="active-link">
-                    <span class="text-xl tracking-wide">{{ route.title }}</span>
+                     (click)="visible = false">
+                    {{ item.title }}
                   </a>
                 }
               }

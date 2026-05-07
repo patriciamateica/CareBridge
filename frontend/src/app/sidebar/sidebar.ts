@@ -1,4 +1,4 @@
-import {Component, HostBinding, HostListener, inject} from '@angular/core';
+import {Component, HostListener, inject} from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Button } from 'primeng/button';
@@ -22,27 +22,36 @@ export class Sidebar {
     return this.authService.currentRole();
   }
 
-  public menuSections = [
+  menuSections = [
     {
       label: 'MAIN',
-      roles: ['admin', 'nurse', 'patient'],
+      roles: ['Admin', 'Nurse', 'Patient', 'Family'],
       items: [
-        { path: '/dashboard/home-nurse',   title: 'Home Nurse',   roles: ['admin', 'nurse'] },
-        { path: '/dashboard/home-patient', title: 'Home Patient', roles: ['admin', 'patient'] },
-        { path: '/dashboard/village',      title: 'Care Village', roles: ['admin', 'patient'] },
-        { path: '/dashboard/appointments', title: 'Appointments', roles: ['admin', 'nurse'] }
+        { path: '/dashboard/home-nurse',   title: 'Home Nurse',   roles: ['Admin', 'Nurse'] },
+        { path: '/dashboard/home-patient', title: 'Home Patient', roles: ['Admin', 'Patient', 'Family'] },
+        { path: '/dashboard/village',      title: 'Care Village', roles: ['Admin', 'Nurse', 'Patient', 'Family'] },
+        { path: '/dashboard/patient-appointments', title: 'Care Schedule', roles: ['Admin', 'Patient'] },
+        { path: '/dashboard/nurse-appointments', title: 'Appointments', roles: ['Admin', 'Nurse'] },
+        { path: '/dashboard/chat', title: 'Community Chat', roles: ['Admin', 'Nurse', 'Patient'] }
       ]
     },
     {
       label: 'MEDICAL',
-      roles: ['admin', 'nurse', 'patient'],
+      roles: ['Admin', 'Nurse', 'Patient'],
       items: [
-        { path: '/dashboard/patient-management', title: 'Patients',        roles: ['admin', 'nurse'] },
-        { path: '/dashboard/medication',         title: 'Medication',      roles: ['admin', 'nurse', 'patient'] },
-        { path: '/dashboard/records',            title: 'Medical Records', roles: ['admin', 'nurse', 'patient'] },
-        { path: '/dashboard/requests',           title: 'Requests',        roles: ['admin', 'nurse'] }
+        { path: '/dashboard/patient-management', title: 'Patients',        roles: ['Admin', 'Nurse'] },
+        { path: '/dashboard/medication',         title: 'Medication',      roles: ['Admin', 'Nurse', 'Patient'] },
+        { path: '/dashboard/records',            title: 'Medical Records', roles: ['Admin', 'Nurse', 'Patient'] },
+        { path: '/dashboard/requests',           title: 'Requests',        roles: ['Admin', 'Nurse'] }
       ]
-    }
+    },
+    {
+      label: 'SECURITY',
+      roles: ['Admin'],
+      items: [
+        { path: '/dashboard/observation-list', title: 'Observation List', roles: ['Admin'] }
+      ]
+    },
   ];
 
   @HostListener('window:resize')
@@ -54,6 +63,7 @@ export class Sidebar {
 
   logout() {
     this.cookiesService.logActivity('logout', this.authService.currentUserName());
+    this.authService.logout();
     this.router.navigate(['/']);
   }
 }
