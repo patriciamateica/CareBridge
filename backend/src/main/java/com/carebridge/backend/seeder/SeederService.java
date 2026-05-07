@@ -25,7 +25,10 @@ import com.carebridge.backend.task.TaskService;
 import com.carebridge.backend.task.model.Task;
 import com.carebridge.backend.task.model.TaskStatus;
 import com.carebridge.backend.task.model.TaskType;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Permission;
+import com.carebridge.backend.user.model.Role;
+import com.carebridge.backend.user.PermissionRepository;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.UserService;
 import com.carebridge.backend.user.UserStatus;
@@ -62,6 +65,8 @@ public class SeederService {
     private final PatientDetailsService patientDetailsService;
     private final NurseDetailsService nurseDetailsService;
     private final RosterService rosterService;
+    private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
 
     private final Faker faker = new Faker(new Random(123));
     private final Random random = new Random(123);
@@ -75,7 +80,8 @@ public class SeederService {
         TaskService taskService, VitalsService vitalsService, UserRepository userRepository,
         UserService userService, PasswordEncoder passwordEncoder,
         PrescriptionService prescriptionService, PatientDetailsService patientDetailsService,
-        NurseDetailsService nurseDetailsService, RosterService rosterService
+        NurseDetailsService nurseDetailsService, RosterService rosterService,
+        RoleRepository roleRepository, PermissionRepository permissionRepository
     ) {
         this.appointmentsService = appointmentsService;
         this.careNotesService = careNotesService;
@@ -90,13 +96,16 @@ public class SeederService {
         this.patientDetailsService = patientDetailsService;
         this.nurseDetailsService = nurseDetailsService;
         this.rosterService = rosterService;
+        this.roleRepository = roleRepository;
+        this.permissionRepository = permissionRepository;
     }
 
-    public void seedDatabase() {
+    public synchronized void seedDatabase() {
         if (!userRepository.findAll().isEmpty()) {
             return;
         }
 
+        seedRolesAndPermissions();
         seedUsersTable();
         seedNurseDetailsTable();
         seedPatientDetailsTable();
@@ -111,7 +120,33 @@ public class SeederService {
         seedPrescriptionsTable();
     }
 
-    public void clearDatabase() {
+    public synchronized void seedRolesAndPermissionsOnly() {
+        List<User> allUsers = userRepository.findAll();
+        allUsers.forEach(user -> {
+            user.getRoles().clear();
+            userRepository.save(user);
+        });
+        userRepository.flush();
+
+        roleRepository.deleteAll();
+        roleRepository.flush();
+        permissionRepository.deleteAll();
+        permissionRepository.flush();
+
+        seedRolesAndPermissions();
+
+        allUsers.forEach(user -> {
+            String email = user.getEmail().toLowerCase();
+            String roleName = "PATIENT"; // default
+            if (email.contains("admin")) roleName = "ADMIN";
+            else if (email.contains("nurse")) roleName = "NURSE";
+            else if (email.contains("family")) roleName = "FAMILY";
+            roleRepository.findByName(roleName).ifPresent(user::addRole);
+            userRepository.save(user);
+        });
+    }
+
+    public synchronized void clearDatabase() {
         appointmentsService.deleteAll();
         careNotesService.deleteAll();
         clinicalLogService.deleteAll();
@@ -123,16 +158,78 @@ public class SeederService {
         patientDetailsService.deleteAll();
         nurseDetailsService.deleteAll();
         userRepository.deleteAll();
+        roleRepository.deleteAll();
+        permissionRepository.deleteAll();
     }
 
     private void seedUsersTable() {
-        createUser("admin@carebridge.local", Role.ADMIN);
-        createUser("nurse@carebridge.local", Role.NURSE);
-        createUser("family@carebridge.local", Role.FAMILY);
+        createUser("admin@carebridge.local", "ADMIN");
+        createUser("nurse@carebridge.local", "NURSE");
+        createUser("family@carebridge.local", "FAMILY");
 
-        for (int i = 1; i <= 10; i++) {
-            createUser("patient" + i + "@carebridge.local", Role.PATIENT);
+        for (int i = 1; i <= 20; i++) {
+            createUser("patient" + i + "@carebridge.local", "PATIENT");
         }
+
+        createUser("test-patient1@carebridge.local", "PATIENT");
+        createUser("test-patient2@carebridge.local", "PATIENT");
+        createUser("test-patient3@carebridge.local", "PATIENT");
+    }
+
+    private void seedRolesAndPermissions() {
+        Permission viewHomeNurse = permissionRepository.save(new Permission("VIEW_HOME_NURSE"));
+        Permission viewHomePatient = permissionRepository.save(new Permission("VIEW_HOME_PATIENT"));
+        Permission viewAppointments = permissionRepository.save(new Permission("VIEW_APPOINTMENTS"));
+        Permission viewChat = permissionRepository.save(new Permission("VIEW_CHAT"));
+        Permission viewPatients = permissionRepository.save(new Permission("VIEW_PATIENTS"));
+        Permission viewMedicalRecords = permissionRepository.save(new Permission("VIEW_MEDICAL_RECORDS"));
+        Permission viewMedication = permissionRepository.save(new Permission("VIEW_MEDICATION"));
+        Permission viewRequests = permissionRepository.save(new Permission("VIEW_REQUESTS"));
+        Permission viewCareVillage = permissionRepository.save(new Permission("VIEW_CARE_VILLAGE"));
+        Permission viewCareSchedule = permissionRepository.save(new Permission("VIEW_CARE_SCHEDULE"));
+        Permission viewAccount = permissionRepository.save(new Permission("VIEW_ACCOUNT"));
+
+        Permission addCrud = permissionRepository.save(new Permission("ADD_ANY_CRUD"));
+        Permission updateCrud = permissionRepository.save(new Permission("UPDATE_ANY_CRUD"));
+
+        Permission deletePrescription = permissionRepository.save(new Permission("DELETE_PRESCRIPTION"));
+        Permission deleteCareNote = permissionRepository.save(new Permission("DELETE_CARE_NOTE"));
+        Permission deleteVillageTask = permissionRepository.save(new Permission("DELETE_VILLAGE_TASK"));
+        Permission deleteAppointment = permissionRepository.save(new Permission("DELETE_APPOINTMENT"));
+
+        Permission manageHealthStatus = permissionRepository.save(new Permission("MANAGE_HEALTH_STATUS"));
+        Permission manageAppointments = permissionRepository.save(new Permission("MANAGE_APPOINTMENTS"));
+
+        Permission claimTask = permissionRepository.save(new Permission("CLAIM_TASK"));
+        Permission manageVillageTasks = permissionRepository.save(new Permission("MANAGE_VILLAGE_TASKS"));
+
+        Role admin = new Role("ADMIN");
+        admin.getPermissions().addAll(permissionRepository.findAll());
+        roleRepository.save(admin);
+
+        Role nurse = new Role("NURSE");
+        nurse.getPermissions().addAll(List.of(
+            viewHomeNurse, viewAppointments, viewChat, viewPatients,
+            viewMedicalRecords, viewMedication, viewRequests, viewCareVillage,
+            addCrud, updateCrud,
+            deletePrescription, deleteCareNote, deleteVillageTask, deleteAppointment
+        ));
+        roleRepository.save(nurse);
+
+        Role patient = new Role("PATIENT");
+        patient.getPermissions().addAll(List.of(
+            viewHomePatient, viewCareSchedule, viewChat, viewMedicalRecords,
+            viewMedication, viewCareVillage, viewAccount,
+            manageHealthStatus, manageAppointments
+        ));
+        roleRepository.save(patient);
+
+        Role family = new Role("FAMILY");
+        family.getPermissions().addAll(List.of(
+            viewHomePatient, viewCareVillage,
+            manageVillageTasks, claimTask
+        ));
+        roleRepository.save(family);
     }
 
     private void seedNurseDetailsTable() {
@@ -148,9 +245,15 @@ public class SeederService {
     }
 
     private void seedPatientDetailsTable() {
-        List<User> patients = getByRole(Role.PATIENT);
+        List<User> allPatients = getByRole("PATIENT");
         User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
 
+        List<User> patients = allPatients.stream()
+            .filter(u -> !u.getEmail().startsWith("test-"))
+            .toList();
+
+        String[] statuses = {"Active", "Active", "Active", "Critical", "Inactive"};
+        int i = 0;
         for (User patient : patients) {
             PatientDetails pd = new PatientDetails();
             pd.setUser(patient);
@@ -159,13 +262,17 @@ public class SeederService {
             pd.setScans(List.of("scan_baseline.png"));
             pd.setEmergencyContact(faker.phoneNumber().phoneNumber());
             pd.setAssignedNurseId(nurse.getId());
+            pd.setStatus(statuses[i % statuses.length]);
 
             patientDetailsService.create(pd);
+            i++;
         }
     }
 
     private void seedRosterTable() {
-        List<User> patients = getByRole(Role.PATIENT);
+        List<User> patients = getByRole("PATIENT").stream()
+            .filter(u -> !u.getEmail().startsWith("test-"))
+            .toList();
         User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
 
         for (User patient : patients) {
@@ -178,7 +285,7 @@ public class SeederService {
     }
 
     private void seedVitalsTable() {
-        List<User> patients = getByRole(Role.PATIENT);
+        List<User> patients = getByRole("PATIENT");
         for (int i = 0; i < 15; i++) {
             User patient = patients.get(random.nextInt(patients.size()));
             vitalsService.create(new Vitals(null,
@@ -192,7 +299,7 @@ public class SeederService {
     }
 
     private void seedTasksTable() {
-        List<User> patients = getByRole(Role.PATIENT);
+        List<User> patients = getByRole("PATIENT");
         for (int i = 0; i < 15; i++) {
             User patient = patients.get(random.nextInt(patients.size()));
             taskService.create(new Task(null,
@@ -207,7 +314,7 @@ public class SeederService {
     }
 
     private void seedAppointmentsTable() {
-        List<User> patients = getByRole(Role.PATIENT);
+        List<User> patients = getByRole("PATIENT");
         User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
         for (int i = 0; i < 10; i++) {
             User patient = patients.get(random.nextInt(patients.size()));
@@ -221,7 +328,7 @@ public class SeederService {
     }
 
     private void seedHealthStatusTable() {
-        List<User> patients = getByRole(Role.PATIENT);
+        List<User> patients = getByRole("PATIENT");
         for (int i = 0; i < 15; i++) {
             User patient = patients.get(random.nextInt(patients.size()));
             healthStatusService.create(new HealthStatus(null,
@@ -235,7 +342,7 @@ public class SeederService {
     }
 
     private void seedClinicalLogTable() {
-        List<User> patients = getByRole(Role.PATIENT);
+        List<User> patients = getByRole("PATIENT");
         User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
         for (int i = 0; i < 10; i++) {
             User patient = patients.get(random.nextInt(patients.size()));
@@ -252,7 +359,7 @@ public class SeederService {
     }
 
     private void seedCareNotesTable() {
-        List<User> patients = getByRole(Role.PATIENT);
+        List<User> patients = getByRole("PATIENT");
         User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
         for (int i = 0; i < 15; i++) {
             User patient = patients.get(random.nextInt(patients.size()));
@@ -265,7 +372,7 @@ public class SeederService {
     }
 
     private void seedPrescriptionsTable() {
-        List<User> patients = getByRole(Role.PATIENT);
+        List<User> patients = getByRole("PATIENT");
         User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElseThrow();
         for (int i = 0; i < 15; i++) {
             User patient = patients.get(random.nextInt(patients.size()));
@@ -274,22 +381,27 @@ public class SeederService {
         }
     }
 
-    private void createUser(String email, Role role) {
+    private void createUser(String email, String roleName) {
         User user = new User();
         user.setFirstName(faker.name().firstName());
         user.setLastName(faker.name().lastName());
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode("Password123!"));
-        user.setPhoneNumber(Integer.parseInt(faker.number().digits(9)));
-        user.setRole(role);
+        user.setPhoneNumber(faker.number().digits(9));
+
+        Role role = roleRepository.findByName(roleName).orElseThrow();
+        user.addRole(role);
+
         user.setUserStatus(UserStatus.ACTIVE);
 
         User savedUser = userRepository.save(user);
         userService.emitRegistration(savedUser);
     }
 
-    private List<User> getByRole(Role role) {
-        return userRepository.findAll().stream().filter(u -> u.getRole() == role).toList();
+    private List<User> getByRole(String roleName) {
+        return userRepository.findAll().stream()
+            .filter(u -> u.getRoles().stream().anyMatch(r -> r.getName().equals(roleName)))
+            .toList();
     }
 
     private String truncate(String text) {
@@ -315,7 +427,7 @@ public class SeederService {
     }
 
     private void runLiveUpdateTick() {
-        List<User> patients = getByRole(Role.PATIENT);
+        List<User> patients = getByRole("PATIENT");
         User nurse = userRepository.findByEmailIgnoreCase("nurse@carebridge.local").orElse(null);
 
         if (patients.isEmpty() || nurse == null) return;

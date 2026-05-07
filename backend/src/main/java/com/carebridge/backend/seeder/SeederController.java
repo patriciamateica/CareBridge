@@ -21,6 +21,12 @@ public class SeederController {
         return ResponseEntity.ok("Repository successfully seeded with initial data.");
     }
 
+    @PostMapping("/seed-rbac")
+    public ResponseEntity<String> seedRbac() {
+        seederService.seedRolesAndPermissionsOnly();
+        return ResponseEntity.ok("Roles and permissions re-seeded. All existing users have been re-assigned their roles.");
+    }
+
     @PostMapping("/unseed")
     public ResponseEntity<String> unseedDatabase() {
         seederService.clearDatabase();
