@@ -84,3 +84,55 @@ router-outlet + * {
 .animate-fade-in     { animation: fadeIn 0.3s ease-out both; }
 .animate-slide-in    { animation: slideInLeft 0.35s ease-out both; }
 .animate-scale-in    { animation: scaleIn 0.3s ease-out both; }
+
+.app-toast.p-toast {
+  width: auto;
+}
+
+.app-toast .p-toast-message {
+  min-width: 280px;
+  max-width: min(420px, calc(100vw - 2rem));
+}
+
+@media (max-width: 640px) {
+  .app-toast.p-toast.p-toast-top-right {
+    top: 1rem !important;
+    right: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: calc(100vw - 2rem) !important;
+  }
+
+  .app-toast .p-toast-message {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+
+.app-toast.p-toast {
+  width: auto;
+}
+
+.app-toast .p-toast-message {
+  min-width: 280px;
+  max-width: min(420px, calc(100vw - 2rem));
+}
+
+@media (max-width: 640px) {
+  .app-toast.p-toast.p-toast-top-right {
+    top: 1rem !important;
+    right: auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: calc(100vw - 2rem) !important;
+  }
+
+  .app-toast .p-toast-message {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
