@@ -25,4 +25,13 @@ export class ToastService {
             life: 3000,
         })
     }
+
+  showInfo(message: string) {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'About',
+        detail: message,
+        life: 3000,
+      })
+  }
 }
