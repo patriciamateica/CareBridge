@@ -1,7 +1,18 @@
 package com.carebridge.backend.user;
 
+import com.carebridge.backend.patientDetails.PatientDetailsService;
+import com.carebridge.backend.patientDetails.model.PatientDetails;
+import com.carebridge.backend.patientDetails.model.PatientRegistrationRequest;
 import com.carebridge.backend.security.RegisterRequest;
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.appointments.AppointmentsRepository;
+import com.carebridge.backend.carenotes.CareNotesRepository;
+import com.carebridge.backend.clinicalLog.ClinicalLogRepository;
+import com.carebridge.backend.healthStatus.HealthStatusRepository;
+import com.carebridge.backend.prescription.PrescriptionRepository;
+import com.carebridge.backend.roster.RosterRepository;
+import com.carebridge.backend.task.TaskRepository;
+import com.carebridge.backend.vitals.VitalsRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,13 +32,74 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PatientDetailsService patientDetailsService;
+    private final VitalsRepository vitalsRepository;
+    private final TaskRepository taskRepository;
+    private final AppointmentsRepository appointmentsRepository;
+    private final RosterRepository rosterRepository;
+    private final CareNotesRepository careNotesRepository;
+    private final ClinicalLogRepository clinicalLogRepository;
+    private final HealthStatusRepository healthStatusRepository;
+    private final PrescriptionRepository prescriptionRepository;
+    private final RoleRepository roleRepository;
 
     private final Sinks.Many<User> registrationSink = Sinks.many().multicast().onBackpressureBuffer();
     private final Sinks.Many<User> statusUpdateSink = Sinks.many().multicast().onBackpressureBuffer();
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(
+        UserRepository userRepository,
+        PasswordEncoder passwordEncoder,
+        PatientDetailsService patientDetailsService,
+        VitalsRepository vitalsRepository,
+        TaskRepository taskRepository,
+        AppointmentsRepository appointmentsRepository,
+        RosterRepository rosterRepository,
+        CareNotesRepository careNotesRepository,
+        ClinicalLogRepository clinicalLogRepository,
+        HealthStatusRepository healthStatusRepository,
+        PrescriptionRepository prescriptionRepository,
+        RoleRepository roleRepository
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.patientDetailsService = patientDetailsService;
+        this.vitalsRepository = vitalsRepository;
+        this.taskRepository = taskRepository;
+        this.appointmentsRepository = appointmentsRepository;
+        this.rosterRepository = rosterRepository;
+        this.careNotesRepository = careNotesRepository;
+        this.clinicalLogRepository = clinicalLogRepository;
+        this.healthStatusRepository = healthStatusRepository;
+        this.prescriptionRepository = prescriptionRepository;
+        this.roleRepository = roleRepository;
+    }
+
+    @Transactional
+    public User registerPatient(PatientRegistrationRequest request) {
+        User user = register(request.userRequest());
+
+        java.util.UUID nurseId = null;
+        if (request.assignedNurseId() != null && !request.assignedNurseId().isEmpty() && !"null".equals(request.assignedNurseId())) {
+            try {
+                nurseId = java.util.UUID.fromString(request.assignedNurseId());
+            } catch (IllegalArgumentException e) {
+                // Keep as null if invalid
+            }
+        }
+
+        PatientDetails details = new PatientDetails(
+            user,
+            request.primaryDiagnosis(),
+            new java.util.ArrayList<>(), // diagnostics
+            new java.util.ArrayList<>(), // scans
+            request.emergencyContact(),
+            nurseId,
+            request.status()
+        );
+
+        patientDetailsService.create(details);
+
+        return user;
     }
 
     @Transactional
@@ -40,9 +112,11 @@ public class UserService implements UserDetailsService {
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setEmail(request.email());
-        user.setPhoneNumber(Integer.parseInt(request.phoneNumber()));
+        user.setPhoneNumber(request.phoneNumber());
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setRole(Role.PATIENT);
+
+        roleRepository.findByName("PATIENT").ifPresent(user::addRole);
+
         user.setUserStatus(UserStatus.ACTIVE);
 
         User savedUser = userRepository.save(user);
@@ -71,6 +145,20 @@ public class UserService implements UserDetailsService {
         return updatedUser;
     }
 
+    @Transactional
+    public User update(UUID id, User userDetails) {
+        User user = getUserById(id);
+        if (userDetails.getFirstName() != null) user.setFirstName(userDetails.getFirstName());
+        if (userDetails.getLastName() != null) user.setLastName(userDetails.getLastName());
+        if (userDetails.getPhoneNumber() != null) user.setPhoneNumber(userDetails.getPhoneNumber());
+        if (userDetails.getDateOfBirth() != null) user.setDateOfBirth(userDetails.getDateOfBirth());
+        if (userDetails.getResidentialAddress() != null) user.setResidentialAddress(userDetails.getResidentialAddress());
+        if (userDetails.getNationality() != null) user.setNationality(userDetails.getNationality());
+        if (userDetails.getUserStatus() != null) user.setUserStatus(userDetails.getUserStatus());
+        // Never overwrite roles from a generic update — roles are managed separately
+        return userRepository.save(user);
+    }
+
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -88,6 +176,27 @@ public class UserService implements UserDetailsService {
     @Transactional(readOnly = true)
     public Page<User> getUsersPaginated(Pageable pageable) {
         return userRepository.findAll(pageable);
+    }
+
+    @Transactional
+    public void delete(UUID id) {
+        patientDetailsService.unassignNurse(id);
+        vitalsRepository.deleteByPatientId(id);
+        taskRepository.deleteByPatientId(id);
+        taskRepository.deleteByClaimerId(id);
+        appointmentsRepository.deleteByPatientId(id);
+        appointmentsRepository.deleteByNurseId(id);
+        rosterRepository.deleteByNurseId(id);
+        rosterRepository.deleteByPatientId(id);
+        careNotesRepository.deleteByPatientId(id);
+        careNotesRepository.deleteByNurseId(id);
+        clinicalLogRepository.deleteByPatientId(id);
+        clinicalLogRepository.deleteByNurseId(id);
+        healthStatusRepository.deleteByPatientId(id);
+        prescriptionRepository.deleteByPatientId(id);
+        prescriptionRepository.deleteByNurseId(id);
+
+        userRepository.deleteById(id);
     }
 
     @Transactional

@@ -1,6 +1,9 @@
 package com.carebridge.backend.user.model;
 
-import com.carebridge.backend.user.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import com.carebridge.backend.nursedetails.model.NurseDetails;
+import com.carebridge.backend.patientDetails.model.PatientDetails;
 import com.carebridge.backend.user.UserStatus;
 import jakarta.persistence.*;
 
@@ -32,7 +35,7 @@ public class User {
     private String password;
 
     @Column(name = "phone_number")
-    private int phoneNumber;
+    private String phoneNumber;
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
@@ -42,13 +45,25 @@ public class User {
 
     private String nationality;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "users_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_name", referencedColumnName = "name")
+    )
+    private java.util.Set<Role> roles = new java.util.HashSet<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_status")
     private UserStatus userStatus;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonIgnore
+    private PatientDetails patientDetails;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonIgnore
+    private NurseDetails nurseDetails;
 
     public User() {
     }
@@ -60,8 +75,7 @@ public class User {
         String lastName,
         String email,
         String password,
-        int phoneNumber,
-        Role role
+        String phoneNumber
     ) {
         this.id = id;
         this.activationNumber = activationNumber;
@@ -70,7 +84,6 @@ public class User {
         this.email = email;
         this.password = password;
         this.phoneNumber = phoneNumber;
-        this.role = role;
     }
 
     public UUID getId() {
@@ -113,20 +126,28 @@ public class User {
         this.password = password;
     }
 
-    public int getPhoneNumber() {
+    public String getPhoneNumber() {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(int phoneNumber) {
+    public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
-    public Role getRole() {
-        return role;
+    public java.util.Set<Role> getRoles() {
+        return roles;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setRoles(java.util.Set<Role> roles) {
+        this.roles = roles;
+    }
+
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
+
+    public boolean hasRole(String roleName) {
+        return roles.stream().anyMatch(r -> r.getName().equalsIgnoreCase(roleName));
     }
 
     public String getActivationNumber() {
@@ -167,6 +188,30 @@ public class User {
 
     public void setUserStatus(UserStatus userStatus) {
         this.userStatus = userStatus;
+    }
+
+    public boolean isActive() {
+        return UserStatus.ACTIVE.equals(userStatus);
+    }
+
+    public void setActive(boolean active) {
+        this.userStatus = active ? UserStatus.ACTIVE : UserStatus.INACTIVE;
+    }
+
+    public PatientDetails getPatientDetails() {
+        return patientDetails;
+    }
+
+    public void setPatientDetails(PatientDetails patientDetails) {
+        this.patientDetails = patientDetails;
+    }
+
+    public NurseDetails getNurseDetails() {
+        return nurseDetails;
+    }
+
+    public void setNurseDetails(NurseDetails nurseDetails) {
+        this.nurseDetails = nurseDetails;
     }
 
     @Override

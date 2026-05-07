@@ -1,6 +1,5 @@
 package com.carebridge.backend.user.model;
 
-import com.carebridge.backend.user.Role;
 import com.carebridge.backend.user.UserStatus;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
@@ -22,7 +21,7 @@ public record UserDto(
     String email,
 
     @Digits(integer = 15, fraction = 0, message = "Invalid phone number format")
-    int phoneNumber,
+    String phoneNumber,
 
     @Past(message = "Date of birth must be in the past")
     LocalDate dateOfBirth,
@@ -30,9 +29,8 @@ public record UserDto(
     String residentialAddress,
 
     String nationality,
-
-    @NotNull(message = "Role is mandatory")
-    Role role,
-
-    UserStatus userStatus
+    java.util.Set<String> roles,
+    java.util.Set<String> permissions,
+    UserStatus userStatus,
+    boolean isActive
 ) {}

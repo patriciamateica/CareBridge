@@ -18,8 +18,13 @@ public class UserMapper {
             user.getDateOfBirth(),
             user.getResidentialAddress(),
             user.getNationality(),
-            user.getRole(),
-            user.getUserStatus()
+            user.getRoles().stream().map(com.carebridge.backend.user.model.Role::getName).collect(java.util.stream.Collectors.toSet()),
+            user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(com.carebridge.backend.user.model.Permission::getName)
+                .collect(java.util.stream.Collectors.toSet()),
+            user.getUserStatus(),
+            user.isActive()
         );
     }
 
