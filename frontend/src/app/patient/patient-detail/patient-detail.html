@@ -7,10 +7,6 @@
         <a class="view-profile-link" [routerLink]="[]">view profile</a>
       </div>
       <div class="flex items-center gap-3">
-        @if (!isInactive()) {
-          <app-update-patient [patientData]="p" (refreshTable)="onPatientUpdated()"></app-update-patient>
-        }
-        <app-delete-patient [patientData]="p" (refreshTable)="onPatientDeleted()"></app-delete-patient>
         <button class="back-btn" (click)="goBack()">Back to Roster</button>
       </div>
     </div>
@@ -177,21 +173,26 @@
 
             <div class="presc-sub-card">
               <p class="presc-subtitle">Active Medication</p>
-              <ul class="med-list">
-                @for (med of medications(); track med.id) {
-                  <li class="med-item">
-                    <span>• {{ med.name }}</span>
-                    @if (!isInactive()) {
-                      <button class="icon-del-btn" (click)="deleteMedication(med.id)">
-                        <i class="pi pi-times text-xs"></i>
-                      </button>
-                    }
-                  </li>
-                }
-                @if (!medications().length) {
-                  <li class="empty-text">No medications added yet.</li>
-                }
-              </ul>
+              <div class="text-xs text-gray-500 mb-2">
+                Showing {{ visibleMedications().length }} of {{ medicationTotal() }}
+              </div>
+              <div class="list-viewport" (scroll)="onMedicationListScroll($event)">
+                <ul class="med-list">
+                  @for (med of visibleMedications(); track med.id) {
+                    <li class="med-item">
+                      <span>• {{ med.name }} ({{ med.dose }})</span>
+                      @if (!isInactive()) {
+                        <button class="icon-del-btn" (click)="deleteMedication(med.id)">
+                          <i class="pi pi-times text-xs"></i>
+                        </button>
+                      }
+                    </li>
+                  }
+                  @if (!medications().length) {
+                    <li class="empty-text">No medications added yet.</li>
+                  }
+                </ul>
+              </div>
               @if (!isInactive()) {
                 <button class="green-action-btn w-full mt-auto" (click)="openMedDialog()">
                   Add medication
@@ -201,33 +202,53 @@
 
             <div class="presc-sub-card">
               <p class="presc-subtitle">Care Notes (Recent)</p>
-              <ul class="notes-list">
-                @for (note of careNotes().slice(0, 4); track note.id) {
-                  <li class="note-item">
-                    <span class="note-date">{{ note.createdAt | date: 'MMM d' }}:</span>
-                    <span class="note-text">{{ note.content }}</span>
-                    @if (!isInactive()) {
-                      <button class="icon-del-btn" (click)="deleteNote(note.id)">
-                        <i class="pi pi-times text-xs"></i>
-                      </button>
-                    }
-                  </li>
+              <div class="text-xs text-gray-500 mb-2">
+                Total: {{ careNotesStats().total }} | Last 7 days: {{ careNotesStats().last7Days }}
+                @if (careNotesStats().latestDate; as d) {
+                  | Latest: {{ d | date: 'MMM d, HH:mm' }}
                 }
-                @if (!careNotes().length) {
-                  <li class="empty-text">No care notes yet.</li>
-                }
-              </ul>
+              </div>
+              <div class="text-xs text-gray-500 mb-2">
+                Showing {{ visibleCareNotes().length }} of {{ careNotesTotal() }}
+              </div>
+              <div class="list-viewport" (scroll)="onCareNotesListScroll($event)">
+                <ul class="notes-list">
+                  @for (note of visibleCareNotes(); track note.id) {
+                    <li class="note-item">
+                      <span class="note-date">{{ note.timestamp | date: 'MMM d' }}:</span>
+                      <span class="note-text">{{ note.content }}</span>
+                      @if (!isInactive()) {
+                        <button class="icon-del-btn" (click)="startEditNote(note.id, note.content)">
+                          <i class="pi pi-pencil text-xs"></i>
+                        </button>
+                        <button class="icon-del-btn" (click)="deleteNote(note.id)">
+                          <i class="pi pi-times text-xs"></i>
+                        </button>
+                      }
+                    </li>
+                  }
+                  @if (!careNotes().length) {
+                    <li class="empty-text">No care notes yet.</li>
+                  }
+                </ul>
+              </div>
               <div class="note-input-row mt-auto">
                 <textarea class="note-textarea" rows="2"
                           [disabled]="isInactive()"
-                          [placeholder]="isInactive() ? 'Read only' : 'Write a care note...'"
+                          [placeholder]="isInactive() ? 'Read only' : (editingNoteId() ? 'Edit care note...' : 'Write a care note...')"
                           [ngModel]="newNoteContent()"
                           (ngModelChange)="newNoteContent.set($event)"></textarea>
                 @if (!isInactive()) {
+                  @if (editingNoteId()) {
+                    <button class="green-action-btn outline"
+                            (click)="cancelEditNote()">
+                      Cancel edit
+                    </button>
+                  }
                   <button class="green-action-btn"
                           (click)="submitNote()"
                           [disabled]="!newNoteContent().trim()">
-                    Add care note
+                    {{ editingNoteId() ? 'Update care note' : 'Add care note' }}
                   </button>
                 }
               </div>

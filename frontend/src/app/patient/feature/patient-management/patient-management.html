@@ -9,24 +9,21 @@
                [value]="searchQuery()"
                (input)="searchQuery.set($any($event.target).value)"/>
       </div>
-      <app-create-patient (refreshTable)="triggerRefresh()"></app-create-patient>
+      @if (authService.isAdmin() || authService.isNurse()) {
+        <app-create-patient></app-create-patient>
+      }
     </div>
   </div>
 
   <div class="split-layout">
 
     <div class="split-table">
-      <div class="table-card">
+      <div class="table-card table-scroll-container" (scroll)="onTableScroll($event)">
         <p-table
           [value]="filteredPatients()"
-          [paginator]="true"
-          [rows]="rowsPerPage"
-          [showCurrentPageReport]="true"
-          currentPageReportTemplate="Showing {first}–{last} of {totalRecords} patients"
+          [paginator]="false"
           styleClass="p-datatable-sm"
           rowHover="true"
-          [rowsPerPageOptions]="[5, 10, 20]"
-          paginatorDropdownAppendTo="body"
           [customSort]="true"
           (sortFunction)="customSort($event)"
           responsiveLayout="stack"
@@ -94,9 +91,11 @@
               </td>
               <td (click)="$event.stopPropagation()">
                 <span class="p-column-title font-bold lg:hidden text-center">Actions</span>
-                <div class="flex justify-center gap-1">
-                  <app-update-patient [patientData]="patient" (refreshTable)="triggerRefresh()"></app-update-patient>
-                  <app-delete-patient [patientData]="patient" (refreshTable)="triggerRefresh()"></app-delete-patient>
+                <div class="flex justify-center items-center gap-1">
+                  @if (authService.isAdmin() || authService.isNurse()) {
+                    <app-update-patient [patientData]="patient"></app-update-patient>
+                  }
+                  <app-delete-patient [patientData]="patient"></app-delete-patient>
                 </div>
               </td>
             </tr>
@@ -117,6 +116,12 @@
           </ng-template>
 
         </p-table>
+
+        @if (loadingMorePatients()) {
+          <div class="infinite-loader">Loading more patients...</div>
+        } @else if (hasMorePatients() && filteredPatients().length > 0) {
+          <div class="infinite-loader hint">Scroll to load more</div>
+        }
       </div>
     </div>
 
@@ -124,9 +129,9 @@
 
       <div class="stat-cards">
         <div class="stat-card">
-          <p class="stat-label">Active Patients</p>
+          <p class="stat-label">{{ authService.currentRole() === 'Nurse' ? 'My Patients' : 'Active Patients' }}</p>
           <p class="stat-number">{{ activeCount() }}</p>
-          <p class="stat-sub">Total Caseload</p>
+          <p class="stat-sub">{{ authService.currentRole() === 'Nurse' ? 'Assigned to you' : 'Total Caseload' }}</p>
         </div>
         <div class="stat-card">
           <p class="stat-label">Critical Alerts</p>

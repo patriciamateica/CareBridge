@@ -6,27 +6,14 @@
   <form #patientForm="ngForm" (ngSubmit)="onSubmit(patientForm)" class="flex flex-col gap-4">
 
     <div class="flex flex-col gap-1">
-      <label class="text-sm font-semibold text-gray-600">Full Name *</label>
-      <div class="grid grid-cols-2 gap-2">
-        <div class="flex flex-col gap-1">
-          <input pInputText name="firstName" placeholder="First name"
-                 [(ngModel)]="newPatient.firstName" #fn="ngModel"
-                 [invalid]="fn.invalid && (fn.touched || patientForm.submitted)"
-                 required minlength="2"/>
-          @if (fn.invalid && (fn.touched || patientForm.submitted)) {
-            <p-message severity="error" size="small" variant="simple">Required.</p-message>
-          }
-        </div>
-        <div class="flex flex-col gap-1">
-          <input pInputText name="lastName" placeholder="Last name"
-                 [(ngModel)]="newPatient.lastName" #ln="ngModel"
-                 [invalid]="ln.invalid && (ln.touched || patientForm.submitted)"
-                 required minlength="2"/>
-          @if (ln.invalid && (ln.touched || patientForm.submitted)) {
-            <p-message severity="error" size="small" variant="simple">Required.</p-message>
-          }
-        </div>
-      </div>
+      <label class="text-sm font-semibold text-gray-600">Account Email *</label>
+      <input pInputText name="userEmail" placeholder="Enter patient's account email"
+             [(ngModel)]="newPatient.userEmail" #email="ngModel"
+             [invalid]="email.invalid && (email.touched || patientForm.submitted)"
+             required email/>
+      @if (email.invalid && (email.touched || patientForm.submitted)) {
+        <p-message severity="error" size="small" variant="simple">A valid account email is required.</p-message>
+      }
     </div>
 
     <div class="flex flex-col gap-1">
@@ -49,10 +36,17 @@
 
     <div class="flex flex-col gap-1">
       <label class="text-sm font-semibold text-gray-600">Assigned Nurse *</label>
-      <input pInputText name="assignedNurse" placeholder="Nurse full name"
-             [(ngModel)]="newPatient.assignedNurse" #nurse="ngModel"
-             [invalid]="nurse.invalid && (nurse.touched || patientForm.submitted)"
-             required/>
+      <p-select name="assignedNurse"
+                [options]="nurseOptions()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select a nurse"
+                [(ngModel)]="newPatient.assignedNurse"
+                #nurse="ngModel"
+                [invalid]="nurse.invalid && (nurse.touched || patientForm.submitted)"
+                appendTo="body"
+                styleClass="w-full"
+                required/>
       @if (nurse.invalid && (nurse.touched || patientForm.submitted)) {
         <p-message severity="error" size="small" variant="simple">Required.</p-message>
       }

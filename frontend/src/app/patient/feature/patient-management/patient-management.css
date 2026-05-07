@@ -216,6 +216,24 @@
   overflow-x: auto;
 }
 
+.table-scroll-container {
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+.infinite-loader {
+  text-align: center;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: #4b5563;
+  border-top: 1px solid #f1f5f9;
+  background: #ffffff;
+}
+
+.infinite-loader.hint {
+  color: #94a3b8;
+}
+
 .patient-avatar {
   width: 34px;
   height: 34px;

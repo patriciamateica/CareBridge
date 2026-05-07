@@ -11,6 +11,7 @@
         <div class="flex flex-col gap-1">
           <input pInputText name="firstName" placeholder="First name"
                  [(ngModel)]="editPatient.firstName" #fn="ngModel"
+                  [readonly]="true"
                  [invalid]="fn.invalid && (fn.touched || patientForm.submitted)"
                  required minlength="2"/>
           @if (fn.invalid && (fn.touched || patientForm.submitted)) {
@@ -20,6 +21,7 @@
         <div class="flex flex-col gap-1">
           <input pInputText name="lastName" placeholder="Last name"
                  [(ngModel)]="editPatient.lastName" #ln="ngModel"
+                  [readonly]="true"
                  [invalid]="ln.invalid && (ln.touched || patientForm.submitted)"
                  required minlength="2"/>
           @if (ln.invalid && (ln.touched || patientForm.submitted)) {
@@ -49,10 +51,17 @@
 
     <div class="flex flex-col gap-1">
       <label class="text-sm font-semibold text-gray-600">Assigned Nurse *</label>
-      <input pInputText name="assignedNurse" placeholder="Nurse full name"
-             [(ngModel)]="editPatient.assignedNurse" #nurse="ngModel"
-             [invalid]="nurse.invalid && (nurse.touched || patientForm.submitted)"
-             required/>
+      <p-select name="assignedNurse"
+                [options]="nurseOptions()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select a nurse"
+                [(ngModel)]="editPatient.assignedNurse"
+                #nurse="ngModel"
+                [invalid]="nurse.invalid && (nurse.touched || patientForm.submitted)"
+                appendTo="body"
+                styleClass="w-full"
+                required/>
       @if (nurse.invalid && (nurse.touched || patientForm.submitted)) {
         <p-message severity="error" size="small" variant="simple">Required.</p-message>
       }

@@ -340,6 +340,12 @@
   flex: 1;
 }
 
+.list-viewport {
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
 .med-item, .note-item {
   display: flex;
   justify-content: space-between;
