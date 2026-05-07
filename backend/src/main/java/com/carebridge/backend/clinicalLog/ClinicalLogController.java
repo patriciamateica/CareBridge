@@ -1,11 +1,11 @@
 package com.carebridge.backend.clinicalLog;
 
 import com.carebridge.backend.clinicalLog.model.ClinicalLogDto;
-import com.carebridge.backend.user.Role;
 import com.carebridge.backend.user.UserService;
 import com.carebridge.backend.user.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -16,11 +16,13 @@ public class ClinicalLogController {
     private final ClinicalLogService service;
     private final ClinicalLogMapper mapper;
     private final UserService userService;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public ClinicalLogController(ClinicalLogService service, ClinicalLogMapper mapper, UserService userService) {
+    public ClinicalLogController(ClinicalLogService service, ClinicalLogMapper mapper, UserService userService, SimpMessagingTemplate messagingTemplate) {
         this.service = service;
         this.mapper = mapper;
         this.userService = userService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @GetMapping
@@ -38,13 +40,15 @@ public class ClinicalLogController {
         User patient = userService.getUserById(dto.patientId());
         User nurse = userService.getUserById(dto.nurseId());
 
-        if (patient.getRole() != Role.PATIENT) {
+        if (!patient.hasRole("PATIENT")) {
             throw new IllegalArgumentException("The provided patient ID does not belong to a patient.");
         }
-        if (nurse.getRole() != Role.NURSE) {
+        if (!nurse.hasRole("NURSE")) {
             throw new IllegalArgumentException("The provided nurse ID does not belong to a nurse.");
         }
-        return mapper.toDto(service.create(mapper.toEntity(dto, nurse, patient)));
+        ClinicalLogDto savedDto = mapper.toDto(service.create(mapper.toEntity(dto, nurse, patient)));
+        messagingTemplate.convertAndSend("/topic/clinical-logs", savedDto);
+        return savedDto;
     }
 
     @PutMapping("/{id}")
@@ -52,17 +56,23 @@ public class ClinicalLogController {
         User patient = userService.getUserById(dto.patientId());
         User nurse = userService.getUserById(dto.nurseId());
 
-        if (patient.getRole() != Role.PATIENT) {
+        if (!patient.hasRole("PATIENT")) {
             throw new IllegalArgumentException("The provided patient ID does not belong to a patient.");
         }
-        if (nurse.getRole() != Role.NURSE) {
+        if (!nurse.hasRole("NURSE")) {
             throw new IllegalArgumentException("The provided nurse ID does not belong to a nurse.");
         }
-        return mapper.toDto(service.update(id, mapper.toEntity(dto, nurse, patient)));
+        ClinicalLogDto updatedDto = mapper.toDto(service.update(id, mapper.toEntity(dto, nurse, patient)));
+        messagingTemplate.convertAndSend("/topic/clinical-logs", updatedDto);
+        return updatedDto;
     }
 
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable UUID id) {
-        return service.delete(id);
+        boolean deleted = service.delete(id);
+        if (deleted) {
+            messagingTemplate.convertAndSend("/topic/clinical-logs/deleted", id.toString());
+        }
+        return deleted;
     }
 }
