@@ -1,10 +1,11 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { Apollo } from 'apollo-angular';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, map, switchMap, tap } from 'rxjs/operators';
-import { GET_USERS, LOGIN_USER, REGISTER_USER } from '../app/graphql/user.graphql';
+import { Observable, throwError, of } from 'rxjs';
+import { catchError, map, switchMap} from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
 
-export type UserRole = 'admin' | 'nurse' | 'patient';
+import { UserService } from '../app/cruds/services/userService';
+
+export type UserRole = 'Admin' | 'Nurse' | 'Patient' | 'Family';
 
 export interface RegisterRequest {
   firstName: string;
@@ -19,187 +20,127 @@ export interface LoginRequest {
   password: string;
 }
 
-type GqlUser = {
-  id: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  role?: string;
-};
-
 const AUTH_TOKEN_KEY = 'carebridge_auth_token';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apollo = inject(Apollo);
+  private readonly userSvc = inject(UserService);
+  private readonly http = inject(HttpClient);
 
-  readonly currentRole = signal<UserRole>('patient');
+  readonly currentRoles = signal<UserRole[]>([]);
+  readonly currentPermissions = signal<string[]>([]);
   readonly currentUserName = signal<string>('Guest');
+  readonly currentUserId = signal<string>('');
+
+  readonly currentRole = () => this.currentRoles()[0] || 'Patient';
 
   constructor() {
     this.hydrateSessionFromToken();
   }
 
-  setRole(role: UserRole, name: string) {
-    this.currentRole.set(role);
+  setRoles(roles: UserRole[], permissions: string[], name: string) {
+    this.currentRoles.set(roles);
+    this.currentPermissions.set(permissions || []);
     this.currentUserName.set(name || 'Guest');
   }
 
-  isAdmin(): boolean {
-    return this.currentRole() === 'admin';
+  setCurrentUser(id: string, roles: UserRole[], permissions: string[], name: string) {
+    this.currentUserId.set(id);
+    this.setRoles(roles, permissions, name);
   }
 
-  isNurse(): boolean {
-    return this.currentRole() === 'nurse';
+  isAdmin(): boolean { return this.currentRoles().includes('Admin'); }
+  isNurse(): boolean { return this.currentRoles().includes('Nurse'); }
+  isPatient(): boolean { return this.currentRoles().includes('Patient'); }
+  isFamily(): boolean { return this.currentRoles().includes('Family'); }
+
+  hasRole(role: UserRole): boolean {
+    return this.currentRoles().includes(role);
   }
 
-  isPatient(): boolean {
-    return this.currentRole() === 'patient';
+  hasPermission(permission: string): boolean {
+    return this.currentPermissions().includes(permission);
   }
 
   registerNewUser(payload: RegisterRequest): Observable<void> {
-    return this.apollo.mutate<{ registerUser: GqlUser }>({
-      mutation: REGISTER_USER,
-      variables: {
-        input: {
-          firstName: payload.firstName,
-          lastName: payload.lastName,
-          email: payload.email,
-          phoneNumber: payload.phoneNumber,
-          password: payload.password,
-        }
-      }
-    }).pipe(
+    return this.userSvc.create({
+      firstName: payload.firstName,
+      lastName: payload.lastName,
+      email: payload.email,
+      phoneNumber: parseInt(payload.phoneNumber) || 0,
+      roles: ['PATIENT'],
+      userStatus: 'ACTIVE'
+    } as any).pipe(
       map(() => void 0),
       catchError((error) => {
-        const backendMessage = error?.message ?? error?.graphQLErrors?.[0]?.message ?? 'Registration failed.';
-        return throwError(() => ({ error: backendMessage }));
+        return throwError(() => ({ error: 'Registration failed.' }));
       })
     );
   }
 
-  login(credentials: LoginRequest): Observable<UserRole> {
-    const email = credentials.email.trim().toLowerCase();
-
-    return this.apollo.mutate<{ loginUser: string }>({
-      mutation: LOGIN_USER,
-      variables: {
-        input: {
-          email,
-          password: credentials.password,
-        }
-      }
-    }).pipe(
-      switchMap((result) => {
-        const token = result.data?.loginUser;
-        if (!token) {
-          return throwError(() => ({ error: 'Login failed. Empty token returned by backend.' }));
-        }
-
-        this.persistToken(token);
-
-        return this.apollo.query<{ getUsers: GqlUser[] }>({
-          query: GET_USERS,
-          variables: { page: 0, size: 500 },
-          fetchPolicy: 'network-only',
-        }).pipe(
-          map((queryResult) => {
-            const users = queryResult.data?.getUsers ?? [];
-            const user = users.find((row) => (row.email ?? '').toLowerCase() === email);
-            const role = this.mapRole(user?.role);
-            const name = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || email;
-            this.setRole(role, name);
-            return role;
-          })
-        );
-      }),
-      catchError((error) => {
-        const backendMessage = error?.error ?? error?.message ?? error?.graphQLErrors?.[0]?.message ?? 'Invalid email or password.';
-        return throwError(() => ({ error: backendMessage }));
-      })
+  login(credentials: LoginRequest): Observable<void> {
+    return this.http.post<void>('http://localhost:8080/api/login', credentials, { withCredentials: true }).pipe(
+      switchMap(() => this.fetchAndHydrateUser()),
+      catchError(error => throwError(() => ({ error: 'Invalid email or password.' })))
     );
-  }
-
-  activateUser(_: string, __: string): Observable<UserRole> {
-    return of(this.currentRole());
   }
 
   logout(): void {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    this.currentRole.set('patient');
-    this.currentUserName.set('Guest');
+    this.http.post('http://localhost:8080/api/logout', {}, { withCredentials: true })
+      .subscribe({ error: () => {} });
+    this.resetLocalState();
   }
 
   getAuthToken(): string | null {
     return localStorage.getItem(AUTH_TOKEN_KEY);
   }
 
-  private hydrateSessionFromToken(): void {
-    const token = this.getAuthToken();
-    if (!token) return;
+  private resetLocalState(): void {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    this.currentRoles.set([]);
+    this.currentPermissions.set([]);
+    this.currentUserName.set('Guest');
+    this.currentUserId.set('');
+  }
 
-    const claims = this.parseJwtClaims(token);
-    const roleFromToken = this.extractRoleFromClaims(claims);
-    if (roleFromToken) {
-      this.currentRole.set(roleFromToken);
-    }
-
-    const subjectClaim = claims?.['sub'];
-    const emailFromToken = typeof subjectClaim === 'string' ? subjectClaim : '';
-    if (!emailFromToken) return;
-
-    this.apollo.query<{ getUsers: GqlUser[] }>({
-      query: GET_USERS,
-      variables: { page: 0, size: 500 },
-      fetchPolicy: 'network-only',
-    }).pipe(
-      map((result) => result.data?.getUsers ?? []),
-      tap((users) => {
-        const user = users.find((row) => (row.email ?? '').toLowerCase() === emailFromToken.toLowerCase());
-        if (!user) return;
-        const resolvedRole = this.mapRole(user.role) || roleFromToken || 'patient';
-        const name = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || emailFromToken;
-        this.setRole(resolvedRole, name);
+  private fetchAndHydrateUser(): Observable<void> {
+    return this.http.get<any>('http://localhost:8080/api/users/me', { withCredentials: true }).pipe(
+      map((user) => {
+        console.log('[AuthService] User data received:', user);
+        const roles = this.mapRoles(user.roles);
+        const permissions = Array.from(new Set(user.permissions || [])) as string[];
+        console.log('[AuthService] Mapped roles:', roles);
+        console.log('[AuthService] Mapped permissions:', permissions);
+        this.setCurrentUser(user.id, roles, permissions, `${user.firstName} ${user.lastName}`);
       }),
-      catchError(() => of([]))
-    ).subscribe();
+      catchError((err) => {
+        console.error('[AuthService] Hydration failed:', err);
+        return of(void 0);
+      })
+    );
+  }
+
+  private hydrateSessionFromToken(): void {
+    this.fetchAndHydrateUser().subscribe({
+      error: () => {
+        this.resetLocalState();
+      }
+    });
   }
 
   private persistToken(token: string): void {
     localStorage.setItem(AUTH_TOKEN_KEY, token);
   }
 
-  private mapRole(role?: string): UserRole {
-    switch ((role ?? '').toUpperCase()) {
-      case 'ADMIN':
-        return 'admin';
-      case 'NURSE':
-        return 'nurse';
-      default:
-        return 'patient';
-    }
-  }
-
-  private parseJwtClaims(token: string): Record<string, unknown> | null {
-    try {
-      const parts = token.split('.');
-      if (parts.length < 2) return null;
-      const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-      const padded = payload.padEnd(Math.ceil(payload.length / 4) * 4, '=');
-      return JSON.parse(atob(padded));
-    } catch {
-      return null;
-    }
-  }
-
-  private extractRoleFromClaims(claims: Record<string, unknown> | null): UserRole | null {
-    if (!claims) return null;
-    const authorities = claims['authorities'];
-    if (!Array.isArray(authorities)) return null;
-    const normalized = authorities.map((a) => String(a).toUpperCase());
-    if (normalized.some((a) => a.includes('ADMIN'))) return 'admin';
-    if (normalized.some((a) => a.includes('NURSE'))) return 'nurse';
-    if (normalized.some((a) => a.includes('PATIENT'))) return 'patient';
-    return null;
+  private mapRoles(roles?: string[]): UserRole[] {
+    if (!roles || roles.length === 0) return [];
+    return roles.map(r => {
+        const role = r.toUpperCase().replace('ROLE_', '').trim();
+        if (role === 'ADMIN') return 'Admin';
+        if (role === 'NURSE') return 'Nurse';
+        if (role === 'FAMILY') return 'Family';
+        if (role === 'PATIENT') return 'Patient';
+        return 'Patient';
+    }) as UserRole[];
   }
 }
