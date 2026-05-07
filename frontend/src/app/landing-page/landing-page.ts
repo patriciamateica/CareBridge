@@ -2,12 +2,12 @@ import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { CardModule } from 'primeng/card';
+
 
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [CommonModule, ButtonModule, CardModule],
+  imports: [CommonModule, ButtonModule],
   templateUrl: './landing-page.html',
   styleUrl: './landing-page.css'
 })
