@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { combineLatest, from, fromEvent, merge, Observable, of, timer } from 'rxjs';
-import { catchError, distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs/operators';
+import { combineLatest, from, fromEvent, merge, Observable, of, timer, Subject } from 'rxjs';
+import { catchError, distinctUntilChanged, map, shareReplay, switchMap, filter, pairwise } from 'rxjs/operators';
 
 type OfflineReason = 'NETWORK_DOWN' | 'SERVER_UNREACHABLE' | 'ONLINE';
 
@@ -12,6 +12,7 @@ export class NetworkService {
 
   private readonly _browserOnline = signal<boolean>(typeof window === 'undefined' ? true : window.navigator.onLine);
   private readonly _serverReachable = signal<boolean>(true);
+  private readonly connectionRestoredSubject = new Subject<void>();
 
   readonly isBrowserOnlineSignal = this._browserOnline.asReadonly();
   readonly isServerReachableSignal = this._serverReachable.asReadonly();
@@ -19,6 +20,7 @@ export class NetworkService {
 
   readonly isServerReachable$: Observable<boolean>;
   readonly isOnline$: Observable<boolean>;
+  readonly connectionRestored$ = this.connectionRestoredSubject.asObservable();
 
   constructor() {
     const browserOnline$ = this.buildBrowserOnlineStream();
@@ -40,6 +42,15 @@ export class NetworkService {
       distinctUntilChanged(),
       shareReplay({ bufferSize: 1, refCount: true })
     );
+
+    this.isOnline$.pipe(
+      pairwise(),
+      filter(([prev, curr]) => !prev && curr),
+      map(() => undefined)
+    ).subscribe(() => {
+      console.log('[NetworkService] Connection restored');
+      this.connectionRestoredSubject.next();
+    });
   }
 
   get isOnline(): boolean {
@@ -75,9 +86,10 @@ export class NetworkService {
   }
 
   private resolveProbeUrl(): string {
-    if (typeof window === 'undefined') return 'http://localhost:8080/graphql';
-    const host = window.location.hostname || 'localhost';
-    return `http://${host}:8080/graphql`;
+    const host = (typeof window !== 'undefined' && window.location.hostname) || 'localhost';
+    const url = `http://${host}:8080/api/health`;
+    console.log('[NetworkService] Initializing connectivity probe to:', url);
+    return url;
   }
 
   private async pingServer(): Promise<boolean> {
@@ -85,9 +97,7 @@ export class NetworkService {
     const timeoutId = setTimeout(() => controller.abort(), this.probeTimeoutMs);
     try {
       await fetch(this.probeUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: 'query HealthPing { __typename }' }),
+        method: 'GET',
         signal: controller.signal,
       });
       return true;

@@ -24,16 +24,32 @@ export interface PendingOperation {
   providedIn: 'root'
 })
 export class OfflineStorageService {
-  private readonly QUEUE_KEY = 'pending_operations';
+  private readonly QUEUE_KEY = 'offline_sync_queue';
+  private readonly LEGACY_QUEUE_KEY = 'pending_operations';
   private readonly DATA_PREFIX = 'offline_data_';
 
-  saveData(key: string, data: any): void {
-    localStorage.setItem(this.DATA_PREFIX + key, JSON.stringify(data));
+  private get isBrowser(): boolean {
+    return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+  }
+
+  saveData<T>(key: string, data: T): void {
+    if (!this.isBrowser) return;
+    try {
+      localStorage.setItem(this.DATA_PREFIX + key, JSON.stringify(data));
+    } catch (error) {
+      console.error(`Failed to save ${key} to localStorage`, error);
+    }
   }
 
   getData<T>(key: string): T | null {
-    const data = localStorage.getItem(this.DATA_PREFIX + key);
-    return data ? JSON.parse(data) : null;
+    if (!this.isBrowser) return null;
+
+    const prefixed = this.safeParse<T>(localStorage.getItem(this.DATA_PREFIX + key));
+    if (prefixed !== null) {
+      return prefixed;
+    }
+
+    return this.safeParse<T>(localStorage.getItem(key));
   }
 
   queueOperation(op: Omit<PendingOperation, 'id' | 'timestamp' | 'retryCount' | 'lastError'>): string {
@@ -50,13 +66,28 @@ export class OfflineStorageService {
   }
 
   getQueue(): PendingOperation[] {
-    const queue = localStorage.getItem(this.QUEUE_KEY);
-    const parsed = queue ? JSON.parse(queue) as PendingOperation[] : [];
-    return parsed.sort((a, b) => a.timestamp - b.timestamp);
+    if (!this.isBrowser) return [];
+
+    const current = this.safeParse<PendingOperation[]>(localStorage.getItem(this.QUEUE_KEY));
+    if (Array.isArray(current)) {
+      return this.sortQueue(current);
+    }
+
+    const legacy = this.safeParse<PendingOperation[]>(localStorage.getItem(this.LEGACY_QUEUE_KEY));
+    if (Array.isArray(legacy)) {
+      const normalized = this.sortQueue(legacy);
+      this.saveQueue(normalized);
+      localStorage.removeItem(this.LEGACY_QUEUE_KEY);
+      return normalized;
+    }
+
+    return [];
   }
 
   clearQueue(): void {
+    if (!this.isBrowser) return;
     localStorage.removeItem(this.QUEUE_KEY);
+    localStorage.removeItem(this.LEGACY_QUEUE_KEY);
   }
 
   removeFromQueue(id: string): void {
@@ -78,8 +109,12 @@ export class OfflineStorageService {
   }
 
   remapPatientId(oldPatientId: string, newPatientId: string): void {
+    let changed = false;
     const queue = this.getQueue().map((op) => {
-      if (op.payload['patientId'] !== oldPatientId) return op;
+      if (op.payload['patientId'] !== oldPatientId) {
+        return op;
+      }
+      changed = true;
       return {
         ...op,
         payload: {
@@ -88,7 +123,20 @@ export class OfflineStorageService {
         },
       };
     });
-    this.saveQueue(queue);
+    if (changed) {
+      this.saveQueue(queue);
+    }
+  }
+
+  removeData(key: string): void {
+    if (!this.isBrowser) return;
+    localStorage.removeItem(this.DATA_PREFIX + key);
+    localStorage.removeItem(key);
+  }
+
+  clearAll(): void {
+    if (!this.isBrowser) return;
+    localStorage.clear();
   }
 
   private generateOperationId(): string {
@@ -96,6 +144,22 @@ export class OfflineStorageService {
   }
 
   private saveQueue(queue: PendingOperation[]): void {
+    if (!this.isBrowser) return;
     localStorage.setItem(this.QUEUE_KEY, JSON.stringify(queue));
+  }
+
+  private sortQueue(queue: PendingOperation[]): PendingOperation[] {
+    return [...queue].sort((a, b) => a.timestamp - b.timestamp);
+  }
+
+  private safeParse<T>(raw: string | null): T | null {
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
   }
 }
