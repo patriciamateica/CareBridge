@@ -65,6 +65,11 @@ public class UserController {
         return ResponseEntity.ok(userService.getUsersPaginated(pageable).map(userMapper::mapToDto));
     }
 
+    @GetMapping("/by-role")
+    public ResponseEntity<Page<UserDto>> getUsersByRole(@RequestParam String role, Pageable pageable) {
+        return ResponseEntity.ok(userService.getUsersByRolePaginated(role, pageable).map(userMapper::mapToDto));
+    }
+
     @PutMapping("/{id}")
     @com.carebridge.backend.audit.LogAction("Update User")
     public ResponseEntity<UserDto> update(@PathVariable UUID id, @RequestBody User user) {
@@ -81,5 +86,19 @@ public class UserController {
         userService.delete(id);
         messagingTemplate.convertAndSend("/topic/users/deleted", java.util.Map.of("id", id.toString()));
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Phase 4: Reactivate an INACTIVE user.
+     * Sets the user status back to ACTIVE, allowing them to perform normal operations.
+     * Patients with INACTIVE status can call this endpoint after logging in.
+     */
+    @PostMapping("/{id}/reactivate")
+    @com.carebridge.backend.audit.LogAction("Reactivate User")
+    public ResponseEntity<UserDto> reactivate(@PathVariable UUID id) {
+        User reactUser = userService.updateStatus(id, com.carebridge.backend.user.UserStatus.ACTIVE);
+        UserDto dto = userMapper.mapToDto(reactUser);
+        messagingTemplate.convertAndSend("/topic/users", dto);
+        return ResponseEntity.ok(dto);
     }
 }

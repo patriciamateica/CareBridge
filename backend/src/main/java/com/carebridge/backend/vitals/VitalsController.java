@@ -35,6 +35,11 @@ public class VitalsController {
         return mapper.toDto(vitalsService.getById(id));
     }
 
+    @GetMapping("/patient/{patientId}")
+    public Page<VitalsDto> getByPatientId(@PathVariable UUID patientId, Pageable pageable) {
+        return vitalsService.getByPatientId(patientId, pageable).map(mapper::toDto);
+    }
+
     @PostMapping
     public VitalsDto create(@RequestBody VitalsDto vitalsDto) {
         User patient = userService.getUserById(vitalsDto.patientId());

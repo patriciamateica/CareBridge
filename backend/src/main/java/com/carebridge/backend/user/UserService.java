@@ -178,6 +178,11 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll(pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Page<User> getUsersByRolePaginated(String roleName, Pageable pageable) {
+        return userRepository.findByRoles_NameIgnoreCase(roleName, pageable);
+    }
+
     @Transactional
     public void delete(UUID id) {
         patientDetailsService.unassignNurse(id);

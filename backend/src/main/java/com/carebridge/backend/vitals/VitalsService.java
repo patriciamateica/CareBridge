@@ -64,6 +64,11 @@ public class VitalsService {
         return vitalsRepository.findByPatientId(patientId);
     }
 
+    @Transactional(readOnly = true)
+    public Page<Vitals> getByPatientId(UUID patientId, Pageable pageable) {
+        return vitalsRepository.findByPatientId(patientId, pageable);
+    }
+
     @Transactional
     public void deleteAll() {
         vitalsRepository.deleteAll();

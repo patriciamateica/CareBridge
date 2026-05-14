@@ -52,6 +52,9 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return user.getUserStatus() == com.carebridge.backend.user.UserStatus.ACTIVE;
+        // Phase 4: Allow INACTIVE users to log in
+        // User status is managed separately from authentication enablement
+        // This allows patients with INACTIVE status to still authenticate and reactivate themselves
+        return true;
     }
 }

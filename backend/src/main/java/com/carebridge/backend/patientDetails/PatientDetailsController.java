@@ -32,9 +32,27 @@ public class PatientDetailsController {
         return service.findAll(pageable).map(this::convertToDto);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping({"/{id}"})
     public PatientDetailsDto getById(@PathVariable UUID id) {
         return convertToDto(service.getById(id));
+    }
+
+    /**
+     * Returns patient details for all patients assigned to the given nurse.
+     * Used by the frontend to enforce nurse-scoped roster views without fetching all records.
+     */
+    @GetMapping("/nurse/{nurseId}")
+    public Page<PatientDetailsDto> getByNurseId(@PathVariable UUID nurseId, Pageable pageable) {
+        return service.findByNurseId(nurseId, pageable).map(this::convertToDto);
+    }
+
+    /**
+     * Returns the single patient details record linked to the given user (patient) ID.
+     * Used by the patient-detail view to load details without scanning all records.
+     */
+    @GetMapping("/user/{userId}")
+    public PatientDetailsDto getByUserId(@PathVariable UUID userId) {
+        return convertToDto(service.getByUserId(userId));
     }
 
     @PostMapping

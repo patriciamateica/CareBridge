@@ -69,6 +69,11 @@ public class HealthStatusService {
         return healthStatusRepository.findByPatientId(patientId);
     }
 
+    @Transactional(readOnly = true)
+    public Page<HealthStatus> getByPatientId(UUID patientId, Pageable pageable) {
+        return healthStatusRepository.findByPatientId(patientId, pageable);
+    }
+
     @Transactional
     public Flux<HealthStatus> getStatusStream(UUID patientId) {
         return statusSink.asFlux()

@@ -35,6 +35,16 @@ public class TaskController {
         return mapper.toDto(service.getById(id));
     }
 
+    @GetMapping("/patient/{patientId}")
+    public Page<TaskDto> getByPatientId(@PathVariable UUID patientId, Pageable pageable) {
+        return service.findByPatientId(patientId, pageable).map(mapper::toDto);
+    }
+
+    @GetMapping("/nurse/{nurseId}")
+    public Page<TaskDto> getByNurseId(@PathVariable UUID nurseId, Pageable pageable) {
+        return service.findByNurseId(nurseId, pageable).map(mapper::toDto);
+    }
+
     @PostMapping
     public TaskDto create(@RequestBody TaskDto dto) {
         User patient = userService.getUserById(dto.patientId());

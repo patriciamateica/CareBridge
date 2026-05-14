@@ -4,6 +4,7 @@ import com.carebridge.backend.patientDetails.model.PatientCreateDto;
 import com.carebridge.backend.patientDetails.model.PatientDetails;
 import com.carebridge.backend.roster.RosterRepository;
 import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.UserStatus;
 import com.carebridge.backend.user.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,10 +36,24 @@ public class PatientDetailsService {
     }
 
     @Transactional(readOnly = true)
+    public Page<PatientDetails> findByNurseId(UUID nurseId, Pageable pageable) {
+        return repository.findByAssignedNurseId(nurseId, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public PatientDetails getById(UUID id) {
         return repository.findById(id).orElseThrow();
     }
 
+    /**
+     * Phase 8: Explicit transaction boundary for creation of new patient details.
+     * This method has a complete transaction that includes:
+     * 1. Create/update PatientDetails
+     * 2. Sync with Roster (create if needed)
+     * 3. Sync patient status to user status
+     * Atomic operation: all succeed or all rollback.
+     */
+    @Transactional
     public PatientDetails create(PatientDetails patientDetails) {
         if (patientDetails.getUser() != null) {
             UUID userId = patientDetails.getUser().getId();
@@ -69,6 +84,15 @@ public class PatientDetailsService {
         return saved;
     }
 
+    /**
+     * Phase 8: Explicit transaction boundary for creating a patient with linked user.
+     * This method ensures:
+     * 1. PatientDetails is created and flushed to DB
+     * 2. Roster entry is created/updated in same transaction
+     * 3. User status is synced to patient status
+     * All changes are committed together or rolled back together.
+     */
+    @Transactional
     public PatientDetails createPatient(PatientCreateDto dto) {
         User user = userRepository.findByEmail(dto.userEmail())
             .orElseThrow(() -> new IllegalArgumentException("The patient cannot be added as the email is not in the system yet."));
@@ -96,6 +120,9 @@ public class PatientDetailsService {
             updateRoster(saved.getUser(), saved.getAssignedNurseId());
         }
 
+        // Phase 4: Sync initial patient status to user status
+        syncPatientStatusToUserStatus(saved);
+
         createdSink.tryEmitNext(saved);
         return saved;
     }
@@ -122,6 +149,32 @@ public class PatientDetailsService {
         }
     }
 
+    /**
+     * Phase 4: Synchronize patient status changes to user status.
+     * Maps patient-level status to system-level user status:
+     * - Patient status "Inactive" -> User status INACTIVE
+     * - Patient status "Active" or "Critical" -> User status ACTIVE
+     */
+    private void syncPatientStatusToUserStatus(PatientDetails patientDetails) {
+        User user = patientDetails.getUser();
+        if (user == null) return;
+
+        String patientStatus = patientDetails.getStatus();
+        if (patientStatus == null) return;
+
+        // Map patient status to user status
+        UserStatus newUserStatus = switch (patientStatus.toLowerCase()) {
+            case "inactive" -> UserStatus.INACTIVE;
+            case "active", "critical" -> UserStatus.ACTIVE;
+            default -> user.getUserStatus(); // Keep current if unknown
+        };
+
+        if (!newUserStatus.equals(user.getUserStatus())) {
+            user.setUserStatus(newUserStatus);
+            userRepository.save(user);
+        }
+    }
+
     public PatientDetails update(UUID id, PatientDetails updatedDetails) {
         PatientDetails oldDetails = repository.findById(id).orElseThrow();
 
@@ -140,6 +193,9 @@ public class PatientDetailsService {
             updateRoster(saved.getUser(), saved.getAssignedNurseId());
         }
 
+        // Phase 4: Sync patient status changes to user status
+        syncPatientStatusToUserStatus(saved);
+
         createdSink.tryEmitNext(saved);
         return saved;
     }
@@ -147,14 +203,21 @@ public class PatientDetailsService {
     public boolean delete(UUID id) {
         PatientDetails patientDetails = repository.findById(id).orElseThrow();
         User user = patientDetails.getUser();
+
+        // Set user status to INACTIVE when patient details are deleted
         if (user != null) {
-            user.setActive(false);
+            user.setUserStatus(UserStatus.INACTIVE);
             userRepository.save(user);
         }
+
         repository.delete(patientDetails);
         return true;
     }
 
+    /**
+     * Phase 8: Explicit transaction boundary for deleting all patient details.
+     */
+    @Transactional
     public void deleteAll() {
         repository.deleteAll();
     }
@@ -173,11 +236,13 @@ public class PatientDetailsService {
         return saved;
     }
 
+    @Transactional(readOnly = true)
     public Flux<PatientDetails> getCreatedStream(UUID userId) {
         return createdSink.asFlux()
             .filter(pd -> userId == null || pd.getUser().getId().equals(userId));
     }
 
+    @Transactional(readOnly = true)
     public Flux<PatientDetails> getDiagnosisStream(UUID id) {
         return diagnosisSink.asFlux()
             .filter(pd -> id == null || pd.getId().equals(id));

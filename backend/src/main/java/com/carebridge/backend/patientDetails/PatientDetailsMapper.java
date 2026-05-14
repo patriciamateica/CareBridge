@@ -12,6 +12,8 @@ public class PatientDetailsMapper {
         return new PatientDetailsDto(
             details.getId(),
             details.getUser().getId(),
+            details.getUser().getFirstName(),
+            details.getUser().getLastName(),
             details.getPrimaryDiagnosis(),
             details.getDiagnostics(),
             details.getScans(),

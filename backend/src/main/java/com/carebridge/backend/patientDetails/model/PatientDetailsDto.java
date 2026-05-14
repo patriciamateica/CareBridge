@@ -11,6 +11,10 @@ public record PatientDetailsDto(
     @NotNull(message = "User ID linkage is mandatory")
     UUID userId,
 
+    String patientFirstName,
+
+    String patientLastName,
+
     @NotBlank(message = "Primary diagnosis is required")
     String primaryDiagnosis,
 

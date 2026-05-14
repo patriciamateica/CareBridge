@@ -1,5 +1,7 @@
 package com.carebridge.backend.roster;
 
+import com.carebridge.backend.patientDetails.PatientDetailsRepository;
+import com.carebridge.backend.patientDetails.PatientDetailsService;
 import com.carebridge.backend.roster.model.Roster;
 import com.carebridge.backend.roster.model.RosterStatus;
 import org.springframework.data.domain.Page;
@@ -16,10 +18,16 @@ import java.util.UUID;
 @Transactional
 public class RosterService {
     private final RosterRepository rosterRepository;
+    private final PatientDetailsRepository patientDetailsRepository;
+    private final PatientDetailsService patientDetailsService;
     private final Sinks.Many<Roster> updateSink = Sinks.many().multicast().onBackpressureBuffer();
 
-    public RosterService(RosterRepository rosterRepository) {
+    public RosterService(RosterRepository rosterRepository,
+                        PatientDetailsRepository patientDetailsRepository,
+                        PatientDetailsService patientDetailsService) {
         this.rosterRepository = rosterRepository;
+        this.patientDetailsRepository = patientDetailsRepository;
+        this.patientDetailsService = patientDetailsService;
     }
 
     @Transactional(readOnly = true)
@@ -36,6 +44,16 @@ public class RosterService {
     public Roster create(Roster roster) {
         Roster saved = rosterRepository.save(roster);
         updateSink.tryEmitNext(saved);
+
+        // Sync with PatientDetails: update assigned nurse
+        if (saved.getPatient() != null && saved.getNurse() != null) {
+            patientDetailsRepository.findByUserId(saved.getPatient().getId())
+                .ifPresent(patientDetails -> {
+                    patientDetails.setAssignedNurseId(saved.getNurse().getId());
+                    patientDetailsRepository.save(patientDetails);
+                });
+        }
+
         return saved;
     }
 
@@ -49,6 +67,16 @@ public class RosterService {
 
         Roster saved = rosterRepository.save(oldRoster);
         updateSink.tryEmitNext(saved);
+
+        // Sync with PatientDetails: update assigned nurse if it changed
+        if (saved.getPatient() != null && saved.getNurse() != null) {
+            patientDetailsRepository.findByUserId(saved.getPatient().getId())
+                .ifPresent(patientDetails -> {
+                    patientDetails.setAssignedNurseId(saved.getNurse().getId());
+                    patientDetailsRepository.save(patientDetails);
+                });
+        }
+
         return saved;
     }
 
@@ -64,7 +92,17 @@ public class RosterService {
 
     @Transactional
     public boolean delete(UUID id) {
-        rosterRepository.findById(id).orElseThrow();
+        Roster roster = rosterRepository.findById(id).orElseThrow();
+
+        // Cascade delete: remove associated PatientDetails
+        if (roster.getPatient() != null) {
+            patientDetailsRepository.findByUserId(roster.getPatient().getId())
+                .ifPresent(patientDetails -> {
+                    // This will also set the User status to INACTIVE
+                    patientDetailsService.delete(patientDetails.getId());
+                });
+        }
+
         rosterRepository.deleteById(id);
         return true;
     }

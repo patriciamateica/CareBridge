@@ -27,6 +27,16 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true)
+    public Page<Task> findByPatientId(UUID patientId, Pageable pageable) {
+        return repository.findByPatient_Id(patientId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Task> findByNurseId(UUID nurseId, Pageable pageable) {
+        return repository.findByClaimer_Id(nurseId, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public Task getById(UUID id) {
         return repository.findById(id).orElseThrow();
     }
