@@ -1,12 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from "@angular/common";
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from "@angular/forms";
-import { Router } from "@angular/router";
-import { ButtonModule } from "primeng/button";
-import { CheckboxModule } from "primeng/checkbox";
-import { InputTextModule } from "primeng/inputtext";
-import { Password } from "primeng/password";
-import { Message } from "primeng/message";
+import { CommonModule } from '@angular/common';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextModule } from 'primeng/inputtext';
+import { Password } from 'primeng/password';
+import { Message } from 'primeng/message';
 import { ToastService } from '../toast-service/toast-service';
 import { AuthService } from '../../auth-service/auth.service';
 import { CookiesService } from '../../cookies/cookieservice';
@@ -23,47 +23,39 @@ import { CookiesService } from '../../cookies/cookieservice';
     CheckboxModule,
     InputTextModule,
     Password,
-    Message,
+    Message
   ]
 })
 export class UserLogin {
-  private readonly toastService = inject(ToastService);
-  private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
+  private readonly toastService  = inject(ToastService);
+  private readonly authService   = inject(AuthService);
+  private readonly router        = inject(Router);
   private readonly cookiesService = inject(CookiesService);
 
   loginError = signal<string>('');
-  isLoading = signal(false);
+  isLoading  = signal(false);
 
   loginForm = new FormGroup({
-    email: new FormControl('', [Validators.required, Validators.email]),
-    password: new FormControl('', [Validators.required]),
+    email:      new FormControl('', [Validators.required, Validators.email]),
+    password:   new FormControl('', [Validators.required]),
     rememberMe: new FormControl(false)
   });
 
-
-
   onSubmit() {
     this.loginError.set('');
-    if (!this.loginForm.valid) {
+    if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
     }
 
     this.isLoading.set(true);
-    const email = this.loginForm.value.email ?? '';
+    const email    = this.loginForm.value.email    ?? '';
     const password = this.loginForm.value.password ?? '';
 
     this.authService.login({ email, password }).subscribe({
       next: () => {
         this.cookiesService.logActivity('login_success', email);
-        const role = this.authService.currentRole();
-        let targetRoute = '/dashboard/home-nurse';
-        if (role === 'Patient') targetRoute = '/dashboard/home-patient';
-        else if (role === 'Admin') targetRoute = '/dashboard/home-nurse';
-        else if (role === 'Family') targetRoute = '/dashboard/home-patient';
-        this.toastService.showSuccess('Logged in successfully.');
-        this.router.navigate([targetRoute]);
+        this.navigateToDashboard();
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -74,7 +66,15 @@ export class UserLogin {
         this.isLoading.set(false);
       }
     });
+  }
 
+  private navigateToDashboard() {
+    const role = this.authService.currentRole();
+    const route = (role === 'Admin' || role === 'Nurse')
+      ? '/dashboard/home-nurse'
+      : '/dashboard/home-patient';
+    this.toastService.showSuccess('Logged in successfully.');
+    this.router.navigate([route]);
   }
 
   onRegister() {

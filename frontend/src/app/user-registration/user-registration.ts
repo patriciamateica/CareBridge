@@ -83,10 +83,12 @@ export class UserRegistration {
 
     this.authService.registerNewUser(requestPayload).subscribe({
       next: () => {
-        this.toastService.showSuccess('User registered successfully!');
+        this.toastService.showSuccess('Registration successful! Check your email for the activation code.');
         this.cookiesService.logActivity('registration_success', requestPayload.email);
         this.registerForm.reset();
-        this.router.navigate(['/user-login']);
+        this.router.navigate(['/activate-account-flow'], {
+          queryParams: { email: requestPayload.email }
+        });
       },
       error: (err) => {
         const backendError = typeof err?.error === 'string' ? err.error : (err?.error?.message || err?.error || 'Could not register user.');

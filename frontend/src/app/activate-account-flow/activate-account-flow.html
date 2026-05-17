@@ -6,40 +6,36 @@
   <div class="activation-card">
     <div class="activation-header">
       <h1 class="activation-title">Activate Account</h1>
-      <p class="activation-subtitle">Enter your id to get started.</p>
+      @if (email()) {
+        <p class="activation-subtitle">Enter the code sent to <strong>{{ email() }}</strong>.</p>
+      } @else {
+        <p class="activation-subtitle">Enter the activation code from your email.</p>
+      }
     </div>
 
     <form [formGroup]="activationForm" (ngSubmit)="onSubmit()" class="activation-form">
-
       <div class="form-field">
-        <label>Activation ID</label>
+        <label>Activation Code</label>
         <input pInputText
-               formControlName="activationId"
-               placeholder="e.g. NRS-0001" />
-
-        <div>
-          <p>• To access your account, you must enter the Activation Number provided to you by the Medical Institution you are affiliated with.</p>
-        </div>
-
-        @if (activationForm.get('activationId')?.invalid && activationForm.get('activationId')?.touched) {
+               formControlName="activationCode"
+               placeholder="Enter your activation code" />
+        @if (activationForm.get('activationCode')?.invalid &&
+        activationForm.get('activationCode')?.touched) {
           <p-message severity="error" size="small" variant="simple">
-            Activation ID is required.
+            Activation code is required.
           </p-message>
         }
       </div>
 
-      <button pButton
-              type="submit"
-              class="submit-btn"
-              (click)="onSubmit()">
-        <span pButtonLabel>Submit</span>
+      @if (errorMessage()) {
+        <p-message severity="error" size="small" variant="simple">
+          {{ errorMessage() }}
+        </p-message>
+      }
+
+      <button pButton type="submit" class="submit-btn" [disabled]="isLoading()">
+        <span pButtonLabel>{{ isLoading() ? 'Activating…' : 'Activate Account' }}</span>
       </button>
-
-<!--      <div class="help-link">-->
-<!--        <span>Need help?</span>-->
-<!--        <a href="mailto:support@carebridge.com">Contact Support</a>-->
-<!--      </div>-->
-
     </form>
   </div>
 </div>

@@ -1,12 +1,14 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { Message } from 'primeng/message';
+import { HttpClient } from '@angular/common/http';
 import { ToastService } from '../toast-service/toast-service';
-import {Message} from 'primeng/message';
-import {CookiesService} from '../../cookies/cookieservice';
+
+const API = 'https://localhost:8443';
 
 @Component({
   selector: 'app-activation',
@@ -15,23 +17,48 @@ import {CookiesService} from '../../cookies/cookieservice';
   imports: [CommonModule, ReactiveFormsModule, ButtonModule, InputTextModule, Message],
 })
 export class ActivateAccountFlow {
+  private readonly router      = inject(Router);
+  private readonly route       = inject(ActivatedRoute);
+  private readonly http        = inject(HttpClient);
   private readonly toastService = inject(ToastService);
-  private readonly router = inject(Router);
-  private readonly cookiesService = inject(CookiesService);
 
+  isLoading    = signal(false);
+  errorMessage = signal('');
+  email        = signal('');
 
   activationForm = new FormGroup({
-    activationId: new FormControl('', [Validators.required]),
+    activationCode: new FormControl('', [Validators.required]),
   });
 
+  constructor() {
+    this.route.queryParamMap.subscribe(params => {
+      const email = params.get('email');
+      if (email) this.email.set(email);
+    });
+  }
+
   onSubmit() {
-    if (!this.activationForm.valid) {
+    if (this.activationForm.invalid) {
       this.activationForm.markAllAsTouched();
       return;
     }
 
-    this.toastService.showSuccess('Activation step acknowledged. Please sign in.');
-    this.router.navigate(['/user-login']);
-    this.cookiesService.logActivity('activation_attempted', this.activationForm.value.activationId ?? '');
+    this.isLoading.set(true);
+    this.errorMessage.set('');
+
+    this.http.post(`${API}/api/auth/activate`, {
+      email: this.email(),
+      activationNumber: this.activationForm.value.activationCode
+    }).subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.toastService.showSuccess('Account activated! You can now sign in.');
+        this.router.navigate(['/user-login']);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        this.errorMessage.set(err?.error?.error ?? 'Invalid activation code. Please try again.');
+      }
+    });
   }
 }
