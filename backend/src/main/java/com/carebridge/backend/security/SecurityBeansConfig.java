@@ -26,11 +26,16 @@ public class SecurityBeansConfig {
 
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOriginPatterns(List.of(
+            "https://localhost:4201",
+            "http://localhost:4200",
+            "https://localhost:4200"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-        source.registerCorsConfiguration("/**", config);
+        config.setExposedHeaders(List.of("Set-Cookie"));
 
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 

@@ -83,15 +83,14 @@ public class UserService implements UserDetailsService {
             try {
                 nurseId = java.util.UUID.fromString(request.assignedNurseId());
             } catch (IllegalArgumentException e) {
-                // Keep as null if invalid
             }
         }
 
         PatientDetails details = new PatientDetails(
             user,
             request.primaryDiagnosis(),
-            new java.util.ArrayList<>(), // diagnostics
-            new java.util.ArrayList<>(), // scans
+            new java.util.ArrayList<>(),
+            new java.util.ArrayList<>(),
             request.emergencyContact(),
             nurseId,
             request.status()
@@ -155,22 +154,21 @@ public class UserService implements UserDetailsService {
         if (userDetails.getResidentialAddress() != null) user.setResidentialAddress(userDetails.getResidentialAddress());
         if (userDetails.getNationality() != null) user.setNationality(userDetails.getNationality());
         if (userDetails.getUserStatus() != null) user.setUserStatus(userDetails.getUserStatus());
-        // Never overwrite roles from a generic update — roles are managed separately
         return userRepository.save(user);
     }
 
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmailIgnoreCase(email)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-        return new CustomUserDetails(user);
+        return loadUserByEmail(email);
     }
 
     @Transactional(readOnly = true)
-    public UserDetails loadUserByEmail(String emailFromToken) {
-        return loadUserByUsername(emailFromToken);
+    public UserDetails loadUserByEmail(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmailIgnoreCase(email)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                "No account found for email: " + email));
+        return new CustomUserDetails(user);
     }
 
     @Transactional(readOnly = true)

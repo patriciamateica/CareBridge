@@ -10,6 +10,10 @@ plugins {
 group = 'com.carebridge'
 version = '0.0.1-SNAPSHOT'
 
+def frontendPath = "$projectDir/../frontend"
+def backendStaticPath = "$projectDir/src/main/resources/static"
+def frontendDistPath = "$frontendPath/dist"
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(25)
@@ -58,11 +62,17 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    //implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3'
+
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
+    systemProperty 'io.netty.noUnsafe', 'true'
+    jvmArgs('--sun-misc-unsafe-memory-access=allow')
     finalizedBy jacocoTestReport
 }
 
@@ -74,3 +84,56 @@ jacocoTestReport {
         html.required = true
     }
 }
+openApiGenerate {
+    generatorName.set("typescript-angular")
+    inputSpec.set(file("${projectDir}/openapi.yaml").toURI().toString())
+    outputDir.set("$frontendPath/typescript-client")
+    apiPackage.set("api")
+    modelPackage.set("model")
+    cleanupOutput.set(true)
+}
+
+tasks.register('generateOpenApiDocs', Test) {
+    dependsOn testClasses
+    useJUnitPlatform()
+    systemProperty 'io.netty.noUnsafe', 'true'
+    jvmArgs('--sun-misc-unsafe-memory-access=allow')
+
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+
+    filter {
+        includeTestsMatching "com.carebridge.backend.OpenApiExportTest"
+    }
+
+    outputs.upToDateWhen { false }
+
+    doFirst {
+        println "========================================"
+        println "OPENAPI DOCS: Running OpenApiExportTest"
+        println "========================================"
+
+        def specFile = file("${projectDir}/openapi.yaml")
+        if (specFile.exists()) {
+            println "CLEANUP: Deleting old openapi.yaml"
+            specFile.delete()
+        }
+    }
+
+    doLast {
+        def openapiFile = file("${projectDir}/openapi.yaml")
+        if (openapiFile.exists()) {
+            println "OPENAPI DOCS: openapi.yaml generated successfully"
+            println "  Location: ${projectDir}/openapi.yaml"
+            println "  Size: ${openapiFile.length()} bytes"
+        } else {
+            println "WARNING: openapi.yaml was NOT generated!"
+        }
+        println "========================================\n"
+    }
+}
+
+tasks.named('openApiGenerate') {
+    dependsOn tasks.named('generateOpenApiDocs')
+}
+

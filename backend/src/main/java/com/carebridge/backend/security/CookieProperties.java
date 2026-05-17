@@ -8,9 +8,10 @@ import org.springframework.context.annotation.Configuration;
 @EnableConfigurationProperties
 @ConfigurationProperties(prefix = "app.security.cookie")
 public class CookieProperties {
+
     private boolean httpOnly = true;
-    private boolean secure = false;
-    private String sameSite = "Lax";
+    private boolean secure = true;
+    private String sameSite = "Strict";
     private String path = "/";
     private long maxAgeHours = 24;
 
@@ -18,7 +19,7 @@ public class CookieProperties {
     public void setHttpOnly(boolean httpOnly) { this.httpOnly = httpOnly; }
 
     public boolean isSecure() { return secure; }
-    public void setSecure(boolean secure) { this.secure = secure;  }
+    public void setSecure(boolean secure) { this.secure = secure; }
 
     public String getSameSite() { return sameSite; }
     public void setSameSite(String sameSite) { this.sameSite = sameSite; }

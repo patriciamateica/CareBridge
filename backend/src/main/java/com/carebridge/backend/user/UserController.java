@@ -88,11 +88,6 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Phase 4: Reactivate an INACTIVE user.
-     * Sets the user status back to ACTIVE, allowing them to perform normal operations.
-     * Patients with INACTIVE status can call this endpoint after logging in.
-     */
     @PostMapping("/{id}/reactivate")
     @com.carebridge.backend.audit.LogAction("Reactivate User")
     public ResponseEntity<UserDto> reactivate(@PathVariable UUID id) {

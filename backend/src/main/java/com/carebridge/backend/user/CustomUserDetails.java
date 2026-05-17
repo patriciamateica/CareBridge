@@ -6,6 +6,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
 
@@ -15,19 +17,18 @@ public class CustomUserDetails implements UserDetails {
         this.user = user;
     }
 
-    public User getUser() {
-        return user;
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        java.util.Set<GrantedAuthority> authorities = new java.util.HashSet<>();
+        List<GrantedAuthority> authorities = new ArrayList<>();
+
         user.getRoles().forEach(role -> {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
-            role.getPermissions().forEach(permission -> {
-                authorities.add(new SimpleGrantedAuthority(permission.getName()));
-            });
+
+            role.getPermissions().forEach(permission ->
+                authorities.add(new SimpleGrantedAuthority(permission.getName()))
+            );
         });
+
         return authorities;
     }
 
@@ -45,16 +46,13 @@ public class CustomUserDetails implements UserDetails {
     public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() { return true; }
+    public boolean isAccountNonLocked() { return user.isActive(); }
 
     @Override
     public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        // Phase 4: Allow INACTIVE users to log in
-        // User status is managed separately from authentication enablement
-        // This allows patients with INACTIVE status to still authenticate and reactivate themselves
-        return true;
-    }
+    public boolean isEnabled() { return user.isActive(); }
+
+    public User getUser() { return user; }
 }

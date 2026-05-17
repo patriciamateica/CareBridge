@@ -48,10 +48,10 @@ public class AuthService {
         user.setEmail(request.email());
         user.setPhoneNumber(request.phoneNumber() != null ? request.phoneNumber() : "");
         user.setPassword(passwordEncoder.encode(request.password()));
-        
+
         roleRepository.findByName("PATIENT").ifPresent(user::addRole);
-        
-        user.setUserStatus(UserStatus.ACTIVE);
+
+        user.setUserStatus(UserStatus.PENDING_ACTIVATION);
 
         User savedUser = userRepository.save(user);
         userService.emitRegistration(savedUser);
@@ -63,5 +63,21 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
         return jwtService.generateToken(authentication.getName(), authentication.getAuthorities());
+    }
+
+    public void activateAccount(String email, String activationNumber) {
+        User user = userRepository.findByEmailIgnoreCase(email)
+            .orElseThrow(() -> new IllegalArgumentException("Account not found."));
+
+        if (!activationNumber.equals(user.getActivationNumber())) {
+            throw new IllegalArgumentException("Invalid activation code.");
+        }
+
+        if (UserStatus.ACTIVE.equals(user.getUserStatus())) {
+            throw new IllegalArgumentException("Account is already activated.");
+        }
+
+        user.setUserStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
     }
 }
