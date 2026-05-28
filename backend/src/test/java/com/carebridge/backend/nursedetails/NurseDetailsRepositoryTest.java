@@ -1,7 +1,8 @@
 package com.carebridge.backend.nursedetails;
 
 import com.carebridge.backend.nursedetails.model.NurseDetails;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Role;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +28,9 @@ class NurseDetailsRepositoryTest {
     private UserRepository userRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private TestEntityManager entityManager;
 
     private User nurseUser;
@@ -38,8 +42,13 @@ class NurseDetailsRepositoryTest {
         nurseUser.setFirstName("Test");
         nurseUser.setLastName("Nurse");
         nurseUser.setPassword("password");
-        nurseUser.setRole(Role.NURSE);
+        nurseUser.addRole(getOrCreateRole("NURSE"));
         nurseUser = userRepository.saveAndFlush(nurseUser);
+    }
+
+    private Role getOrCreateRole(String roleName) {
+        return roleRepository.findByName(roleName)
+            .orElseGet(() -> roleRepository.save(new Role(roleName)));
     }
 
     private NurseDetails createNurseDetails(User user, String spec, String hospital, int years, boolean hire) {
@@ -88,7 +97,7 @@ class NurseDetailsRepositoryTest {
             user.setFirstName("Nurse");
             user.setLastName("Test" + i);
             user.setPassword("password");
-            user.setRole(Role.NURSE);
+            user.addRole(getOrCreateRole("NURSE"));
             user = userRepository.saveAndFlush(user);
             createNurseDetails(user, "Spec " + i, "Hospital", 2, false);
         }

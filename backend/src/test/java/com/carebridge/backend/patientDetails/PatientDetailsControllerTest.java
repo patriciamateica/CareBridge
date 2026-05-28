@@ -21,8 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -42,13 +41,16 @@ class PatientDetailsControllerTest {
     private PatientDetailsService service;
 
     @MockitoBean
-    private PatientDetailsMapper mapper;
+    private com.carebridge.backend.patientDetails.PatientDetailsMapper mapper;
 
     @MockitoBean
     private com.carebridge.backend.user.UserService userService;
 
     @MockitoBean
     private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
 
     private PatientDetails sampleDetails;
     private PatientDetailsDto sampleDetailsDto;
@@ -64,8 +66,8 @@ class PatientDetailsControllerTest {
         testUser.setId(userId);
         testUser.setEmail("patient@test.com");
 
-        sampleDetails = new PatientDetails(testUser, "Asthma", List.of("Spirometry"), List.of(), "Brother: 0755123123", UUID.randomUUID());
-        sampleDetailsDto = new PatientDetailsDto(detailsId, userId, "Asthma", List.of("Spirometry"), List.of(), "Brother: 0755123123", UUID.randomUUID());
+        sampleDetails = new PatientDetails(testUser, "Asthma", List.of("Spirometry"), List.of(), "Brother: 0755123123", UUID.randomUUID(), "ACTIVE");
+        sampleDetailsDto = new PatientDetailsDto(detailsId, userId, "John", "Doe", "Asthma", List.of("Spirometry"), List.of(), "Brother: 0755123123", UUID.randomUUID(), "Nurse Name", "ACTIVE");
     }
 
     @Test
@@ -73,7 +75,7 @@ class PatientDetailsControllerTest {
         Page<PatientDetails> mockPage = new PageImpl<>(List.of(sampleDetails));
 
         when(service.findAll(any(Pageable.class))).thenReturn(mockPage);
-        when(mapper.toDto(any(PatientDetails.class))).thenReturn(sampleDetailsDto);
+        when(mapper.toDto(any(PatientDetails.class), anyString())).thenReturn(sampleDetailsDto);
 
         mockMvc.perform(get("/api/patient-details")
                 .param("page", "0")
@@ -87,7 +89,7 @@ class PatientDetailsControllerTest {
     @Test
     void getById_ShouldReturnDto() throws Exception {
         when(service.getById(detailsId)).thenReturn(sampleDetails);
-        when(mapper.toDto(sampleDetails)).thenReturn(sampleDetailsDto);
+        when(mapper.toDto(eq(sampleDetails), anyString())).thenReturn(sampleDetailsDto);
 
         mockMvc.perform(get("/api/patient-details/{id}", detailsId)
                 .contentType(MediaType.APPLICATION_JSON))
@@ -96,21 +98,29 @@ class PatientDetailsControllerTest {
             .andExpect(jsonPath("$.primaryDiagnosis").value("Asthma"));
     }
 
+    // ...existing code...
+
     @Test
     void create_ShouldReturnCreatedDto() throws Exception {
-        User testUser = new User();
-        testUser.setId(userId);
-        testUser.setEmail("patient@test.com");
-        testUser.setRole(com.carebridge.backend.user.Role.PATIENT);
+        // Use PatientCreateDto instead of PatientDetailsDto for POST endpoint
+        com.carebridge.backend.patientDetails.model.PatientCreateDto createDto =
+            new com.carebridge.backend.patientDetails.model.PatientCreateDto(
+                "patient@test.com",
+                "Asthma",
+                List.of("Spirometry"),
+                List.of(),
+                "Brother: 0755123123",
+                UUID.randomUUID(),
+                "ACTIVE"
+            );
 
-        when(userService.getUserById(userId)).thenReturn(testUser);
-        when(mapper.toEntity(any(PatientDetailsDto.class), any(User.class))).thenReturn(sampleDetails);
-        when(service.create(any(PatientDetails.class))).thenReturn(sampleDetails);
-        when(mapper.toDto(any(PatientDetails.class))).thenReturn(sampleDetailsDto);
+        when(service.createPatient(any(com.carebridge.backend.patientDetails.model.PatientCreateDto.class)))
+            .thenReturn(sampleDetails);
+        when(mapper.toDto(any(PatientDetails.class), anyString())).thenReturn(sampleDetailsDto);
 
         mockMvc.perform(post("/api/patient-details")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(sampleDetailsDto)))
+                .content(objectMapper.writeValueAsString(createDto)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.primaryDiagnosis").value("Asthma"));
     }
@@ -120,12 +130,12 @@ class PatientDetailsControllerTest {
         User testUser = new User();
         testUser.setId(userId);
         testUser.setEmail("patient@test.com");
-        testUser.setRole(com.carebridge.backend.user.Role.PATIENT);
+        testUser.addRole(new com.carebridge.backend.user.model.Role("PATIENT"));
 
         when(userService.getUserById(userId)).thenReturn(testUser);
         when(mapper.toEntity(any(PatientDetailsDto.class), any(User.class))).thenReturn(sampleDetails);
         when(service.update(eq(detailsId), any(PatientDetails.class))).thenReturn(sampleDetails);
-        when(mapper.toDto(any(PatientDetails.class))).thenReturn(sampleDetailsDto);
+        when(mapper.toDto(any(PatientDetails.class), anyString())).thenReturn(sampleDetailsDto);
 
         mockMvc.perform(put("/api/patient-details/{id}", detailsId)
                 .contentType(MediaType.APPLICATION_JSON)

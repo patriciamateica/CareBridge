@@ -2,8 +2,9 @@ package com.carebridge.backend.appointments;
 
 import com.carebridge.backend.appointments.model.Appointments;
 import com.carebridge.backend.appointments.model.AppointmentsStatus;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.model.Role;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ class AppointmentsRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
     private Appointments sampleAppointment;
     private User patientUser;
     private User nurseUser;
@@ -38,7 +42,7 @@ class AppointmentsRepositoryTest {
         patientUser.setFirstName("Patient");
         patientUser.setLastName("Test");
         patientUser.setPassword("password");
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(getOrCreateRole("PATIENT"));
         patientUser = userRepository.saveAndFlush(patientUser);
 
         nurseUser = new User();
@@ -46,7 +50,7 @@ class AppointmentsRepositoryTest {
         nurseUser.setFirstName("Nurse");
         nurseUser.setLastName("Test");
         nurseUser.setPassword("password");
-        nurseUser.setRole(Role.NURSE);
+        nurseUser.addRole(getOrCreateRole("NURSE"));
         nurseUser = userRepository.saveAndFlush(nurseUser);
 
         sampleAppointment = new Appointments(
@@ -57,6 +61,11 @@ class AppointmentsRepositoryTest {
             LocalDateTime.now().plusDays(1),
             AppointmentsStatus.REQUESTED
         );
+    }
+
+    private Role getOrCreateRole(String roleName) {
+        return roleRepository.findByName(roleName)
+            .orElseGet(() -> roleRepository.save(new Role(roleName)));
     }
 
     @Test
@@ -124,7 +133,7 @@ class AppointmentsRepositoryTest {
         otherPatient.setFirstName("Other");
         otherPatient.setLastName("Patient");
         otherPatient.setPassword("password");
-        otherPatient.setRole(Role.PATIENT);
+        otherPatient.addRole(getOrCreateRole("PATIENT"));
         otherPatient = userRepository.saveAndFlush(otherPatient);
 
         repository.save(sampleAppointment);

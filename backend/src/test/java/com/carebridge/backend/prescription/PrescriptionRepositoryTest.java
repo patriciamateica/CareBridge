@@ -1,9 +1,10 @@
 package com.carebridge.backend.prescription;
 
 import com.carebridge.backend.prescription.model.Prescription;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.user.model.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,18 +26,29 @@ class PrescriptionRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
     private Prescription samplePrescription;
     private User patientUser;
     private User nurseUser;
+    private Role patientRole;
+    private Role nurseRole;
 
     @BeforeEach
     void setUp() {
+        patientRole = new Role("PATIENT");
+        patientRole = roleRepository.save(patientRole);
+
+        nurseRole = new Role("NURSE");
+        nurseRole = roleRepository.save(nurseRole);
+
         patientUser = new User();
         patientUser.setEmail("patient@test.com");
         patientUser.setFirstName("Patient");
         patientUser.setLastName("Test");
         patientUser.setPassword("password");
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(patientRole);
         patientUser = userRepository.saveAndFlush(patientUser);
 
         nurseUser = new User();
@@ -44,7 +56,7 @@ class PrescriptionRepositoryTest {
         nurseUser.setFirstName("Nurse");
         nurseUser.setLastName("Test");
         nurseUser.setPassword("password");
-        nurseUser.setRole(Role.NURSE);
+        nurseUser.addRole(nurseRole);
         nurseUser = userRepository.saveAndFlush(nurseUser);
 
         samplePrescription = new Prescription(
@@ -122,7 +134,7 @@ class PrescriptionRepositoryTest {
         otherPatient.setFirstName("Other");
         otherPatient.setLastName("Patient");
         otherPatient.setPassword("password");
-        otherPatient.setRole(Role.PATIENT);
+        otherPatient.addRole(patientRole);
         otherPatient = userRepository.saveAndFlush(otherPatient);
 
         repository.save(samplePrescription);
@@ -152,7 +164,7 @@ class PrescriptionRepositoryTest {
         otherPatient.setFirstName("Other3");
         otherPatient.setLastName("Patient");
         otherPatient.setPassword("password");
-        otherPatient.setRole(Role.PATIENT);
+        otherPatient.addRole(patientRole);
         otherPatient = userRepository.saveAndFlush(otherPatient);
 
         repository.save(new Prescription(null, "Drug A", "10mg", "Daily", patientUser, nurseUser));
@@ -181,7 +193,7 @@ class PrescriptionRepositoryTest {
         otherPatient.setFirstName("Other2");
         otherPatient.setLastName("Patient");
         otherPatient.setPassword("password");
-        otherPatient.setRole(Role.PATIENT);
+        otherPatient.addRole(patientRole);
         otherPatient = userRepository.saveAndFlush(otherPatient);
 
         repository.save(samplePrescription);

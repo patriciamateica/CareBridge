@@ -1,7 +1,7 @@
 package com.carebridge.backend.prescription;
 
 import com.carebridge.backend.prescription.model.Prescription;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Role;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,19 +34,24 @@ class PrescriptionServiceTest {
     private UUID prescriptionId;
     private User patientUser;
     private User nurseUser;
+    private Role patientRole;
+    private Role nurseRole;
 
     @BeforeEach
     void setUp() {
         prescriptionId = UUID.randomUUID();
 
+        patientRole = new Role("PATIENT");
+        nurseRole = new Role("NURSE");
+
         patientUser = new User();
         patientUser.setId(UUID.randomUUID());
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(patientRole);
         patientUser.setEmail("patient@test.com");
 
         nurseUser = new User();
         nurseUser.setId(UUID.randomUUID());
-        nurseUser.setRole(Role.NURSE);
+        nurseUser.addRole(nurseRole);
         nurseUser.setEmail("nurse@test.com");
 
         samplePrescription = new Prescription(

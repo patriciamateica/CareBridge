@@ -3,7 +3,9 @@ package com.carebridge.backend.roster;
 import com.carebridge.backend.roster.model.Roster;
 import com.carebridge.backend.roster.model.RosterStatus;
 import com.carebridge.backend.user.UserRepository;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.user.model.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,18 +27,29 @@ class RosterRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
     private Roster sampleRoster;
     private User patientUser;
     private User nurseUser;
+    private Role patientRole;
+    private Role nurseRole;
 
     @BeforeEach
     void setUp() {
+        patientRole = new Role("PATIENT");
+        patientRole = roleRepository.save(patientRole);
+
+        nurseRole = new Role("NURSE");
+        nurseRole = roleRepository.save(nurseRole);
+
         patientUser = new User();
         patientUser.setEmail("patient@test.com");
         patientUser.setFirstName("Patient");
         patientUser.setLastName("Test");
         patientUser.setPassword("password");
-        patientUser.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patientUser.addRole(patientRole);
         patientUser = userRepository.saveAndFlush(patientUser);
 
         nurseUser = new User();
@@ -44,7 +57,7 @@ class RosterRepositoryTest {
         nurseUser.setFirstName("Nurse");
         nurseUser.setLastName("Test");
         nurseUser.setPassword("password");
-        nurseUser.setRole(com.carebridge.backend.user.Role.NURSE);
+        nurseUser.addRole(nurseRole);
         nurseUser = userRepository.saveAndFlush(nurseUser);
 
         sampleRoster = new Roster(
@@ -89,7 +102,7 @@ class RosterRepositoryTest {
             patient.setFirstName("Patient");
             patient.setLastName("Test" + i);
             patient.setPassword("password");
-            patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+            patient.addRole(patientRole);
             patient = userRepository.saveAndFlush(patient);
 
             repository.save(new Roster(null, patient, nurseUser, RosterStatus.ACTIVE));
@@ -127,7 +140,7 @@ class RosterRepositoryTest {
         otherNurse.setFirstName("Other");
         otherNurse.setLastName("Nurse");
         otherNurse.setPassword("password");
-        otherNurse.setRole(com.carebridge.backend.user.Role.NURSE);
+        otherNurse.addRole(nurseRole);
         otherNurse = userRepository.saveAndFlush(otherNurse);
 
         User patient2 = new User();
@@ -135,7 +148,7 @@ class RosterRepositoryTest {
         patient2.setFirstName("Patient2");
         patient2.setLastName("Test");
         patient2.setPassword("password");
-        patient2.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient2.addRole(patientRole);
         patient2 = userRepository.saveAndFlush(patient2);
 
         repository.save(sampleRoster);

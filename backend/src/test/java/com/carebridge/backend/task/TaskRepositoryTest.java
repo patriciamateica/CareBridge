@@ -4,6 +4,8 @@ import com.carebridge.backend.task.model.Task;
 import com.carebridge.backend.task.model.TaskStatus;
 import com.carebridge.backend.task.model.TaskType;
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.user.model.Role;
+import com.carebridge.backend.user.RoleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,17 +29,24 @@ class TaskRepositoryTest {
     @Autowired
     private TestEntityManager entityManager;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
     private Task sampleTask;
     private User patient;
+    private Role patientRole;
 
     @BeforeEach
     void setUp() {
+        patientRole = new Role("PATIENT");
+        patientRole = roleRepository.save(patientRole);
+
         patient = new User();
         patient.setFirstName("John");
         patient.setLastName("Doe");
         patient.setEmail("john.doe@example.com");
         patient.setPassword("password");
-        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.addRole(patientRole);
         entityManager.persist(patient);
 
         sampleTask = new Task(
@@ -86,7 +95,7 @@ class TaskRepositoryTest {
             user.setLastName("Test" + i);
             user.setEmail("user" + i + "@example.com");
             user.setPassword("password");
-            user.setRole(com.carebridge.backend.user.Role.PATIENT);
+            user.addRole(patientRole);
             entityManager.persist(user);
             repository.save(new Task(null, "Task " + i, "Desc", TaskType.MEAL_PREP, LocalDateTime.now(), TaskStatus.OPEN, user, null));
         }

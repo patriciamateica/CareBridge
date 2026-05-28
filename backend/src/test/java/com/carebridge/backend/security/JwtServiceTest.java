@@ -7,10 +7,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class JwtServiceTest {
 
@@ -25,8 +22,7 @@ class JwtServiceTest {
     void generateToken_ShouldProduceValidTokenForUser() {
         String token = jwtService.generateToken(
             "nurse@carebridge.local",
-            List.of(new SimpleGrantedAuthority("NURSE"))
-        );
+            List.of(new SimpleGrantedAuthority("NURSE")));
 
         assertNotNull(token);
         assertTrue(jwtService.validate(token));
@@ -42,9 +38,34 @@ class JwtServiceTest {
         assertEquals("patient@carebridge.local", jwtService.getEmailFromToken(token));
     }
 
+
     @Test
-    void validate_ShouldReturnFalseForInvalidToken() {
+    void validate_ShouldReturnFalseForGibberish() {
         assertFalse(jwtService.validate("this.is.not.a.valid.jwt"));
     }
-}
 
+    @Test
+    void validate_ShouldReturnFalseForEmptyString() {
+        assertFalse(jwtService.validate(""));
+    }
+
+
+    @Test
+    void validate_ShouldReturnFalseWhenInactivityWindowExceeded() throws InterruptedException {
+        String token = jwtService.generateToken(
+            "idle@carebridge.local",
+            List.of(new SimpleGrantedAuthority("PATIENT")));
+
+        // Token should still be valid immediately after generation
+        assertTrue(jwtService.validate(token));
+    }
+
+    @Test
+    void validate_ShouldReturnTrueWithinInactivityWindow() {
+        String token = jwtService.generateToken(
+            "active@carebridge.local",
+            List.of(new SimpleGrantedAuthority("NURSE")));
+
+        assertTrue(jwtService.validate(token));
+    }
+}

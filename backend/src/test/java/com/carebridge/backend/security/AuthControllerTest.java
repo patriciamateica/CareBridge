@@ -2,6 +2,7 @@ package com.carebridge.backend.security;
 
 import com.carebridge.backend.user.CustomUserDetails;
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.user.model.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,7 +79,8 @@ class AuthControllerTest {
     void login_ShouldReturnOkWithCookie() throws Exception {
         User user = new User();
         user.setEmail("john@example.com");
-        user.setRole(com.carebridge.backend.user.Role.PATIENT);
+        Role patientRole = new Role("PATIENT");
+        user.addRole(patientRole);
         user.setUserStatus(com.carebridge.backend.user.UserStatus.ACTIVE);
         CustomUserDetails customUserDetails = new CustomUserDetails(user);
 

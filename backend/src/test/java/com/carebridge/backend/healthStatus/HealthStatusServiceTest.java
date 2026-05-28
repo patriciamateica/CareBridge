@@ -1,7 +1,7 @@
 package com.carebridge.backend.healthStatus;
 
 import com.carebridge.backend.healthStatus.model.HealthStatus;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Role;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +41,7 @@ class HealthStatusServiceTest {
 
         patientUser = new User();
         patientUser.setId(UUID.randomUUID());
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(new Role("PATIENT"));
         patientUser.setEmail("patient@test.com");
 
         sampleStatus = new HealthStatus(

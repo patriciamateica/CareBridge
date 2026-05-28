@@ -3,7 +3,8 @@ package com.carebridge.backend.clinicalLog;
 import com.carebridge.backend.clinicalLog.model.ClinicalLog;
 import com.carebridge.backend.clinicalLog.model.ClinicalLogStatus;
 import com.carebridge.backend.clinicalLog.model.DocumentType;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Role;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +30,9 @@ class ClinicalLogRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
     private ClinicalLog sampleLog;
     private User patientUser;
     private User nurseUser;
@@ -40,7 +44,7 @@ class ClinicalLogRepositoryTest {
         patientUser.setFirstName("Patient");
         patientUser.setLastName("Test");
         patientUser.setPassword("password");
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(getOrCreateRole("PATIENT"));
         patientUser = userRepository.saveAndFlush(patientUser);
 
         nurseUser = new User();
@@ -48,7 +52,7 @@ class ClinicalLogRepositoryTest {
         nurseUser.setFirstName("Nurse");
         nurseUser.setLastName("Test");
         nurseUser.setPassword("password");
-        nurseUser.setRole(Role.NURSE);
+        nurseUser.addRole(getOrCreateRole("NURSE"));
         nurseUser = userRepository.saveAndFlush(nurseUser);
 
         sampleLog = new ClinicalLog(
@@ -62,6 +66,11 @@ class ClinicalLogRepositoryTest {
             LocalDateTime.now(),
             ClinicalLogStatus.ACTIVE
         );
+    }
+
+    private Role getOrCreateRole(String roleName) {
+        return roleRepository.findByName(roleName)
+            .orElseGet(() -> roleRepository.save(new Role(roleName)));
     }
 
     @Test
@@ -119,7 +128,7 @@ class ClinicalLogRepositoryTest {
         otherPatient.setFirstName("Other");
         otherPatient.setLastName("Patient");
         otherPatient.setPassword("password");
-        otherPatient.setRole(Role.PATIENT);
+        otherPatient.addRole(getOrCreateRole("PATIENT"));
         otherPatient = userRepository.saveAndFlush(otherPatient);
 
         repository.save(sampleLog);

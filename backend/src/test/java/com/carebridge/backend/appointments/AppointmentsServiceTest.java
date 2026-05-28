@@ -2,7 +2,7 @@ package com.carebridge.backend.appointments;
 
 import com.carebridge.backend.appointments.model.Appointments;
 import com.carebridge.backend.appointments.model.AppointmentsStatus;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Role;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,12 +43,12 @@ class AppointmentsServiceTest {
 
         patientUser = new User();
         patientUser.setId(UUID.randomUUID());
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(new Role("PATIENT"));
         patientUser.setEmail("patient@test.com");
 
         nurseUser = new User();
         nurseUser.setId(UUID.randomUUID());
-        nurseUser.setRole(Role.NURSE);
+        nurseUser.addRole(new Role("NURSE"));
         nurseUser.setEmail("nurse@test.com");
 
         sampleAppointment = new Appointments(
@@ -104,11 +104,11 @@ class AppointmentsServiceTest {
     void update_ShouldUpdateAndReturnAppointmentsWhenExists() {
         User otherPatient = new User();
         otherPatient.setId(UUID.randomUUID());
-        otherPatient.setRole(Role.PATIENT);
+        otherPatient.addRole(new Role("PATIENT"));
 
         User otherNurse = new User();
         otherNurse.setId(UUID.randomUUID());
-        otherNurse.setRole(Role.NURSE);
+        otherNurse.addRole(new Role("NURSE"));
 
         Appointments updatedData = new Appointments(null, otherPatient, otherNurse,
             "Updated desc", LocalDateTime.now(), AppointmentsStatus.VALIDATED);

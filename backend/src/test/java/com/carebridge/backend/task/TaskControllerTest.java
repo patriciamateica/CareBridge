@@ -5,6 +5,7 @@ import com.carebridge.backend.task.model.TaskDto;
 import com.carebridge.backend.task.model.TaskStatus;
 import com.carebridge.backend.task.model.TaskType;
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.user.model.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,19 +55,26 @@ class TaskControllerTest {
     @MockitoBean
     private PasswordEncoder passwordEncoder;
 
+    @MockitoBean
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     private Task sampleTask;
     private TaskDto sampleTaskDto;
     private UUID taskId;
     private UUID patientId;
     private User patient;
+    private Role patientRole;
 
     @BeforeEach
     void setUp() {
         taskId = UUID.randomUUID();
         patientId = UUID.randomUUID();
+
+        patientRole = new Role("PATIENT");
+
         patient = new User();
         patient.setId(patientId);
-        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.addRole(patientRole);
 
 
         objectMapper.registerModule(new JavaTimeModule());

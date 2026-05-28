@@ -2,7 +2,9 @@ package com.carebridge.backend.security;
 
 import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.UserService;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.user.model.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +39,12 @@ class AuthServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
+    private EmailService emailService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -53,6 +61,7 @@ class AuthServiceTest {
     void register_ShouldSaveAndReturnUser() {
         when(userRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        when(roleRepository.findByName("PATIENT")).thenReturn(Optional.of(new Role("PATIENT")));
 
         User user = new User();
         user.setEmail(registerRequest.email());

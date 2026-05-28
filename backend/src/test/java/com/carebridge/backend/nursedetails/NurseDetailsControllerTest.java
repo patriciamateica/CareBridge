@@ -50,6 +50,9 @@ class NurseDetailsControllerTest {
     @MockitoBean
     private PasswordEncoder passwordEncoder;
 
+    @MockitoBean
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     private NurseDetails sampleDetails;
     private NurseDetailsDto sampleDetailsDto;
     private UUID detailsId;
@@ -101,7 +104,7 @@ class NurseDetailsControllerTest {
         User testUser = new User();
         testUser.setId(userId);
         testUser.setEmail("nurse@test.com");
-        testUser.setRole(com.carebridge.backend.user.Role.NURSE);
+        testUser.addRole(new com.carebridge.backend.user.model.Role("NURSE"));
 
         when(userService.getUserById(userId)).thenReturn(testUser);
         when(mapper.toEntity(any(NurseDetailsDto.class), any(User.class))).thenReturn(sampleDetails);
@@ -120,7 +123,7 @@ class NurseDetailsControllerTest {
         User testUser = new User();
         testUser.setId(userId);
         testUser.setEmail("nurse@test.com");
-        testUser.setRole(com.carebridge.backend.user.Role.NURSE);
+        testUser.addRole(new com.carebridge.backend.user.model.Role("NURSE"));
 
         when(userService.getUserById(userId)).thenReturn(testUser);
         when(mapper.toEntity(any(NurseDetailsDto.class), any(User.class))).thenReturn(sampleDetails);

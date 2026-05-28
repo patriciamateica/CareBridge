@@ -1,8 +1,9 @@
 package com.carebridge.backend.vitals;
 
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.user.model.Role;
 import com.carebridge.backend.vitals.model.Vitals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,17 +27,24 @@ class VitalsRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
     private Vitals sampleVitals;
     private User patientUser;
+    private Role patientRole;
 
     @BeforeEach
     void setUp() {
+        patientRole = new Role("PATIENT");
+        patientRole = roleRepository.save(patientRole);
+
         patientUser = new User();
         patientUser.setEmail("patient@test.com");
         patientUser.setFirstName("Patient");
         patientUser.setLastName("Test");
         patientUser.setPassword("password");
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(patientRole);
         patientUser = userRepository.saveAndFlush(patientUser);
 
         sampleVitals = new Vitals(null, LocalDate.now(), 80, 120, 16, 98, patientUser);
@@ -106,7 +114,7 @@ class VitalsRepositoryTest {
         otherPatient.setFirstName("Other");
         otherPatient.setLastName("Patient");
         otherPatient.setPassword("password");
-        otherPatient.setRole(Role.PATIENT);
+        otherPatient.addRole(patientRole);
         otherPatient = userRepository.saveAndFlush(otherPatient);
 
         repository.save(sampleVitals);

@@ -1,7 +1,7 @@
 package com.carebridge.backend.carenotes;
 
 import com.carebridge.backend.carenotes.model.CareNotes;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Role;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,12 +44,12 @@ class CareNotesServiceTest {
         notesId = UUID.randomUUID();
         patientUser = new User();
         patientUser.setId(UUID.randomUUID());
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(new Role("PATIENT"));
         patientUser.setEmail("patient@test.com");
 
         nurseUser = new User();
         nurseUser.setId(UUID.randomUUID());
-        nurseUser.setRole(Role.NURSE);
+        nurseUser.addRole(new Role("NURSE"));
         nurseUser.setEmail("nurse@test.com");
 
         sampleNotes = new CareNotes(
@@ -179,11 +179,11 @@ class CareNotesServiceTest {
     void getNoteStream_ShouldEmitOnlyMatchingPatientNotes() throws InterruptedException {
         User watchedPatient = new User();
         watchedPatient.setId(UUID.randomUUID());
-        watchedPatient.setRole(Role.PATIENT);
+        watchedPatient.addRole(new Role("PATIENT"));
 
         User otherPatient = new User();
         otherPatient.setId(UUID.randomUUID());
-        otherPatient.setRole(Role.PATIENT);
+        otherPatient.addRole(new Role("PATIENT"));
 
         when(repository.save(any(CareNotes.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -210,7 +210,7 @@ class CareNotesServiceTest {
 
         User testPatient = new User();
         testPatient.setId(patientId);
-        testPatient.setRole(Role.PATIENT);
+        testPatient.addRole(new Role("PATIENT"));
 
         when(repository.save(any(CareNotes.class))).thenAnswer(invocation -> invocation.getArgument(0));
 

@@ -48,6 +48,7 @@ class NurseDetailsServiceTest {
             10,
             true
         );
+        sampleDetails.setId(detailsId);
     }
 
     @Test
@@ -97,7 +98,10 @@ class NurseDetailsServiceTest {
 
         NurseDetails updatedData = new NurseDetails(updatedUser, "Neurology", "Brain Institute", 12, false);
         when(repository.findById(detailsId)).thenReturn(Optional.of(sampleDetails));
-        when(repository.save(any(NurseDetails.class))).thenAnswer(i -> i.getArguments()[0]);
+        when(repository.save(any(NurseDetails.class))).thenAnswer(i -> {
+            NurseDetails arg = i.getArgument(0);
+            return arg; // Return the argument as-is (with updated values)
+        });
 
         NurseDetails result = service.update(detailsId, updatedData);
 

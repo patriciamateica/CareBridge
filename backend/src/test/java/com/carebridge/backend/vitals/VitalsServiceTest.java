@@ -1,7 +1,7 @@
 package com.carebridge.backend.vitals;
 
-import com.carebridge.backend.user.Role;
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.user.model.Role;
 import com.carebridge.backend.vitals.model.Vitals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,14 +34,17 @@ class VitalsServiceTest {
     private Vitals sampleVitals;
     private UUID vitalsId;
     private User patientUser;
+    private Role patientRole;
 
     @BeforeEach
     void setUp() {
         vitalsId = UUID.randomUUID();
 
+        patientRole = new Role("PATIENT");
+
         patientUser = new User();
         patientUser.setId(UUID.randomUUID());
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(patientRole);
         patientUser.setEmail("patient@test.com");
 
         sampleVitals = new Vitals(vitalsId, LocalDate.now(), 80, 120,

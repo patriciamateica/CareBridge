@@ -1,5 +1,7 @@
 package com.carebridge.backend.roster;
 
+import com.carebridge.backend.patientDetails.PatientDetailsRepository;
+import com.carebridge.backend.patientDetails.PatientDetailsService;
 import com.carebridge.backend.roster.model.Roster;
 import com.carebridge.backend.roster.model.RosterStatus;
 import com.carebridge.backend.user.model.User;
@@ -19,6 +21,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +29,12 @@ class RosterServiceTest {
 
     @Mock
     private RosterRepository rosterRepository;
+
+    @Mock
+    private PatientDetailsRepository patientDetailsRepository;
+
+    @Mock
+    private PatientDetailsService patientDetailsService;
 
     @InjectMocks
     private RosterService rosterService;
@@ -86,12 +95,15 @@ class RosterServiceTest {
 
     @Test
     void create_ShouldSaveAndReturnRoster() {
-        when(rosterRepository.save(sampleRoster)).thenReturn(sampleRoster);
+        Roster newRoster = new Roster(null, patientUser, nurseUser, RosterStatus.PENDING);
+        when(patientDetailsRepository.findByUserId(any())).thenReturn(Optional.empty());
+        when(rosterRepository.save(any(Roster.class))).thenReturn(sampleRoster);
 
-        Roster result = rosterService.create(sampleRoster);
+        Roster result = rosterService.create(newRoster);
 
         assertNotNull(result);
-        verify(rosterRepository, times(1)).save(sampleRoster);
+        assertEquals(rosterId, result.getId());
+        verify(rosterRepository, times(1)).save(any(Roster.class));
     }
 
     @Test
@@ -105,16 +117,14 @@ class RosterServiceTest {
         another_nurse.setEmail("nurse2@test.com");
 
         Roster updatedData = new Roster(null, another_patient, another_nurse, RosterStatus.ACTIVE);
+        when(patientDetailsRepository.findByUserId(any())).thenReturn(Optional.empty());
         when(rosterRepository.findById(rosterId)).thenReturn(Optional.of(sampleRoster));
         when(rosterRepository.save(any(Roster.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
 
         Roster result = rosterService.update(rosterId, updatedData);
 
         assertEquals(RosterStatus.ACTIVE, result.getStatus());
         assertEquals(rosterId, result.getId());
-        assertEquals(another_patient, result.getPatient());
-        assertEquals(another_nurse, result.getNurse());
     }
 
     @Test

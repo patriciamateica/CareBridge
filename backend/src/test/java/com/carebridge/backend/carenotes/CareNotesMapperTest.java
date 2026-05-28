@@ -2,7 +2,7 @@ package com.carebridge.backend.carenotes;
 
 import com.carebridge.backend.carenotes.model.CareNotes;
 import com.carebridge.backend.carenotes.model.CareNotesDto;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Role;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,12 +22,12 @@ class CareNotesMapperTest {
     void setUp() {
         patientUser = new User();
         patientUser.setId(UUID.randomUUID());
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(new Role("PATIENT"));
         patientUser.setEmail("patient@test.com");
 
         nurseUser = new User();
         nurseUser.setId(UUID.randomUUID());
-        nurseUser.setRole(Role.NURSE);
+        nurseUser.addRole(new Role("NURSE"));
         nurseUser.setEmail("nurse@test.com");
     }
 

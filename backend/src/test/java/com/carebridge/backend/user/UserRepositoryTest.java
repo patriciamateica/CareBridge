@@ -1,6 +1,7 @@
 package com.carebridge.backend.user;
 
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.user.model.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,17 +18,26 @@ class UserRepositoryTest {
 
     @Autowired
     private UserRepository repository;
+
+    @Autowired
+    private RoleRepository roleRepository;
+
     private User sampleUser;
+    private Role patientRole;
 
     @BeforeEach
     void setUp() {
+        // Create and save the patient role first
+        patientRole = new Role("PATIENT");
+        patientRole = roleRepository.save(patientRole);
+
         sampleUser = new User();
         sampleUser.setFirstName("John");
         sampleUser.setLastName("Doe");
         sampleUser.setEmail("john@example.com");
         sampleUser.setPassword("hashedpassword");
-        sampleUser.setPhoneNumber(0744123456);
-        sampleUser.setRole(Role.PATIENT);
+        sampleUser.setPhoneNumber("0744123456");
+        sampleUser.addRole(patientRole);
         sampleUser.setUserStatus(UserStatus.ACTIVE);
     }
 
@@ -65,7 +75,7 @@ class UserRepositoryTest {
             u.setFirstName("User" + i);
             u.setLastName("Test" + i);
             u.setPassword("password");
-            u.setRole(Role.PATIENT);
+            u.addRole(patientRole);
             repository.save(u);
         }
 

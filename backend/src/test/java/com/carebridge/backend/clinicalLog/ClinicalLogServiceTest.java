@@ -3,7 +3,7 @@ package com.carebridge.backend.clinicalLog;
 import com.carebridge.backend.clinicalLog.model.ClinicalLog;
 import com.carebridge.backend.clinicalLog.model.ClinicalLogStatus;
 import com.carebridge.backend.clinicalLog.model.DocumentType;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Role;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,12 +44,12 @@ class ClinicalLogServiceTest {
 
         patientUser = new User();
         patientUser.setId(UUID.randomUUID());
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(new Role("PATIENT"));
         patientUser.setEmail("patient@test.com");
 
         nurseUser = new User();
         nurseUser.setId(UUID.randomUUID());
-        nurseUser.setRole(Role.NURSE);
+        nurseUser.addRole(new Role("NURSE"));
         nurseUser.setEmail("nurse@test.com");
 
         sampleLog = new ClinicalLog(

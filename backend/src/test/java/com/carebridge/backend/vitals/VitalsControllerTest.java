@@ -2,6 +2,7 @@ package com.carebridge.backend.vitals;
 
 import com.carebridge.backend.vitals.model.Vitals;
 import com.carebridge.backend.vitals.model.VitalsDto;
+import com.carebridge.backend.user.model.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,19 +52,25 @@ class VitalsControllerTest {
     @MockitoBean
     private PasswordEncoder passwordEncoder;
 
+    @MockitoBean
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     private Vitals sampleVitals;
     private VitalsDto sampleVitalsDto;
     private UUID vitalsId;
     private UUID patientId;
+    private Role patientRole;
 
     @BeforeEach
     void setUp() {
         vitalsId = UUID.randomUUID();
         patientId = UUID.randomUUID();
 
+        patientRole = new Role("PATIENT");
+
         com.carebridge.backend.user.model.User patient = new com.carebridge.backend.user.model.User();
         patient.setId(patientId);
-        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.addRole(patientRole);
         patient.setEmail("patient@test.com");
 
         sampleVitals = new Vitals(vitalsId, LocalDate.now(), 80, 120, 16, 98, patient);

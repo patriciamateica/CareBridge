@@ -2,7 +2,8 @@ package com.carebridge.backend.healthStatus;
 
 import com.carebridge.backend.healthStatus.model.HealthStatus;
 import com.carebridge.backend.healthStatus.model.Mood;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Role;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,6 +29,9 @@ class HealthStatusRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
     private HealthStatus sampleStatus;
     private User patientUser;
 
@@ -38,7 +42,7 @@ class HealthStatusRepositoryTest {
         patientUser.setFirstName("Patient");
         patientUser.setLastName("Test");
         patientUser.setPassword("password");
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(getOrCreateRole("PATIENT"));
         patientUser = userRepository.saveAndFlush(patientUser);
 
         sampleStatus = new HealthStatus(
@@ -50,6 +54,11 @@ class HealthStatusRepositoryTest {
             LocalDate.now(),
             patientUser
         );
+    }
+
+    private Role getOrCreateRole(String roleName) {
+        return roleRepository.findByName(roleName)
+            .orElseGet(() -> roleRepository.save(new Role(roleName)));
     }
 
     @Test
@@ -116,7 +125,7 @@ class HealthStatusRepositoryTest {
         otherPatient.setFirstName("Other");
         otherPatient.setLastName("Patient");
         otherPatient.setPassword("password");
-        otherPatient.setRole(Role.PATIENT);
+        otherPatient.addRole(getOrCreateRole("PATIENT"));
         otherPatient = userRepository.saveAndFlush(otherPatient);
 
         repository.save(sampleStatus);

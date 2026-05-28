@@ -53,6 +53,9 @@ class ClinicalLogControllerTest {
     @MockitoBean
     private PasswordEncoder passwordEncoder;
 
+    @MockitoBean
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     private ClinicalLog sampleLog;
     private ClinicalLogDto sampleLogDto;
     private UUID logId;
@@ -65,12 +68,12 @@ class ClinicalLogControllerTest {
 
         com.carebridge.backend.user.model.User patient = new com.carebridge.backend.user.model.User();
         patient.setId(UUID.randomUUID());
-        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.addRole(new com.carebridge.backend.user.model.Role("PATIENT"));
         patient.setEmail("patient@test.com");
 
         com.carebridge.backend.user.model.User nurse = new com.carebridge.backend.user.model.User();
         nurse.setId(UUID.randomUUID());
-        nurse.setRole(com.carebridge.backend.user.Role.NURSE);
+        nurse.addRole(new com.carebridge.backend.user.model.Role("NURSE"));
         nurse.setEmail("nurse@test.com");
 
         sampleLog = new ClinicalLog(logId, "Chest X-Ray", DocumentType.X_RAY, LocalDate.now(), "url", patient, nurse, LocalDateTime.now(), ClinicalLogStatus.ACTIVE);

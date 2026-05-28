@@ -51,6 +51,9 @@ class CareNotesControllerTest {
     @MockitoBean
     private PasswordEncoder passwordEncoder;
 
+    @MockitoBean
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     private CareNotes sampleNotes;
     private CareNotesDto sampleNotesDto;
     private UUID notesId;
@@ -71,12 +74,12 @@ class CareNotesControllerTest {
 
         patientUser = new com.carebridge.backend.user.model.User();
         patientUser.setId(patientId);
-        patientUser.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patientUser.addRole(new com.carebridge.backend.user.model.Role("PATIENT"));
         patientUser.setEmail("patient@test.com");
 
         nurseUser = new com.carebridge.backend.user.model.User();
         nurseUser.setId(nurseId);
-        nurseUser.setRole(com.carebridge.backend.user.Role.NURSE);
+        nurseUser.addRole(new com.carebridge.backend.user.model.Role("NURSE"));
         nurseUser.setEmail("nurse@test.com");
 
         sampleNotes = new CareNotes(notesId, "Vitals are stable.", patientUser, nurseUser, timestamp);

@@ -2,34 +2,39 @@ package com.carebridge.backend.security;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SecurityModelRecordsTest {
 
+
     @Test
-    void cookieProperties_ShouldReadAndWriteAllFields() {
-        CookieProperties properties = new CookieProperties();
+    void cookieProperties_DefaultsShouldBeSecure() {
+        CookieProperties props = new CookieProperties();
 
-        assertFalse(properties.isHttpOnly());
-        assertTrue(properties.isSecure());
-        assertEquals("Strict", properties.getSameSite());
-        assertEquals("/", properties.getPath());
-        assertEquals(24, properties.getMaxAgeHours());
-
-        properties.setHttpOnly(true);
-        properties.setSecure(false);
-        properties.setSameSite("Lax");
-        properties.setPath("/api");
-        properties.setMaxAgeHours(12);
-
-        assertTrue(properties.isHttpOnly());
-        assertFalse(properties.isSecure());
-        assertEquals("Lax", properties.getSameSite());
-        assertEquals("/api", properties.getPath());
-        assertEquals(12, properties.getMaxAgeHours());
+        assertTrue(props.isHttpOnly(),  "httpOnly must default to true");
+        assertTrue(props.isSecure(),    "secure must default to true (HTTPS)");
+        assertEquals("Strict", props.getSameSite());
+        assertEquals("/",  props.getPath());
+        assertEquals(24L,  props.getMaxAgeHours());
     }
+
+    @Test
+    void cookieProperties_SettersShouldUpdateAllFields() {
+        CookieProperties props = new CookieProperties();
+
+        props.setHttpOnly(false);
+        props.setSecure(false);
+        props.setSameSite("Lax");
+        props.setPath("/api");
+        props.setMaxAgeHours(12);
+
+        assertFalse(props.isHttpOnly());
+        assertFalse(props.isSecure());
+        assertEquals("Lax", props.getSameSite());
+        assertEquals("/api", props.getPath());
+        assertEquals(12L, props.getMaxAgeHours());
+    }
+
 
     @Test
     void loginRequest_ShouldExposeRecordComponents() {
@@ -41,12 +46,13 @@ class SecurityModelRecordsTest {
 
     @Test
     void registerRequest_ShouldExposeRecordComponents() {
-        RegisterRequest request = new RegisterRequest("Ana", "Pop", "ana@carebridge.local", "pw", "0712345678");
+        RegisterRequest request = new RegisterRequest(
+            "Ana", "Pop", "ana@carebridge.local", "pw", "0712345678");
 
-        assertEquals("Ana", request.firstName());
-        assertEquals("Pop", request.lastName());
+        assertEquals("Ana",  request.firstName());
+        assertEquals("Pop",  request.lastName());
         assertEquals("ana@carebridge.local", request.email());
-        assertEquals("pw", request.password());
+        assertEquals("pw",   request.password());
         assertEquals("0712345678", request.phoneNumber());
     }
 
@@ -64,8 +70,7 @@ class SecurityModelRecordsTest {
 
         assertEquals("token", response.token());
         assertEquals("NURSE", response.role());
-        assertEquals("Ana", response.firstName());
-        assertEquals("Pop", response.lastName());
+        assertEquals("Ana",   response.firstName());
+        assertEquals("Pop",   response.lastName());
     }
 }
-

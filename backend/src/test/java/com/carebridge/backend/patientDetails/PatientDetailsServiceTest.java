@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,18 +27,23 @@ class PatientDetailsServiceTest {
     @Mock
     private com.carebridge.backend.patientDetails.PatientDetailsRepository repository;
 
+    @Mock
+    private com.carebridge.backend.user.UserRepository userRepository;
+
     @InjectMocks
     private PatientDetailsService service;
 
     private PatientDetails sampleDetails;
     private UUID detailsId;
+    private UUID userId;
     private User testUser;
 
     @BeforeEach
     void setUp() {
         detailsId = UUID.randomUUID();
+        userId = UUID.randomUUID();
         testUser = new User();
-        testUser.setId(detailsId);
+        testUser.setId(userId);
         testUser.setEmail("patient@test.com");
 
         sampleDetails = new PatientDetails(
@@ -46,8 +52,10 @@ class PatientDetailsServiceTest {
             List.of("A1C Test"),
             List.of(),
             "Son: 0744111222",
-            UUID.randomUUID()
+            UUID.randomUUID(),
+            "ACTIVE"
         );
+        sampleDetails.setId(detailsId);
     }
 
     @Test
@@ -81,23 +89,32 @@ class PatientDetailsServiceTest {
 
     @Test
     void create_ShouldSaveAndReturnPatientDetails() {
-        when(repository.save(sampleDetails)).thenReturn(sampleDetails);
+        PatientDetails newDetails = new PatientDetails(testUser, "Diabetes Type 2", List.of("A1C Test"), List.of(),
+            "Son: 0744111222", UUID.randomUUID(), "ACTIVE");
+        when(repository.findByUserId(userId)).thenReturn(Optional.empty());
+        when(repository.saveAndFlush(any(PatientDetails.class))).thenReturn(sampleDetails);
 
-        PatientDetails result = service.create(sampleDetails);
+        PatientDetails result = service.create(newDetails);
 
         assertNotNull(result);
-        verify(repository, times(1)).save(sampleDetails);
+        assertEquals(detailsId, result.getId());
+        verify(repository, times(1)).saveAndFlush(any(PatientDetails.class));
     }
 
     @Test
     void update_ShouldUpdateAndReturnPatientDetailsWhenExists() {
         User updatedUser = new User();
-        updatedUser.setId(detailsId);
+        updatedUser.setId(userId);
         updatedUser.setEmail("patient@test.com");
 
-        PatientDetails updatedData = new PatientDetails(updatedUser, "Updated Diagnosis", List.of("MRI"), List.of("/scans/mri.png"), "Updated Contact", UUID.randomUUID());
+        PatientDetails updatedData = new PatientDetails(updatedUser, "Updated Diagnosis", List.of("MRI"),
+            List.of("/scans/mri.png"), "Updated Contact", UUID.randomUUID(), "ACTIVE");
         when(repository.findById(detailsId)).thenReturn(Optional.of(sampleDetails));
-        when(repository.save(any(PatientDetails.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.save(any(PatientDetails.class))).thenAnswer(invocation -> {
+            PatientDetails arg = invocation.getArgument(0);
+            arg.setId(detailsId);
+            return arg;
+        });
 
         PatientDetails result = service.update(detailsId, updatedData);
 
@@ -113,6 +130,6 @@ class PatientDetailsServiceTest {
         boolean result = service.delete(detailsId);
 
         assertTrue(result);
-        verify(repository, times(1)).deleteById(detailsId);
+        verify(repository, times(1)).delete(sampleDetails);
     }
 }

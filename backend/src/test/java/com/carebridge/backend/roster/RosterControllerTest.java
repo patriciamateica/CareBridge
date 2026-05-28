@@ -4,6 +4,7 @@ import com.carebridge.backend.roster.model.Roster;
 import com.carebridge.backend.roster.model.RosterDto;
 import com.carebridge.backend.roster.model.RosterStatus;
 import com.carebridge.backend.user.model.User;
+import com.carebridge.backend.user.model.Role;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,9 @@ class RosterControllerTest {
     @MockitoBean
     private PasswordEncoder passwordEncoder;
 
+    @MockitoBean
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     private Roster sampleRoster;
     private RosterDto sampleRosterDto;
     private UUID rosterId;
@@ -58,6 +62,8 @@ class RosterControllerTest {
     private UUID nurseId;
     private User patient;
     private User nurse;
+    private Role patientRole;
+    private Role nurseRole;
 
     @BeforeEach
     void setUp() {
@@ -65,13 +71,16 @@ class RosterControllerTest {
         patientId = UUID.randomUUID();
         nurseId = UUID.randomUUID();
 
+        patientRole = new Role("PATIENT");
+        nurseRole = new Role("NURSE");
+
         patient = new User();
         patient.setId(patientId);
-        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.addRole(patientRole);
 
         nurse = new User();
         nurse.setId(nurseId);
-        nurse.setRole(com.carebridge.backend.user.Role.NURSE);
+        nurse.addRole(nurseRole);
 
         sampleRoster = new Roster(rosterId, patient, nurse, RosterStatus.PENDING);
         sampleRosterDto = new RosterDto(rosterId, patientId, nurseId, RosterStatus.PENDING);

@@ -50,6 +50,9 @@ class HealthStatusControllerTest {
     @MockitoBean
     private PasswordEncoder passwordEncoder;
 
+    @MockitoBean
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     private HealthStatus sampleStatus;
     private HealthStatusDto sampleStatusDto;
     private UUID statusId;
@@ -62,7 +65,7 @@ class HealthStatusControllerTest {
 
         com.carebridge.backend.user.model.User patient = new com.carebridge.backend.user.model.User();
         patient.setId(patientId);
-        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.addRole(new com.carebridge.backend.user.model.Role("PATIENT"));
         patient.setEmail("patient@test.com");
 
         sampleStatus = new HealthStatus(statusId, 2, null, List.of("Cough"), "Mild symptoms", LocalDate.now(), patient);

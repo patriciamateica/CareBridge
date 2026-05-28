@@ -51,6 +51,9 @@ class AppointmentsControllerTest {
     @MockitoBean
     private PasswordEncoder passwordEncoder;
 
+    @MockitoBean
+    private org.springframework.messaging.simp.SimpMessagingTemplate messagingTemplate;
+
     private Appointments sampleAppointment;
     private AppointmentsDto sampleAppointmentDto;
     private UUID appointmentId;
@@ -65,12 +68,12 @@ class AppointmentsControllerTest {
 
         com.carebridge.backend.user.model.User patient = new com.carebridge.backend.user.model.User();
         patient.setId(patientId);
-        patient.setRole(com.carebridge.backend.user.Role.PATIENT);
+        patient.addRole(new com.carebridge.backend.user.model.Role("PATIENT"));
         patient.setEmail("patient@test.com");
 
         com.carebridge.backend.user.model.User nurse = new com.carebridge.backend.user.model.User();
         nurse.setId(nurseId);
-        nurse.setRole(com.carebridge.backend.user.Role.NURSE);
+        nurse.addRole(new com.carebridge.backend.user.model.Role("NURSE"));
         nurse.setEmail("nurse@test.com");
 
         sampleAppointment = new Appointments(appointmentId, patient, nurse, "Physiotherapy", LocalDateTime.now(), AppointmentsStatus.REQUESTED);

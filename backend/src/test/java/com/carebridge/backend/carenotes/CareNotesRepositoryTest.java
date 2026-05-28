@@ -1,7 +1,8 @@
 package com.carebridge.backend.carenotes;
 
 import com.carebridge.backend.carenotes.model.CareNotes;
-import com.carebridge.backend.user.Role;
+import com.carebridge.backend.user.model.Role;
+import com.carebridge.backend.user.RoleRepository;
 import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,9 @@ class CareNotesRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private RoleRepository roleRepository;
+
 
     private CareNotes sampleNotes;
     private User patientUser;
@@ -43,7 +47,7 @@ class CareNotesRepositoryTest {
         patientUser.setFirstName("Patient");
         patientUser.setLastName("Test");
         patientUser.setPassword("password");
-        patientUser.setRole(Role.PATIENT);
+        patientUser.addRole(getOrCreateRole("PATIENT"));
         patientUser = userRepository.saveAndFlush(patientUser);
 
         nurseUser = new User();
@@ -51,7 +55,7 @@ class CareNotesRepositoryTest {
         nurseUser.setFirstName("Nurse");
         nurseUser.setLastName("Test");
         nurseUser.setPassword("password");
-        nurseUser.setRole(Role.NURSE);
+        nurseUser.addRole(getOrCreateRole("NURSE"));
         nurseUser = userRepository.saveAndFlush(nurseUser);
 
         sampleNotes = new CareNotes(
@@ -61,6 +65,11 @@ class CareNotesRepositoryTest {
             nurseUser,
             LocalDateTime.now()
         );
+    }
+
+    private Role getOrCreateRole(String roleName) {
+        return roleRepository.findByName(roleName)
+            .orElseGet(() -> roleRepository.save(new Role(roleName)));
     }
 
     @Test
@@ -144,7 +153,7 @@ class CareNotesRepositoryTest {
         patient.setFirstName("Patient");
         patient.setLastName("Sort");
         patient.setPassword("password");
-        patient.setRole(Role.PATIENT);
+        patient.addRole(getOrCreateRole("PATIENT"));
         patient = userRepository.saveAndFlush(patient);
 
         CareNotes older = repository.save(new CareNotes(null, "older", patient, nurseUser, LocalDateTime.of(2026, 1, 1, 8, 0)));
@@ -164,7 +173,7 @@ class CareNotesRepositoryTest {
         patient.setFirstName("Patient");
         patient.setLastName("Page");
         patient.setPassword("password");
-        patient.setRole(Role.PATIENT);
+        patient.addRole(getOrCreateRole("PATIENT"));
         patient = userRepository.saveAndFlush(patient);
 
         repository.save(new CareNotes(null, "only", patient, nurseUser, LocalDateTime.now()));
@@ -182,7 +191,7 @@ class CareNotesRepositoryTest {
         patient.setFirstName("Patient");
         patient.setLastName("Order");
         patient.setPassword("password");
-        patient.setRole(Role.PATIENT);
+        patient.addRole(getOrCreateRole("PATIENT"));
         patient = userRepository.saveAndFlush(patient);
 
         CareNotes oldest = repository.save(new CareNotes(null, "oldest", patient, nurseUser, LocalDateTime.of(2026, 2, 1, 8, 0)));
@@ -204,7 +213,7 @@ class CareNotesRepositoryTest {
         patient.setFirstName("Patient");
         patient.setLastName("Valid");
         patient.setPassword("password");
-        patient.setRole(Role.PATIENT);
+        patient.addRole(getOrCreateRole("PATIENT"));
         patient = userRepository.saveAndFlush(patient);
 
         CareNotes earlier = repository.save(new CareNotes(null, "earlier", patient, nurseUser, LocalDateTime.of(2026, 2, 28, 10, 0)));
@@ -224,7 +233,7 @@ class CareNotesRepositoryTest {
         patient.setFirstName("Patient");
         patient.setLastName("Count");
         patient.setPassword("password");
-        patient.setRole(Role.PATIENT);
+        patient.addRole(getOrCreateRole("PATIENT"));
         patient = userRepository.saveAndFlush(patient);
 
         repository.save(new CareNotes(null, "n1", patient, nurseUser, LocalDateTime.now()));
