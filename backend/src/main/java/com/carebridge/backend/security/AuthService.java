@@ -20,14 +20,16 @@ public class AuthService {
     private final JwtService jwtService;
     private final UserService userService;
     private final RoleRepository roleRepository;
+    private final EmailService emailService;
+
 
     public AuthService(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            AuthenticationManager authenticationManager,
-            JwtService jwtService,
-            UserService userService,
-            RoleRepository roleRepository
+        UserRepository userRepository,
+        PasswordEncoder passwordEncoder,
+        AuthenticationManager authenticationManager,
+        JwtService jwtService,
+        UserService userService,
+        RoleRepository roleRepository, EmailService emailService
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -35,6 +37,7 @@ public class AuthService {
         this.jwtService = jwtService;
         this.userService = userService;
         this.roleRepository = roleRepository;
+        this.emailService = emailService;
     }
 
     public User register(RegisterRequest request) {
@@ -42,18 +45,23 @@ public class AuthService {
             throw new IllegalArgumentException("Email already exists");
         }
 
+        String activationCode = String.valueOf(new java.security.SecureRandom().nextInt(900000) + 100000);
+
         User user = new User();
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setEmail(request.email());
         user.setPhoneNumber(request.phoneNumber() != null ? request.phoneNumber() : "");
         user.setPassword(passwordEncoder.encode(request.password()));
+        user.setActivationNumber(activationCode);
 
         roleRepository.findByName("PATIENT").ifPresent(user::addRole);
-
         user.setUserStatus(UserStatus.PENDING_ACTIVATION);
 
         User savedUser = userRepository.save(user);
+
+        emailService.sendActivationEmail(savedUser.getEmail(), savedUser.getFirstName(), activationCode);
+
         userService.emitRegistration(savedUser);
         return savedUser;
     }

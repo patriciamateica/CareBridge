@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class JwtService {
 
     public static final long TOKEN_EXPIRATION_MS =
-        ChronoUnit.HOURS.getDuration().toMillis() * 24;
+        ChronoUnit.MINUTES.getDuration().toMillis();
 
     private static final String SECRET_STRING =
         "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
