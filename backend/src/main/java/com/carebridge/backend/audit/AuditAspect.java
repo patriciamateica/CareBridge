@@ -29,7 +29,7 @@ public class AuditAspect {
     @Around("within(@org.springframework.web.bind.annotation.RestController *)")
     public Object audit(ProceedingJoinPoint joinPoint) throws Throwable {
         LogAction logAction = ((org.aspectj.lang.reflect.MethodSignature) joinPoint.getSignature()).getMethod().getAnnotation(LogAction.class);
-        
+
         UUID userId = null;
         String userRole = "GUEST";
         String username = "ANONYMOUS";
@@ -65,14 +65,24 @@ public class AuditAspect {
         try {
             Object result = joinPoint.proceed();
             logBuilder.status("SUCCESS");
-            AuditLog log = auditLogRepository.save(logBuilder.build());
-            malvolentBehaviorService.analyzeBehavior(log);
+            try {
+                AuditLog log = auditLogRepository.save(logBuilder.build());
+                malvolentBehaviorService.analyzeBehavior(log);
+            } catch (Exception auditEx) {
+            }
             return result;
         } catch (Throwable throwable) {
             logBuilder.status("FAILURE");
-            logBuilder.details(throwable.getMessage());
-            AuditLog log = auditLogRepository.save(logBuilder.build());
-            malvolentBehaviorService.analyzeBehavior(log);
+            String msg = throwable.getMessage();
+            if (msg != null && msg.length() > 1000) {
+                msg = msg.substring(0, 1000);
+            }
+            logBuilder.details(msg);
+            try {
+                AuditLog log = auditLogRepository.save(logBuilder.build());
+                malvolentBehaviorService.analyzeBehavior(log);
+            } catch (Exception auditEx) {
+            }
             throw throwable;
         }
     }

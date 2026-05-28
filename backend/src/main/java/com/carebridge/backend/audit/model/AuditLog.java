@@ -24,8 +24,11 @@ public class AuditLog {
     private String userRole;
     private String username;
     private String action;
-    private String resource;
+    @Column(name = "details", columnDefinition = "TEXT")
     private String details;
+
+    @Column(name = "resource", columnDefinition = "TEXT")
+    private String resource;
     private LocalDateTime timestamp;
     private String status;
     private String ipAddress;
