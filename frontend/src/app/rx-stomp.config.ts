@@ -1,10 +1,12 @@
 import { RxStompConfig } from '@stomp/rx-stomp';
+import { environment } from '../environments/environment';
 import * as SockJS_ from 'sockjs-client';
 const SockJS = (SockJS_ as any).default || SockJS_;
 
 export const myRxStompConfig: RxStompConfig = {
   webSocketFactory: () => {
-    return new SockJS('http://localhost:8080/ws');
+    const wsUrl = environment.wsUrl;
+    return new SockJS(wsUrl);
   },
 
   connectHeaders: {},
