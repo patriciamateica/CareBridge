@@ -7,8 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { HttpClient } from '@angular/common/http';
 import { ToastService } from '../toast-service/toast-service';
-
-const API = 'https://localhost:8443';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-activation',
@@ -27,8 +26,10 @@ export class ActivateAccountFlow {
   email        = signal('');
 
   activationForm = new FormGroup({
+    email: new FormControl('', [Validators.email]),
     activationCode: new FormControl('', [Validators.required]),
   });
+
 
   constructor() {
     this.route.queryParamMap.subscribe(params => {
@@ -42,11 +43,12 @@ export class ActivateAccountFlow {
       this.activationForm.markAllAsTouched();
       return;
     }
+    const emailToUse = this.email() || this.activationForm.value.email || '';
 
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.http.post(`${API}/api/auth/activate`, {
+     this.http.post(`${environment.apiBaseUrl}/api/auth/activate`, {
       email: this.email(),
       activationNumber: this.activationForm.value.activationCode
     }).subscribe({

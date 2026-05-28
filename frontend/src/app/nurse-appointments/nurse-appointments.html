@@ -1,0 +1,176 @@
+<div class="pm-page">
+  <div class="pm-header">
+    <h2 class="pm-title">Schedule & Requests</h2>
+  </div>
+
+  <div class="split-layout">
+
+    <div class="split-calendar">
+
+      <div class="calendar-toolbar">
+        <div class="search-wrap">
+          <i class="pi pi-search search-icon"></i>
+          <input class="search-input" type="text" placeholder="Search day, patient or keyword..."
+                 [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)"/>
+        </div>
+
+        <div class="toolbar-actions">
+          <button class="action-btn outline" (click)="showBlockTimeForm.set(true)">
+            <i class="pi pi-ban"></i> Block Time
+          </button>
+          <button class="action-btn primary" (click)="showAppointmentForm.set(true)">
+            <i class="pi pi-plus"></i> New Appointment
+          </button>
+        </div>
+      </div>
+
+      <div class="calendar-nav-header">
+        <button class="nav-btn" (click)="previousMonth()"><i class="pi pi-chevron-left"></i></button>
+        <h3 class="current-month">{{ currentDate() | date: 'MMMM yyyy' }}</h3>
+        <button class="nav-btn" (click)="nextMonth()"><i class="pi pi-chevron-right"></i></button>
+      </div>
+
+      <div class="calendar-card">
+        <div class="calendar-header-row">
+          @for (day of weekDays; track day) { <div class="weekday-name">{{ day }}</div> }
+        </div>
+
+        <div class="calendar-grid">
+          @for (day of calendarGrid(); track day.date.getTime()) {
+            <div class="calendar-cell" [ngClass]="{'not-current': !day.isCurrentMonth, 'is-today': day.isToday}">
+              <div class="cell-header">
+                <span class="date-number">{{ day.date | date: 'd' }}</span>
+              </div>
+              <div class="events-container">
+                @for (apt of day.appointments; track apt.id) {
+                  <div class="event-pill" [ngClass]="apt.status.toLowerCase()">
+                    <span class="event-time">{{ apt.timeSlot | date: 'HH:mm' }}</span>
+                    <span class="event-patient">{{ getPatientName(apt.patientId) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="split-sidebar">
+
+      <div class="sidebar-section">
+        <div class="sidebar-header">
+          <h3 class="sidebar-title">Requests Queue</h3>
+          <span class="badge warning">{{ pendingRequests().length }}</span>
+        </div>
+
+        <div class="sidebar-list">
+          @for (req of pendingRequests(); track req.id) {
+            <div class="request-card">
+              <div class="req-info">
+                <span class="req-date">{{ req.timeSlot | date: 'dd MMM, HH:mm' }}</span>
+                <span class="req-patient">{{ getPatientName(req.patientId) }}</span>
+                <span class="req-desc">{{ req.description }}</span>
+              </div>
+              <div class="req-actions">
+                <button class="icon-btn success" (click)="acceptRequest(req.id)" title="Accept"><i class="pi pi-check"></i></button>
+                <button class="icon-btn warning" (click)="rescheduleRequest(req.id)" title="Reschedule"><i class="pi pi-calendar-times"></i></button>
+                <button class="icon-btn danger" (click)="cancelRequest(req.id)" title="Cancel"><i class="pi pi-times"></i></button>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-mini">No pending requests!</div>
+          }
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-header">
+          <h3 class="sidebar-title">Today's Agenda</h3>
+          <span class="badge success">{{ todaysAgenda().length }}</span>
+        </div>
+
+        <div class="sidebar-list timeline">
+          @for (agenda of todaysAgenda(); track agenda.id) {
+            <div class="agenda-item">
+              <div class="agenda-time">{{ agenda.timeSlot | date: 'HH:mm' }}</div>
+              <div class="agenda-details border-scheduled">
+                <span class="agenda-patient">{{ getPatientName(agenda.patientId) }}</span>
+                <span class="agenda-desc">{{ agenda.description }}</span>
+              </div>
+            </div>
+          } @empty {
+            <div class="empty-mini">No appointments scheduled for today.</div>
+          }
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <p-dialog header="Request New Appointment" [visible]="showAppointmentForm()" (visibleChange)="showAppointmentForm.set($event)" [modal]="true" [style]="{ width: '400px' }">
+    <div class="flex flex-col gap-4 pt-2">
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-gray-700">Patient</label>
+        <select class="native-form-field" [(ngModel)]="newApt.patientId">
+          <option value="" disabled selected>Select a Patient</option>
+          @for (p of getPatientsList(); track p.value) {
+            <option [value]="p.value">{{ p.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="flex flex-col gap-1 w-1/2">
+          <label class="text-sm font-medium text-gray-700">Date</label>
+          <input type="date" class="native-form-field" [(ngModel)]="newApt.date" />
+        </div>
+        <div class="flex flex-col gap-1 w-1/2">
+          <label class="text-sm font-medium text-gray-700">Time</label>
+          <input type="time" class="native-form-field" [(ngModel)]="newApt.time" />
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-gray-700">Reason</label>
+        <input type="text" class="native-form-field" [(ngModel)]="newApt.description" placeholder="e.g., Follow up check" />
+      </div>
+
+    </div>
+    <ng-template pTemplate="footer">
+      <button class="action-btn outline w-full justify-center mb-2" (click)="showAppointmentForm.set(false)">Cancel</button>
+      <button class="action-btn primary w-full justify-center" (click)="submitNewAppointment()">Schedule</button>
+    </ng-template>
+  </p-dialog>
+
+  <p-dialog header="Block Calendar Time" [visible]="showBlockTimeForm()" (visibleChange)="showBlockTimeForm.set($event)" [modal]="true" [style]="{ width: '400px' }">
+    <div class="flex flex-col gap-4 pt-2">
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-gray-700">Date</label>
+        <input type="date" class="native-form-field" [(ngModel)]="blockTimeData.date" />
+      </div>
+
+      <div class="flex gap-4">
+        <div class="flex flex-col gap-1 w-1/2">
+          <label class="text-sm font-medium text-gray-700">Start Time</label>
+          <input type="time" class="native-form-field" [(ngModel)]="blockTimeData.startTime" />
+        </div>
+        <div class="flex flex-col gap-1 w-1/2">
+          <label class="text-sm font-medium text-gray-700">End Time</label>
+          <input type="time" class="native-form-field" [(ngModel)]="blockTimeData.endTime" />
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-gray-700">Reason</label>
+        <input type="text" class="native-form-field" [(ngModel)]="blockTimeData.reason" placeholder="e.g., Lunch Break, Meeting" />
+      </div>
+
+    </div>
+    <ng-template pTemplate="footer">
+      <button class="action-btn primary w-full justify-center" (click)="submitBlockedTime()">Block Time</button>
+    </ng-template>
+  </p-dialog>
+
+</div>

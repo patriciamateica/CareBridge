@@ -6,8 +6,8 @@
       <div class="search-wrap">
         <i class="pi pi-search search-icon"></i>
         <input class="search-input" type="text" placeholder="Search Patients..."
-               [value]="searchQuery()"
-               (input)="searchQuery.set($any($event.target).value)"/>
+               [value]="facade.searchQuery()"
+               (input)="facade.searchQuery.set($any($event.target).value)"/>
       </div>
       @if (authService.isAdmin() || authService.isNurse()) {
         <app-create-patient></app-create-patient>
@@ -18,9 +18,9 @@
   <div class="split-layout">
 
     <div class="split-table">
-      <div class="table-card table-scroll-container" (scroll)="onTableScroll($event)">
+      <div class="table-card table-scroll-container">
         <p-table
-          [value]="filteredPatients()"
+          [value]="facade.filteredPatients()"
           [paginator]="false"
           styleClass="p-datatable-sm"
           rowHover="true"
@@ -78,7 +78,7 @@
               <td>
                 <span class="p-column-title font-bold lg:hidden">Last Vital Check</span>
                 <span class="text-gray-500 text-sm">
-                  @if (getLastVitalTime(patient.id); as t) {
+                  @if (facade.getLastVitalTime(patient.id); as t) {
                     {{ t | date: 'dd MMM, HH:mm' }}
                   } @else {
                     <span class="italic text-gray-400">No data</span>
@@ -87,7 +87,7 @@
               </td>
               <td>
                 <span class="p-column-title font-bold lg:hidden">Status</span>
-                <p-tag [value]="patient.status" [severity]="getSeverity(patient.status)"></p-tag>
+                <p-tag [value]="patient.status" [severity]="facade.getSeverity(patient.status)"></p-tag>
               </td>
               <td (click)="$event.stopPropagation()">
                 <span class="p-column-title font-bold lg:hidden text-center">Actions</span>
@@ -107,7 +107,7 @@
                 <div class="empty-state">
                   <i class="pi pi-users text-4xl text-gray-300"></i>
                   <p class="text-gray-400 text-base">No patients found</p>
-                  @if (searchQuery()) {
+                  @if (facade.searchQuery()) {
                     <p class="text-gray-400 text-sm">Try clearing the search filter</p>
                   }
                 </div>
@@ -117,10 +117,8 @@
 
         </p-table>
 
-        @if (loadingMorePatients()) {
-          <div class="infinite-loader">Loading more patients...</div>
-        } @else if (hasMorePatients() && filteredPatients().length > 0) {
-          <div class="infinite-loader hint">Scroll to load more</div>
+        @if (facade.loading()) {
+          <div class="infinite-loader">Loading patients...</div>
         }
       </div>
     </div>
@@ -130,17 +128,17 @@
       <div class="stat-cards">
         <div class="stat-card">
           <p class="stat-label">{{ authService.currentRole() === 'Nurse' ? 'My Patients' : 'Active Patients' }}</p>
-          <p class="stat-number">{{ activeCount() }}</p>
+          <p class="stat-number">{{ facade.activeCount() }}</p>
           <p class="stat-sub">{{ authService.currentRole() === 'Nurse' ? 'Assigned to you' : 'Total Caseload' }}</p>
         </div>
         <div class="stat-card">
           <p class="stat-label">Critical Alerts</p>
-          <p class="stat-number critical">{{ criticalCount() }}</p>
+          <p class="stat-number critical">{{ facade.criticalCount() }}</p>
           <p class="stat-sub">Patients needing immediate care</p>
         </div>
         <div class="stat-card">
           <p class="stat-label">Pending tasks</p>
-          <p class="stat-number">{{ pendingTasksCount() }}</p>
+          <p class="stat-number">{{ facade.pendingTasksCount() }}</p>
           <p class="stat-sub">New Requests and follow-ups</p>
         </div>
       </div>
@@ -148,18 +146,18 @@
       <div class="chart-card">
         <p class="chart-title">Patients Status Overview</p>
         <div class="donut-wrap">
-          <p-chart type="doughnut" [data]="donutData()" [options]="donutOptions" height="220"></p-chart>
+          <p-chart type="doughnut" [data]="facade.donutData()" [options]="donutOptions" height="220"></p-chart>
         </div>
         <div class="donut-legend">
-          <button class="legend-pill normal">{{ donutData().normalPct }}% Normal</button>
-          <button class="legend-pill critical">{{ donutData().criticalPct }}% Critical</button>
+          <button class="legend-pill normal">{{ facade.donutData().normalPct }}% Normal</button>
+          <button class="legend-pill critical">{{ facade.donutData().criticalPct }}% Critical</button>
         </div>
       </div>
 
       <div class="chart-card">
         <p class="chart-title">Reported Symptoms Today</p>
         <div class="bar-wrap">
-          <p-chart type="bar" [data]="symptomsData()" [options]="barOptions" height="200"></p-chart>
+          <p-chart type="bar" [data]="facade.symptomsData()" [options]="barOptions" height="200"></p-chart>
         </div>
       </div>
 

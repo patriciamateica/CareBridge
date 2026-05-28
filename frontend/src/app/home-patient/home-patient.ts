@@ -59,8 +59,8 @@ export class HomePatient implements OnInit {
     const id = this.authService.currentUserId();
     if (id) {
       this.userSvc.getById(id).subscribe(u => this._currentUser.set(u));
-      this.vitalsSvc.getAll().subscribe((res: any) => {
-        this._vitals.set(res.content?.filter((v: any) => v.patientId === id) || []);
+      this.vitalsSvc.getByPatientId(id).subscribe((res: any) => {
+        this._vitals.set(res.content || []);
       });
 
       this.vitalsSvc.listenToUpdates('/topic/vitals').subscribe((v: Vitals) => {
@@ -129,7 +129,6 @@ export class HomePatient implements OnInit {
         timestamp: new Date().toISOString()
     } as any));
 
-    // Reset form
     this.notes = '';
   }
 }

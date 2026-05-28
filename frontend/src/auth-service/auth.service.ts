@@ -3,6 +3,7 @@ import { Observable, throwError, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { UserService } from '../app/cruds/services/userService';
+import {buildApiUrl} from '../app/api-config';
 
 export type UserRole = 'Admin' | 'Nurse' | 'Patient' | 'Family';
 
@@ -24,11 +25,10 @@ export interface ForgotPasswordRequest {
 }
 
 export interface ResetPasswordRequest {
-  token: string;
+  email: string;
+  otp: string;
   newPassword: string;
 }
-
-const API = 'https://localhost:8443';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -70,67 +70,62 @@ export class AuthService {
     return this.currentPermissions().includes(permission);
   }
 
-  login(credentials: LoginRequest): Observable<void> {
-    return this.http
-      .post<void>(`${API}/api/login`, credentials, { withCredentials: true })
-      .pipe(
-        switchMap(() => this.fetchAndHydrateUser()),
-        catchError(() => throwError(() => ({ error: 'Invalid email or password.' })))
-      );
-  }
+   login(credentials: LoginRequest): Observable<void> {
+     return this.http
+       .post<void>(buildApiUrl('/api/login'), credentials, { withCredentials: true })
+       .pipe(
+         switchMap(() => this.fetchAndHydrateUser()),
+         catchError(() => throwError(() => ({ error: 'Invalid email or password.' })))
+       );
+   }
 
-  loginWithGoogle(): void {
-    window.location.href = `${API}/oauth2/authorization/google`;
-  }
+   forgotPassword(email: string): Observable<void> {
+     const body: ForgotPasswordRequest = { email };
+     return this.http
+       .post<void>(buildApiUrl('/api/auth/forgot-password'), body)
+       .pipe(catchError(() => of(void 0)));
+   }
 
-  forgotPassword(email: string): Observable<void> {
-    const body: ForgotPasswordRequest = { email };
-    return this.http
-      .post<void>(`${API}/api/auth/forgot-password`, body)
-      .pipe(catchError(() => of(void 0)));
-  }
+   resetPassword(email: string, otp: string, newPassword: string): Observable<void> {
+     const body: ResetPasswordRequest = { email, otp, newPassword };
+     return this.http
+       .post<{ message?: string; error?: string }>(buildApiUrl('/api/auth/reset-password'), body)
+       .pipe(
+         map(() => void 0),
+         catchError(err => {
+           const msg = err?.error?.error ?? 'Password reset failed. The link may have expired.';
+           return throwError(() => ({ error: msg }));
+         })
+       );
+   }
 
-  resetPassword(token: string, newPassword: string): Observable<void> {
-    const body: ResetPasswordRequest = { token, newPassword };
-    return this.http
-      .post<{ message?: string; error?: string }>(`${API}/api/auth/reset-password`, body)
-      .pipe(
-        map(() => void 0),
-        catchError(err => {
-          const msg = err?.error?.error ?? 'Password reset failed. The link may have expired.';
-          return throwError(() => ({ error: msg }));
-        })
-      );
-  }
+   registerNewUser(payload: RegisterRequest): Observable<void> {
+     return this.http
+       .post<void>(buildApiUrl('/api/register'), payload)
+       .pipe(
+         map(() => void 0),
+         catchError(() => throwError(() => ({ error: 'Registration failed.' })))
+       );
+   }
 
-  registerNewUser(payload: RegisterRequest): Observable<void> {
-    return this.http
-      .post<void>(`${API}/api/register`, payload)
-      .pipe(
-        map(() => void 0),
-        catchError(() => throwError(() => ({ error: 'Registration failed.' })))
-      );
-  }
+   logout(): void {
+     this.http.post(buildApiUrl('/api/logout'), {}, { withCredentials: true })
+       .subscribe({ error: () => {} });
+     this.resetLocalState();
+   }
 
-  logout(): void {
-    this.http.post(`${API}/api/logout`, {}, { withCredentials: true })
-      .subscribe({ error: () => {} });
-    this.resetLocalState();
-  }
-
-
-  private fetchAndHydrateUser(): Observable<void> {
-    return this.http
-      .get<any>(`${API}/api/users/me`, { withCredentials: true })
-      .pipe(
-        map(user => {
-          const roles = this.mapRoles(user.roles);
-          const permissions = Array.from(new Set<string>(user.permissions || [])) as string[];
-          this.setCurrentUser(user.id, roles, permissions, `${user.firstName} ${user.lastName}`);
-        }),
-        catchError(() => of(void 0))
-      );
-  }
+   private fetchAndHydrateUser(): Observable<void> {
+     return this.http
+       .get<any>(buildApiUrl('/api/users/me'), { withCredentials: true })
+       .pipe(
+         map(user => {
+           const roles = this.mapRoles(user.roles);
+           const permissions = Array.from(new Set<string>(user.permissions || [])) as string[];
+           this.setCurrentUser(user.id, roles, permissions, `${user.firstName} ${user.lastName}`);
+         }),
+         catchError(() => of(void 0))
+       );
+   }
 
   private hydrateSessionFromToken(): void {
     this.fetchAndHydrateUser().subscribe({

@@ -43,6 +43,8 @@ export class ForgotPassword {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
+  submittedEmail = signal('');
+
   step = signal<'email' | 'reset'>('email');
   isLoading = signal(false);
   errorMessage = signal('');
@@ -81,16 +83,14 @@ export class ForgotPassword {
       this.emailForm.markAllAsTouched();
       return;
     }
-
     this.isLoading.set(true);
     const email = this.emailForm.value.email!;
+    this.submittedEmail.set(email);
 
     this.authService.forgotPassword(email).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.successMessage.set(
-          'If that email is registered, you will receive a reset link shortly.'
-        );
+        this.successMessage.set('If that email is registered, you will receive a reset code shortly.');
         this.step.set('reset');
       },
       error: () => {
@@ -106,11 +106,10 @@ export class ForgotPassword {
       this.resetForm.markAllAsTouched();
       return;
     }
-
     this.isLoading.set(true);
     const { token, password } = this.resetForm.value;
 
-    this.authService.resetPassword(token!, password!).subscribe({
+    this.authService.resetPassword(this.submittedEmail(), token!, password!).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.toastService.showSuccess('Password updated successfully. Please sign in.');
@@ -118,7 +117,7 @@ export class ForgotPassword {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.errorMessage.set(err?.error ?? 'Reset failed. The link may have expired.');
+        this.errorMessage.set(err?.error ?? 'Reset failed. The code may have expired.');
       }
     });
   }

@@ -1,7 +1,7 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ChartModule } from 'primeng/chart';
-import { forkJoin } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 import { AuthService } from '../../auth-service/auth.service';
 import { UserService } from '../cruds/services/userService';
@@ -17,92 +17,141 @@ import { Task } from '../cruds/models/task';
   standalone: true,
   imports: [CommonModule, ChartModule, DatePipe],
   templateUrl: './home-nurse.html',
-  styleUrl: './home-nurse.css'
+  styleUrl: './home-nurse.css',
 })
-export class HomeNurse implements OnInit {
-  private readonly authService = inject(AuthService);
-  private readonly userSvc = inject(UserService);
-  private readonly detailsSvc = inject(PatientDetailsService);
-  private readonly taskSvc = inject(TaskService);
+export class HomeNurse implements OnInit, OnDestroy {
+  private readonly authService    = inject(AuthService);
+  private readonly userSvc        = inject(UserService);
+  private readonly detailsSvc     = inject(PatientDetailsService);
+  private readonly taskSvc        = inject(TaskService);
 
-  private readonly _localUsers = signal<User[]>([]);
-  private readonly _localDetails = signal<PatientDetails[]>([]);
-  private readonly _localTasks = signal<Task[]>([]);
+  private subs: Subscription[] = [];
+
+  private readonly _users   = signal<User[]>([]);
+  private readonly _details = signal<PatientDetails[]>([]);
+  private readonly _tasks   = signal<Task[]>([]);
+
+  private readonly _taskPage     = signal(0);
+  private readonly _hasMoreTasks = signal(false);
+  readonly loadingTasks          = signal(false);
+
+  readonly currentDate = signal(new Date());
 
   readonly nurseName = computed(() => this.authService.currentUserName());
-  readonly currentDate = new Date();
 
-  ngOnInit() {
-    forkJoin({
-      users: this.userSvc.getAll(),
-      details: this.detailsSvc.getAll(),
-      tasks: this.taskSvc.getAll()
-    }).subscribe((res: any) => {
-      this._localUsers.set(res.users.content || []);
-      this._localDetails.set(res.details.content || []);
-      this._localTasks.set(res.tasks.content || []);
-    });
-
-    this.taskSvc.listenToUpdates('/topic/tasks').subscribe((t: Task) => {
-        this._localTasks.update(list => [...list, t]);
-    });
-  }
-
-  readonly tasks = computed(() => this._localTasks().slice(0, 10));
+  readonly tasks = computed(() => this._tasks());
 
   readonly patients = computed(() => {
-    const users = this._localUsers().filter(u => u.roles?.includes('PATIENT'));
-    const details = this._localDetails();
-    return users.map(u => {
-      const d = details.find(det => det.userId === u.id);
+    const details = this._details();
+    const users   = this._users();
+    return details.map(d => {
+      const u = users.find(user => user.id === d.userId);
       return {
-        id: u.id,
-        firstName: u.firstName,
-        lastName: u.lastName,
-        status: 'Active'
+        id: d.userId,
+        firstName: d.patientFirstName || u?.firstName || 'Unknown',
+        lastName: d.patientLastName || u?.lastName || 'Patient',
+        status: d.status ?? 'Active'
       };
     });
   });
 
-  readonly criticalCount = computed(() =>
-    this.patients().filter((p) => p.status === 'Critical').length
-  );
-
-  readonly totalCount = computed(() => this.patients().length);
-  readonly normalCount = computed(() => this.totalCount() - this.criticalCount());
+  readonly criticalCount  = computed(() => this.patients().filter(p => p.status === 'Critical').length);
+  readonly totalCount     = computed(() => this.patients().length);
+  readonly normalCount    = computed(() => this.totalCount() - this.criticalCount());
 
   readonly alerts = computed(() =>
     this.patients()
-      .filter((p) => p.status === 'Critical')
-      .map((p) => ({
+      .filter(p => p.status === 'Critical')
+      .map(p => ({
         id: p.id,
         patientName: `${p.firstName} ${p.lastName}`,
         description: 'Realtime alert: elevated pain score or vitals threshold exceeded',
       }))
   );
 
+  readonly criticalPercent = computed(() =>
+    this.totalCount() ? Math.round((this.criticalCount() / this.totalCount()) * 100) : 0
+  );
+  readonly normalPercent = computed(() => 100 - this.criticalPercent());
+
   readonly chartData = computed(() => ({
     labels: ['Critical', 'Normal'],
-    datasets: [
-      {
-        data: [this.criticalCount(), this.normalCount()],
-        backgroundColor: ['#b32d2d', '#6a966a'],
-        hoverBackgroundColor: ['#9e2424', '#5a825a'],
-        borderWidth: 0,
-      }
-    ]
+    datasets: [{
+      data: [this.criticalCount(), this.normalCount()],
+      backgroundColor: ['#b32d2d', '#6a966a'],
+      hoverBackgroundColor: ['#9e2424', '#5a825a'],
+      borderWidth: 0,
+    }],
   }));
 
   readonly chartOptions = {
     cutout: '80%',
     plugins: { legend: { display: false }, tooltip: { enabled: true } },
     maintainAspectRatio: false,
-    responsive: true
+    responsive: true,
   };
 
-  readonly criticalPercent = computed(() =>
-    this.totalCount() ? Math.round((this.criticalCount() / this.totalCount()) * 100) : 0
-  );
+  ngOnInit(): void {
+    this.loadInitialData();
+    this.setupWebSockets();
+  }
 
-  readonly normalPercent = computed(() => 100 - this.criticalPercent());
+  ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
+  }
+
+  private loadInitialData(): void {
+    this.loadingTasks.set(true);
+    const nurseId = this.authService.currentUserId();
+    this.subs.push(
+      this.userSvc.getByRole('PATIENT').subscribe((res: any) => this._users.set(res.content || [])),
+      this.detailsSvc.getByNurseId(nurseId).subscribe((res: any) => this._details.set(res.content || [])),
+    );
+    this.loadTaskPage(0);
+  }
+
+  private setupWebSockets(): void {
+    this.subs.push(
+      this.taskSvc.listenToUpdates('/topic/tasks').subscribe((t: Task) => {
+        this._tasks.update(list => {
+          const idx = list.findIndex(i => i.id === t.id);
+          return idx >= 0 ? list.map((i, n) => (n === idx ? t : i)) : [t, ...list];
+        });
+      }),
+      this.taskSvc.listenToUpdates('/topic/tasks/deleted').subscribe((res: any) => {
+        this._tasks.update(list => list.filter(t => t.id !== res.id));
+      }),
+    );
+  }
+
+  private readonly PAGE_SIZE = 10;
+
+  private loadTaskPage(page: number): void {
+    this.loadingTasks.set(true);
+    const nurseId = this.authService.currentUserId();
+    this.subs.push(
+      this.taskSvc.getByNurseId(nurseId, page, this.PAGE_SIZE).subscribe({
+        next: (res: any) => {
+          const content: Task[] = res.content || [];
+          if (page === 0) {
+            this._tasks.set(content);
+          } else {
+            this._tasks.update(prev => [...prev, ...content]);
+          }
+          this._taskPage.set(page);
+          this._hasMoreTasks.set(!res.last);
+          this.loadingTasks.set(false);
+        },
+        error: () => this.loadingTasks.set(false),
+      })
+    );
+  }
+
+  onTaskListScroll(event: Event): void {
+    if (!this._hasMoreTasks() || this.loadingTasks()) return;
+    const el = event.target as HTMLElement;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40) {
+      this.loadTaskPage(this._taskPage() + 1);
+    }
+  }
 }

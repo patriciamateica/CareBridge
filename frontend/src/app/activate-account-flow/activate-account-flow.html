@@ -33,6 +33,15 @@
         </p-message>
       }
 
+      @if (!email()) {
+        <div class="form-field">
+          <label>Email Address</label>
+          <input pInputText
+                 formControlName="email"
+                 placeholder="Enter your email" />
+        </div>
+      }
+
       <button pButton type="submit" class="submit-btn" [disabled]="isLoading()">
         <span pButtonLabel>{{ isLoading() ? 'Activating…' : 'Activate Account' }}</span>
       </button>

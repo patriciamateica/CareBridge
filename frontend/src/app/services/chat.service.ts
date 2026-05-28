@@ -10,7 +10,7 @@ import { Observable, map } from 'rxjs';
 export class ChatService {
   private readonly http = inject(HttpClient);
   private readonly rxStompService = inject(RxStompService);
-  private readonly apiUrl = 'http://localhost:8080/api/chat';
+  private readonly apiUrl = '/api/chat';
 
   getChatHistory(): Observable<ChatMessage[]> {
     return this.http.get<ChatMessage[]>(`${this.apiUrl}/history`);

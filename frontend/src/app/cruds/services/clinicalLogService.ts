@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { Client } from '@stomp/stompjs';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../../environments/environment';
 // @ts-ignore
 import * as SockJS_ from 'sockjs-client';
 const SockJS = (SockJS_ as any).default || SockJS_;
@@ -12,23 +13,21 @@ import { ClinicalLog } from '../models/clinicalLog';
   providedIn: 'root'
 })
 export class ClinicalLogService {
-  private apiUrl = 'http://localhost:8080/api/clinical-logs';
+  private apiUrl = '/api/clinical-logs';
   private stompClient: Client | null = null;
   private isBrowser: boolean;
 
   constructor(private http: HttpClient, @Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
     if (this.isBrowser) {
-        this.stompClient = new Client({
-          webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-          debug: (str) => {
-            console.log(str);
-          },
-          reconnectDelay: 5000,
-          heartbeatIncoming: 4000,
-          heartbeatOutgoing: 4000,
-        });
-        this.stompClient.activate();
+      const wsUrl = '/ws';
+      this.stompClient = new Client({
+        webSocketFactory: () => new SockJS(wsUrl),
+        reconnectDelay: 5000,
+        heartbeatIncoming: 4000,
+        heartbeatOutgoing: 4000,
+      });
+      this.stompClient.activate();
     }
   }
 

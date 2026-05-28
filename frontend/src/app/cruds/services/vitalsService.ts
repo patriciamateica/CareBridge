@@ -1,76 +1,54 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
-import { Client } from '@stomp/stompjs';
-import { isPlatformBrowser } from '@angular/common';
-// @ts-ignore
-import * as SockJS_ from 'sockjs-client';
-const SockJS = (SockJS_ as any).default || SockJS_;
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Vitals } from '../models/vitals';
+import { WsStompService } from './ws-stomp.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class VitalsService {
-  private apiUrl = 'http://localhost:8080/api/vitals';
-  private stompClient: Client | null = null;
-  private isBrowser: boolean;
+  private readonly apiUrl = '/api/vitals';
 
-  constructor(private http: HttpClient, @Inject(PLATFORM_ID) platformId: Object) {
-    this.isBrowser = isPlatformBrowser(platformId);
-    if (this.isBrowser) {
-        this.stompClient = new Client({
-          webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-          debug: (str) => {
-            console.log(str);
-          },
-          reconnectDelay: 5000,
-          heartbeatIncoming: 4000,
-          heartbeatOutgoing: 4000,
-        });
-        this.stompClient.activate();
-    }
+  constructor(private readonly http: HttpClient, private readonly ws: WsStompService) {}
+
+  getAll(page = 0, size = 200): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}?page=${page}&size=${size}`).pipe(
+      catchError(err => { console.error('[VitalsService] getAll', err); return throwError(() => err); })
+    );
   }
 
-  getAll(): Observable<any> {
-    return this.http.get<any>(this.apiUrl);
+  getByPatientId(patientId: string, page = 0, size = 20): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/patient/${patientId}?page=${page}&size=${size}`).pipe(
+      catchError(err => { console.error('[VitalsService] getByPatientId', err); return throwError(() => err); })
+    );
   }
 
   getById(id: string): Observable<Vitals> {
-    return this.http.get<Vitals>(`${this.apiUrl}/${id}`);
+    return this.http.get<Vitals>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => { console.error('[VitalsService] getById', err); return throwError(() => err); })
+    );
   }
 
   create(data: Vitals): Observable<Vitals> {
-    return this.http.post<Vitals>(this.apiUrl, data);
+    return this.http.post<Vitals>(this.apiUrl, data).pipe(
+      catchError(err => { console.error('[VitalsService] create', err); return throwError(() => err); })
+    );
   }
 
   update(id: string, data: Vitals): Observable<Vitals> {
-    return this.http.put<Vitals>(`${this.apiUrl}/${id}`, data);
+    return this.http.put<Vitals>(`${this.apiUrl}/${id}`, data).pipe(
+      catchError(err => { console.error('[VitalsService] update', err); return throwError(() => err); })
+    );
   }
 
   delete(id: string): Observable<boolean> {
-    return this.http.delete<boolean>(`${this.apiUrl}/${id}`);
+    return this.http.delete<boolean>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => { console.error('[VitalsService] delete', err); return throwError(() => err); })
+    );
   }
 
+  /** @deprecated Use WsStompService.listen() directly or via a facade service. */
   listenToUpdates(topic: string): Observable<any> {
-    const subject = new Subject<any>();
-    if (!this.isBrowser || !this.stompClient) return subject.asObservable();
-
-    const subscribe = () => {
-      this.stompClient!.subscribe(topic, (message) => {
-        if (message.body) {
-          subject.next(JSON.parse(message.body));
-        }
-      });
-    };
-
-    if (this.stompClient.connected) {
-      subscribe();
-    } else {
-      this.stompClient.onConnect = () => {
-        subscribe();
-      };
-    }
-    return subject.asObservable();
+    return this.ws.listen(topic);
   }
 }

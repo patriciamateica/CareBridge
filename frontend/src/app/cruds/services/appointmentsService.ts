@@ -8,7 +8,7 @@ import { catchError } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AppointmentsService {
-  private apiUrl = 'http://localhost:8080/api/appointments';
+  private apiUrl = '/api/appointments';
 
   constructor(private http: HttpClient) {}
 

@@ -1,76 +1,54 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
-import { Client } from '@stomp/stompjs';
-import { isPlatformBrowser } from '@angular/common';
-// @ts-ignore
-import * as SockJS_ from 'sockjs-client';
-const SockJS = (SockJS_ as any).default || SockJS_;
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Task } from '../models/task';
+import { WsStompService } from './ws-stomp.service';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class TaskService {
-  private apiUrl = 'http://localhost:8080/api/tasks';
-  private stompClient: Client | null = null;
-  private isBrowser: boolean;
+  private readonly apiUrl = '/api/tasks';
 
-  constructor(private http: HttpClient, @Inject(PLATFORM_ID) platformId: Object) {
-    this.isBrowser = isPlatformBrowser(platformId);
-    if (this.isBrowser) {
-        this.stompClient = new Client({
-          webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-          debug: (str) => {
-            console.log(str);
-          },
-          reconnectDelay: 5000,
-          heartbeatIncoming: 4000,
-          heartbeatOutgoing: 4000,
-        });
-        this.stompClient.activate();
-    }
+  constructor(private readonly http: HttpClient, private readonly ws: WsStompService) {}
+
+  getAll(page = 0, size = 10): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}?page=${page}&size=${size}`).pipe(
+      catchError(err => { console.error('[TaskService] getAll', err); return throwError(() => err); })
+    );
   }
 
-  getAll(): Observable<any> {
-    return this.http.get<any>(this.apiUrl);
+  getByNurseId(nurseId: string, page = 0, size = 10): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/nurse/${nurseId}?page=${page}&size=${size}`).pipe(
+      catchError(err => { console.error('[TaskService] getByNurseId', err); return throwError(() => err); })
+    );
   }
 
   getById(id: string): Observable<Task> {
-    return this.http.get<Task>(`${this.apiUrl}/${id}`);
+    return this.http.get<Task>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => { console.error('[TaskService] getById', err); return throwError(() => err); })
+    );
   }
 
   create(data: Task): Observable<Task> {
-    return this.http.post<Task>(this.apiUrl, data);
+    return this.http.post<Task>(this.apiUrl, data).pipe(
+      catchError(err => { console.error('[TaskService] create', err); return throwError(() => err); })
+    );
   }
 
   update(id: string, data: Task): Observable<Task> {
-    return this.http.put<Task>(`${this.apiUrl}/${id}`, data);
+    return this.http.put<Task>(`${this.apiUrl}/${id}`, data).pipe(
+      catchError(err => { console.error('[TaskService] update', err); return throwError(() => err); })
+    );
   }
 
   delete(id: string): Observable<boolean> {
-    return this.http.delete<boolean>(`${this.apiUrl}/${id}`);
+    return this.http.delete<boolean>(`${this.apiUrl}/${id}`).pipe(
+      catchError(err => { console.error('[TaskService] delete', err); return throwError(() => err); })
+    );
   }
 
+  /** @deprecated Use WsStompService.listen() directly or via a facade service. */
   listenToUpdates(topic: string): Observable<any> {
-    const subject = new Subject<any>();
-    if (!this.isBrowser || !this.stompClient) return subject.asObservable();
-
-    const subscribe = () => {
-      this.stompClient!.subscribe(topic, (message) => {
-        if (message.body) {
-          subject.next(JSON.parse(message.body));
-        }
-      });
-    };
-
-    if (this.stompClient.connected) {
-      subscribe();
-    } else {
-      this.stompClient.onConnect = () => {
-        subscribe();
-      };
-    }
-    return subject.asObservable();
+    return this.ws.listen(topic);
   }
 }

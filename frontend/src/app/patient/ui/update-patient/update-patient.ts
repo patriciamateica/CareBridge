@@ -50,20 +50,32 @@ export class UpdatePatient implements OnChanges, OnInit {
   })));
 
   ngOnInit() {
-    this.loadNurses();
   }
 
   ngOnChanges() { this.sync(); }
 
   private loadNurses() {
-    this.userSvc.getAll().subscribe((res: any) => {
-      const users = res.content || [];
-      const nurses = users.filter((u: any) => u.roles?.includes('NURSE'));
-      this._nurses.set(nurses);
+    if (this._nurses().length > 0) {
+      return;
+    }
+
+    this.userSvc.getByRole('NURSE').subscribe({
+      next: (res: any) => {
+        const nurses = res.content || [];
+        this._nurses.set(nurses);
+      },
+      error: (err: any) => {
+        console.error('[UpdatePatient] Failed to load nurses:', err);
+        this._nurses.set([]);
+      }
     });
   }
 
-  openDialog() { this.sync(); this.visible.set(true); }
+  openDialog() {
+    this.sync();
+    this.loadNurses();
+    this.visible.set(true);
+  }
 
   async onSubmit(form: NgForm) {
     if (!form.valid) return;
@@ -86,10 +98,7 @@ export class UpdatePatient implements OnChanges, OnInit {
 
         await firstValueFrom(this.userSvc.update(this.patientData().id, userPayload));
 
-        const detailsRes: any = await firstValueFrom(
-          this.http.get('http://localhost:8080/api/patient-details?size=200')
-        );
-        const detail = detailsRes.content?.find((d: any) => d.userId === this.patientData().id);
+        const detail = await firstValueFrom(this.detailsSvc.getByUserId(this.patientData().id));
 
         if (detail) {
           await firstValueFrom(this.detailsSvc.update(detail.id, {

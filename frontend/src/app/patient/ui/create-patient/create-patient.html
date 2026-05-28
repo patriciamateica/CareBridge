@@ -7,10 +7,17 @@
 
     <div class="flex flex-col gap-1">
       <label class="text-sm font-semibold text-gray-600">Account Email *</label>
-      <input pInputText name="userEmail" placeholder="Enter patient's account email"
-             [(ngModel)]="newPatient.userEmail" #email="ngModel"
-             [invalid]="email.invalid && (email.touched || patientForm.submitted)"
-             required email/>
+      <p-select name="userEmail"
+                [options]="patientEmailOptions()"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select a patient account"
+                [(ngModel)]="newPatient.userEmail"
+                #email="ngModel"
+                [invalid]="email.invalid && (email.touched || patientForm.submitted)"
+                appendTo="body"
+                styleClass="w-full"
+                required/>
       @if (email.invalid && (email.touched || patientForm.submitted)) {
         <p-message severity="error" size="small" variant="simple">A valid account email is required.</p-message>
       }

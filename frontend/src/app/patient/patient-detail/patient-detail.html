@@ -1,4 +1,4 @@
-@if (patient(); as p) {
+@if (facade.patient(); as p) {
   <div class="detail-page">
 
     <div class="top-bar">
@@ -14,12 +14,12 @@
     <div class="content-columns">
 
       <div class="vitals-card"
-           [class.vitals-active]="p.status === 'Active' && !isAnyCritical()"
-           [class.vitals-critical]="isAnyCritical()">
+           [class.vitals-active]="p.status === 'Active' && !facade.isAnyCritical()"
+           [class.vitals-critical]="facade.isAnyCritical()">
 
         <h2 class="vitals-title">Vitals</h2>
 
-        @if (sparklinePath(); as path) {
+        @if (facade.sparklinePath(); as path) {
           <div class="sparkline-wrap">
             <svg width="100%" height="52" viewBox="0 0 300 52" preserveAspectRatio="none"
                  xmlns="http://www.w3.org/2000/svg">
@@ -33,7 +33,7 @@
           </div>
         }
 
-        @if (latestVital(); as v) {
+        @if (facade.latestVital(); as v) {
           <div class="vital-rows">
             <div class="vital-row" [class.vital-row-alert]="v.heartRate > 100 || v.heartRate < 60">
               <span class="vital-name">Heart Rate</span>
@@ -66,7 +66,7 @@
             </tr>
             </thead>
             <tbody>
-              @for (v of recentVitalsTable(); track v.timestamp) {
+              @for (v of facade.recentVitalsTable(); track v.timestamp) {
                 <tr>
                   <td>{{ v.timestamp | date: 'MMM d, HH:mm' }}</td>
                   <td>{{ v.heartRate }}</td>
@@ -109,34 +109,34 @@
             <div class="card-header">Daily Check-in</div>
             <div class="card-body">
               <div class="checkin-row">
-                <span class="checkin-label">Pain level: <strong>{{ checkInPainLevel() }}/10</strong></span>
-                <p-slider [ngModel]="checkInPainLevel()"
-                          [disabled]="isInactive()"
-                          (ngModelChange)="checkInPainLevel.set($event)"
+                <span class="checkin-label">Pain level: <strong>{{ facade.checkInPainLevel() }}/10</strong></span>
+                <p-slider [ngModel]="facade.checkInPainLevel()"
+                          [disabled]="facade.isInactive()"
+                          (ngModelChange)="facade.checkInPainLevel.set($event)"
                           [min]="1" [max]="10" styleClass="w-full">
                 </p-slider>
               </div>
               <div class="checkin-row">
-                <span class="checkin-label">Status: <strong>{{ checkInMood() }}</strong></span>
+                <span class="checkin-label">Status: <strong>{{ facade.checkInMood() }}</strong></span>
                 <div class="mood-pills">
                   @for (mood of moodOptions; track mood) {
                     <button class="mood-pill"
-                            [disabled]="isInactive()"
-                            [class.mood-pill-active]="checkInMood() === mood"
-                            (click)="checkInMood.set(mood)">{{ mood }}</button>
+                            [disabled]="facade.isInactive()"
+                            [class.mood-pill-active]="facade.checkInMood() === mood"
+                            (click)="facade.checkInMood.set(mood)">{{ mood }}</button>
                   }
                 </div>
               </div>
               <div class="checkin-row">
                 <span class="checkin-label">
-                  Experienced: <strong>{{ checkInSymptoms().join(', ') || 'None' }}</strong>
+                  Experienced: <strong>{{ facade.checkInSymptoms().join(', ') || 'None' }}</strong>
                 </span>
                 <div class="symptom-list">
                   @for (s of symptomOptions; track s) {
                     <label class="symptom-item">
                       <input type="checkbox"
-                             [disabled]="isInactive()"
-                             [checked]="checkInSymptoms().includes(s)"
+                             [disabled]="facade.isInactive()"
+                             [checked]="facade.checkInSymptoms().includes(s)"
                              (change)="toggleSymptom(s)"
                              class="symptom-cb"/>
                       <span>{{ s }}</span>
@@ -147,16 +147,16 @@
               <div class="checkin-row">
                 <span class="checkin-label">Comments:</span>
                 <textarea class="comments-area" rows="2"
-                          [disabled]="isInactive()"
+                          [disabled]="facade.isInactive()"
                           placeholder="Experienced major pain..."
-                          [ngModel]="checkInComments()"
-                          (ngModelChange)="checkInComments.set($event)"></textarea>
+                          [ngModel]="facade.checkInComments()"
+                          (ngModelChange)="facade.checkInComments.set($event)"></textarea>
               </div>
               <div class="checkin-actions">
-                <button class="green-action-btn outline" (click)="showCheckInHistory.set(true)">
+                <button class="green-action-btn outline" (click)="facade.showCheckInHistory.set(true)">
                   View Previous Logs
                 </button>
-                @if (!isInactive()) {
+                @if (!facade.isInactive()) {
                   <button class="green-action-btn" (click)="submitCheckIn()">
                     Save Check-in
                   </button>
@@ -174,26 +174,26 @@
             <div class="presc-sub-card">
               <p class="presc-subtitle">Active Medication</p>
               <div class="text-xs text-gray-500 mb-2">
-                Showing {{ visibleMedications().length }} of {{ medicationTotal() }}
+                Showing {{ facade.visibleMedications().length }} of {{ facade.medicationTotal() }}
               </div>
               <div class="list-viewport" (scroll)="onMedicationListScroll($event)">
                 <ul class="med-list">
-                  @for (med of visibleMedications(); track med.id) {
+                  @for (med of facade.visibleMedications(); track med.id) {
                     <li class="med-item">
                       <span>• {{ med.name }} ({{ med.dose }})</span>
-                      @if (!isInactive()) {
+                      @if (!facade.isInactive()) {
                         <button class="icon-del-btn" (click)="deleteMedication(med.id)">
                           <i class="pi pi-times text-xs"></i>
                         </button>
                       }
                     </li>
                   }
-                  @if (!medications().length) {
+                  @if (!facade.medications().length) {
                     <li class="empty-text">No medications added yet.</li>
                   }
                 </ul>
               </div>
-              @if (!isInactive()) {
+              @if (!facade.isInactive()) {
                 <button class="green-action-btn w-full mt-auto" (click)="openMedDialog()">
                   Add medication
                 </button>
@@ -203,21 +203,21 @@
             <div class="presc-sub-card">
               <p class="presc-subtitle">Care Notes (Recent)</p>
               <div class="text-xs text-gray-500 mb-2">
-                Total: {{ careNotesStats().total }} | Last 7 days: {{ careNotesStats().last7Days }}
-                @if (careNotesStats().latestDate; as d) {
+                Total: {{ facade.careNotesStats().total }} | Last 7 days: {{ facade.careNotesStats().last7Days }}
+                @if (facade.careNotesStats().latestDate; as d) {
                   | Latest: {{ d | date: 'MMM d, HH:mm' }}
                 }
               </div>
               <div class="text-xs text-gray-500 mb-2">
-                Showing {{ visibleCareNotes().length }} of {{ careNotesTotal() }}
+                Showing {{ facade.visibleCareNotes().length }} of {{ facade.careNotesTotal() }}
               </div>
               <div class="list-viewport" (scroll)="onCareNotesListScroll($event)">
                 <ul class="notes-list">
-                  @for (note of visibleCareNotes(); track note.id) {
+                  @for (note of facade.visibleCareNotes(); track note.id) {
                     <li class="note-item">
                       <span class="note-date">{{ note.timestamp | date: 'MMM d' }}:</span>
                       <span class="note-text">{{ note.content }}</span>
-                      @if (!isInactive()) {
+                      @if (!facade.isInactive()) {
                         <button class="icon-del-btn" (click)="startEditNote(note.id, note.content)">
                           <i class="pi pi-pencil text-xs"></i>
                         </button>
@@ -227,19 +227,19 @@
                       }
                     </li>
                   }
-                  @if (!careNotes().length) {
+                  @if (!facade.careNotes().length) {
                     <li class="empty-text">No care notes yet.</li>
                   }
                 </ul>
               </div>
               <div class="note-input-row mt-auto">
                 <textarea class="note-textarea" rows="2"
-                          [disabled]="isInactive()"
-                          [placeholder]="isInactive() ? 'Read only' : (editingNoteId() ? 'Edit care note...' : 'Write a care note...')"
-                          [ngModel]="newNoteContent()"
-                          (ngModelChange)="newNoteContent.set($event)"></textarea>
-                @if (!isInactive()) {
-                  @if (editingNoteId()) {
+                          [disabled]="facade.isInactive()"
+                          [placeholder]="facade.isInactive() ? 'Read only' : (facade.editingNoteId() ? 'Edit care note...' : 'Write a care note...')"
+                          [ngModel]="facade.newNoteContent()"
+                          (ngModelChange)="facade.newNoteContent.set($event)"></textarea>
+                @if (!facade.isInactive()) {
+                  @if (facade.editingNoteId()) {
                     <button class="green-action-btn outline"
                             (click)="cancelEditNote()">
                       Cancel edit
@@ -247,8 +247,8 @@
                   }
                   <button class="green-action-btn"
                           (click)="submitNote()"
-                          [disabled]="!newNoteContent().trim()">
-                    {{ editingNoteId() ? 'Update care note' : 'Add care note' }}
+                          [disabled]="!facade.newNoteContent().trim()">
+                    {{ facade.editingNoteId() ? 'Update care note' : 'Add care note' }}
                   </button>
                 }
               </div>
@@ -261,8 +261,12 @@
     </div>
 
   </div>
-} @else {
+} @else if (facade.loading()) {
   <div class="flex items-center justify-center h-64 text-gray-400">
     <i class="pi pi-spin pi-spinner text-3xl"></i>
+  </div>
+} @else {
+  <div class="flex items-center justify-center h-64 text-gray-400">
+    <p>Patient not found.</p>
   </div>
 }

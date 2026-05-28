@@ -40,8 +40,7 @@ export class DeletePatient {
 
     try {
       if (this.networkSvc.isOnline) {
-        const detailsRes: any = await firstValueFrom(this.detailsSvc.getAll());
-        const detail = detailsRes.content?.find((d: any) => d.userId === p.id);
+        const detail = await firstValueFrom(this.detailsSvc.getByUserId(p.id));
         if (detail) {
           await firstValueFrom(this.detailsSvc.delete(detail.id));
         }

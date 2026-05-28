@@ -1,80 +1,60 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
-import { Client } from '@stomp/stompjs';
-import { isPlatformBrowser } from '@angular/common';
-// @ts-ignore
-import * as SockJS_ from 'sockjs-client';
-const SockJS = (SockJS_ as any).default || SockJS_;
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { User } from '../models/user';
+import { WsStompService } from './ws-stomp.service';
+import { buildApiUrl } from '../../api-config';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class UserService {
-  private apiUrl = 'http://localhost:8080/api/users';
-  private stompClient: Client | null = null;
-  private isBrowser: boolean;
 
-  constructor(private http: HttpClient, @Inject(PLATFORM_ID) platformId: Object) {
-    this.isBrowser = isPlatformBrowser(platformId);
-    if (this.isBrowser) {
-        this.stompClient = new Client({
-          webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
-          debug: (str) => {
-            console.log(str);
-          },
-          reconnectDelay: 5000,
-          heartbeatIncoming: 4000,
-          heartbeatOutgoing: 4000,
-        });
-        this.stompClient.activate();
-    }
+  constructor(private readonly http: HttpClient, private readonly ws: WsStompService) {}
+
+  getAll(page = 0, size = 200): Observable<any> {
+    return this.http.get<any>(buildApiUrl(`/api/users?page=${page}&size=${size}`)).pipe(
+      catchError(err => { console.error('[UserService] getAll', err); return throwError(() => err); })
+    );
   }
 
-  getAll(): Observable<any> {
-    return this.http.get<any>(this.apiUrl);
+  getByRole(role: string, page = 0, size = 200): Observable<any> {
+    return this.http.get<any>(buildApiUrl(`/api/users/by-role?role=${role}&page=${page}&size=${size}`)).pipe(
+      catchError(err => { console.error('[UserService] getByRole', err); return throwError(() => err); })
+    );
   }
 
   getById(id: string): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/${id}`);
+    return this.http.get<User>(buildApiUrl(`/api/users/${id}`)).pipe(
+      catchError(err => { console.error('[UserService] getById', err); return throwError(() => err); })
+    );
   }
 
   create(data: any): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/register`, data);
+    return this.http.post<User>(buildApiUrl('/api/users/register'), data).pipe(
+      catchError(err => { console.error('[UserService] create', err); return throwError(() => err); })
+    );
   }
 
   registerPatient(data: any): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/register-patient`, data);
+    return this.http.post<User>(buildApiUrl('/api/users/register-patient'), data).pipe(
+      catchError(err => { console.error('[UserService] registerPatient', err); return throwError(() => err); })
+    );
   }
 
-  update(id: string, data: User): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/${id}`, data);
+  update(id: string, data: Partial<User>): Observable<User> {
+    return this.http.put<User>(buildApiUrl(`/api/users/${id}`), data).pipe(
+      catchError(err => { console.error('[UserService] update', err); return throwError(() => err); })
+    );
   }
 
-  delete(id: string): Observable<boolean> {
-    return this.http.delete<boolean>(`${this.apiUrl}/${id}`);
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(buildApiUrl(`/api/users/${id}`)).pipe(
+      catchError(err => { console.error('[UserService] delete', err); return throwError(() => err); })
+    );
   }
 
+  /** @deprecated Use WsStompService.listen() directly or via a facade service. */
   listenToUpdates(topic: string): Observable<any> {
-    const subject = new Subject<any>();
-    if (!this.isBrowser || !this.stompClient) return subject.asObservable();
-
-    const subscribe = () => {
-      this.stompClient!.subscribe(topic, (message) => {
-        if (message.body) {
-          subject.next(JSON.parse(message.body));
-        }
-      });
-    };
-
-    if (this.stompClient.connected) {
-      subscribe();
-    } else {
-      this.stompClient.onConnect = () => {
-        subscribe();
-      };
-    }
-    return subject.asObservable();
+    return this.ws.listen(topic);
   }
 }

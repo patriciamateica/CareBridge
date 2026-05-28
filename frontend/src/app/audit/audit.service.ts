@@ -17,7 +17,7 @@ export interface SuspiciousUser {
 })
 export class AuditService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/audit';
+  private readonly apiUrl = '/api/audit';
 
   getSuspiciousUsers(): Observable<SuspiciousUser[]> {
     return this.http.get<SuspiciousUser[]>(`${this.apiUrl}/suspicious`);

@@ -134,9 +134,9 @@ export class OfflineSyncService implements OnInit {
         userStatus: dto.status === 'Inactive' ? 'INACTIVE' : 'ACTIVE'
     } as any));
 
-    const detailsRes: any = await firstValueFrom(this.detailsSvc.getAll());
-    const detail = detailsRes.content?.find((d: any) => d.userId === id);
-    if (detail) {
+    try {
+      const detail = await firstValueFrom(this.detailsSvc.getByUserId(id));
+      if (detail) {
       await firstValueFrom(this.detailsSvc.update(detail.id, {
         id: detail.id,
         userId: id,
@@ -148,6 +148,9 @@ export class OfflineSyncService implements OnInit {
         diagnostics: detail.diagnostics || [],
         scans: detail.scans || []
       } as any));
+    }
+    } catch (e) {
+      console.warn('[OfflineSyncService] No patient details found for user to update');
     }
   }
 }

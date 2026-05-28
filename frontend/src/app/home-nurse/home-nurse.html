@@ -3,7 +3,7 @@
   <header class="dashboard-header">
     <div class="welcome-text">
       <h1>Welcome Back: {{ nurseName() }}!</h1>
-      <p>Today is {{ currentDate | date: 'MMM d, y' }}</p>
+      <p>Today is {{ currentDate() | date: 'MMM d, y' }}</p>
     </div>
 
     <div class="header-actions">
@@ -20,7 +20,7 @@
 
     <section class="tasks-section">
       <h2>Today's Tasks</h2>
-      <div class="task-list scrollable-task-container">
+      <div class="task-list scrollable-task-container" (scroll)="onTaskListScroll($event)">
         @for (task of tasks(); track task.id) {
           <div class="task-card">
             <div class="task-info">
@@ -31,6 +31,14 @@
             </div>
             <button class="status-btn">Upcoming</button>
           </div>
+        }
+        @if (loadingTasks()) {
+          <div class="task-card" style="justify-content:center;color:#6b7280;">
+            <i class="pi pi-spin pi-spinner"></i>&nbsp;Loading more tasks…
+          </div>
+        }
+        @if (!tasks().length && !loadingTasks()) {
+          <p style="color:#9ca3af;font-style:italic;padding:1rem;">No tasks yet.</p>
         }
       </div>
     </section>
