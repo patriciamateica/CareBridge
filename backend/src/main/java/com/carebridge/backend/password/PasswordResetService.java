@@ -3,6 +3,8 @@ package com.carebridge.backend.password;
 import com.carebridge.backend.security.EmailService;
 import com.carebridge.backend.user.UserRepository;
 import com.carebridge.backend.user.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,7 @@ import java.time.LocalDateTime;
 @Service
 public class PasswordResetService {
 
+    private static final Logger logger = LoggerFactory.getLogger(PasswordResetService.class);
     private static final int OTP_EXPIRY_MINUTES = 15;
 
     private final PasswordResetTokenRepository tokenRepository;
@@ -34,20 +37,25 @@ public class PasswordResetService {
 
     @Transactional
     public void initiateReset(String email) {
-        userRepository.findByEmailIgnoreCase(email).ifPresent(user -> {
-            tokenRepository.deleteAllByEmail(email.toLowerCase());
+        logger.info("Initiating password reset for email: {}", email);
+        userRepository.findByEmailIgnoreCase(email).ifPresentOrElse(
+            user -> {
+                tokenRepository.deleteAllByEmail(email.toLowerCase());
 
-            String otp = generateOtp();
-            LocalDateTime expiry = LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES);
-            tokenRepository.save(new PasswordResetToken(otp, email.toLowerCase(), expiry));
+                String otp = generateOtp();
+                LocalDateTime expiry = LocalDateTime.now().plusMinutes(OTP_EXPIRY_MINUTES);
+                tokenRepository.save(new PasswordResetToken(otp, email.toLowerCase(), expiry));
 
-            emailService.sendPasswordResetEmail(email, otp);
-        });
+                try {
+                    emailService.sendPasswordResetEmail(email, otp);
+                } catch (Exception e) {
+                    logger.error("Error sending password reset email", e);
+                }
+            },
+            () -> logger.info("No user found for email: {} (this is expected for security)", email)
+        );
     }
 
-    /**
-     * Step 2: validate OTP and update password.
-     */
     @Transactional
     public void confirmReset(String email, String otp, String newPassword) {
         PasswordResetToken prt = tokenRepository.findByToken(otp)
