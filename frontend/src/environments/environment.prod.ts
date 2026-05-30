@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://carebridge-production-dc56.up.railway.app',
-  wsUrl: 'wss://carebridge-production-dc56.up.railway.app/ws',
+  apiBaseUrl: 'https://grand-emotion-production-2923.up.railway.app',
+  wsUrl: 'wss://grand-emotion-production-2923.up.railway.app/ws',
   proxyBypass: false
 };
