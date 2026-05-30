@@ -16,7 +16,7 @@ export class WsStompService {
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
     if (this.isBrowser) {
-      const wsUrl = '/ws';
+      const wsUrl = environment.wsUrl;
       this.client = new Client({
         webSocketFactory: () => new SockJS(wsUrl),
         reconnectDelay: 5000,
