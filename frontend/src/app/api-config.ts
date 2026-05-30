@@ -7,11 +7,9 @@ export function getApiBaseUrl(): string {
   return '';
 }
 
-export function buildApiUrl(endpoint: string): string {
-  const baseUrl = getApiBaseUrl();
-  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  // Return relative URL to use Angular dev server proxy (proxy.conf.json)
-  // The proxy will forward to https://localhost:8443 with secure: false
-  return `${baseUrl}${path}`;
-}
+import { environment } from '../environments/environment';
+
+export const buildApiUrl = (path: string): string => {
+  return `${environment.apiBaseUrl}${path}`;
+};
 
