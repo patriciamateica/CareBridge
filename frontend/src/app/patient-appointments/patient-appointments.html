@@ -1,0 +1,141 @@
+<div class="pm-page">
+  <div class="pm-header">
+    <h2 class="pm-title">My Appointments</h2>
+  </div>
+
+  <div class="split-layout">
+
+    <div class="split-calendar">
+
+      <div class="calendar-toolbar">
+        <div class="search-wrap">
+          <i class="pi pi-search search-icon"></i>
+          <input class="search-input" type="text" placeholder="Search appointments..."
+                 [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)"/>
+        </div>
+
+        <div class="toolbar-actions">
+          <button class="action-btn primary" (click)="showAppointmentForm.set(true)">
+            <i class="pi pi-plus"></i> Request Appointment
+          </button>
+        </div>
+      </div>
+
+      <div class="calendar-nav-header">
+        <button class="nav-btn" (click)="previousMonth()"><i class="pi pi-chevron-left"></i></button>
+        <h3 class="current-month">{{ currentDate() | date: 'MMMM yyyy' }}</h3>
+        <button class="nav-btn" (click)="nextMonth()"><i class="pi pi-chevron-right"></i></button>
+      </div>
+
+      <div class="calendar-card">
+        <div class="calendar-header-row">
+          @for (day of weekDays; track day) { <div class="weekday-name">{{ day }}</div> }
+        </div>
+
+        <div class="calendar-grid">
+          @for (day of calendarGrid(); track day.date.getTime()) {
+            <div class="calendar-cell cursor-pointer"
+                 [ngClass]="{'not-current': !day.isCurrentMonth, 'is-today': day.isToday, 'is-selected': selectedDate()?.toDateString() === day.date.toDateString()}"
+                 (click)="selectDay(day.date)">
+
+              <div class="cell-header">
+                <span class="date-number">{{ day.date | date: 'd' }}</span>
+              </div>
+              <div class="events-container">
+                @for (apt of day.appointments; track apt.id) {
+                  <div class="event-pill" [ngClass]="getCardStatusClass(apt.status)">
+                    <span class="event-time">{{ apt.timeSlot | date: 'HH:mm' }}</span>
+                    <span class="event-desc">{{ apt.description }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="split-sidebar">
+      <div class="sidebar-section h-full">
+        <div class="sidebar-header">
+          <h3 class="sidebar-title">
+            @if (selectedDate()) {
+              Schedule for {{ selectedDate() | date: 'MMM dd, yyyy' }}
+            } @else {
+              All Upcoming Appointments
+            }
+          </h3>
+          <span class="badge" [ngClass]="selectedDate() ? 'success' : 'info'">
+            {{ sidebarAppointments().length }}
+          </span>
+        </div>
+
+        <div class="sidebar-list">
+          @for (apt of sidebarAppointments(); track apt.id) {
+
+            <div class="apt-row-card" [ngClass]="getCardStatusClass(apt.status)">
+              <div class="apt-time-col">
+                <span class="apt-time">{{ apt.timeSlot | date: 'HH:mm' }}</span>
+                <span class="apt-date">{{ apt.timeSlot | date: 'dd MMM' }}</span>
+              </div>
+
+              <div class="apt-details-col">
+                <div class="apt-header-info">
+                  <h3 class="apt-desc-title">{{ apt.description }}</h3>
+                  <p-tag [value]="apt.status" [severity]="getSeverity(apt.status)"></p-tag>
+                </div>
+
+                <div class="provider-info mt-1">
+                  <div class="avatar"><i class="pi pi-user text-xs" style="color:#5f8d5f"></i></div>
+                  <span class="provider-name">{{ getNurseName(apt.nurseId) }}</span>
+                </div>
+              </div>
+
+              <div class="apt-actions-col">
+                @if (apt.status === 'SCHEDULED' || apt.status === 'REQUESTED') {
+                  <button class="icon-action-btn danger-outline" (click)="cancel(apt.id)" title="Cancel Request">
+                    <i class="pi pi-times"></i>
+                  </button>
+                }
+              </div>
+            </div>
+
+          } @empty {
+            <div class="empty-mini flex flex-col items-center justify-center gap-2">
+              <i class="pi pi-calendar-times text-3xl text-gray-300"></i>
+              <span>No appointments found.</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p-dialog header="Request New Appointment" [visible]="showAppointmentForm()" (visibleChange)="showAppointmentForm.set($event)" [modal]="true" [style]="{ width: '400px' }">
+    <p class="text-sm text-gray-500 mb-4">Requests will be sent to your assigned nurse for validation.</p>
+
+    <div class="flex flex-col gap-4 pt-2">
+      <div class="flex gap-4">
+        <div class="flex flex-col gap-1 w-1/2">
+          <label class="text-sm font-medium text-gray-700">Preferred Date</label>
+          <input type="date" class="native-form-field" [(ngModel)]="newApt.date" />
+        </div>
+        <div class="flex flex-col gap-1 w-1/2">
+          <label class="text-sm font-medium text-gray-700">Preferred Time</label>
+          <input type="time" class="native-form-field" [(ngModel)]="newApt.time" />
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-gray-700">Reason for visit</label>
+        <input type="text" class="native-form-field" [(ngModel)]="newApt.description" placeholder="e.g., Routine checkup, Follow up..." />
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button class="action-btn outline w-full justify-center mb-2" (click)="showAppointmentForm.set(false)">Cancel</button>
+      <button class="action-btn primary w-full justify-center" (click)="submitNewAppointment()">Submit Request</button>
+    </ng-template>
+  </p-dialog>
+</div>
