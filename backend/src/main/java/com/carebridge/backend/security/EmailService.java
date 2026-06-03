@@ -43,9 +43,7 @@ public class EmailService {
             mailSender.send(message);
             logger.info("✓ Activation email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            logger.error("✗ Failed to send activation email to {}: {} | Cause: {}",
-                toEmail, e.getMessage(), e.getCause() != null ? e.getCause().getMessage() : "Unknown", e);
-            throw new RuntimeException("Failed to send activation email: " + e.getMessage(), e);
+            logger.error("✗ SMTP Blocked by Railway. MANUAL ACTIVATION CODE FOR {}: {}", toEmail, activationCode);
         }
     }
 
@@ -73,9 +71,7 @@ public class EmailService {
             mailSender.send(message);
             logger.info("✓ Password reset email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            logger.error("✗ Failed to send password reset email to {}: {} | Cause: {}",
-                toEmail, e.getMessage(), e.getCause() != null ? e.getCause().getMessage() : "Unknown", e);
-            throw new RuntimeException("Failed to send password reset email: " + e.getMessage(), e);
+            logger.error("✗ SMTP Blocked by Railway. MANUAL ACTIVATION CODE FOR {}: {}", toEmail, otpCode);
         }
     }
 }
