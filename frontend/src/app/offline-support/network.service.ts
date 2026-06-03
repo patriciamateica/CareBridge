@@ -1,7 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { combineLatest, from, fromEvent, merge, Observable, of, timer, Subject } from 'rxjs';
 import { catchError, distinctUntilChanged, map, shareReplay, switchMap, filter, pairwise } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
+import { buildApiUrl } from '../api-config';
 
 type OfflineReason = 'NETWORK_DOWN' | 'SERVER_UNREACHABLE' | 'ONLINE';
 
@@ -87,7 +87,7 @@ export class NetworkService {
   }
 
   private resolveProbeUrl(): string {
-    const url = `/api/health`;
+    const url = buildApiUrl('/api/health');
     console.log('[NetworkService] Initializing connectivity probe to:', url);
     return url;
   }

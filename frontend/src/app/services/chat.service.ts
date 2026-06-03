@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { RxStompService } from '../rx-stomp.service';
 import { ChatMessage } from '../cruds/models/chat';
 import { Observable, map } from 'rxjs';
+import { buildApiUrl } from '../api-config';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,7 @@ import { Observable, map } from 'rxjs';
 export class ChatService {
   private readonly http = inject(HttpClient);
   private readonly rxStompService = inject(RxStompService);
-  private readonly apiUrl = '/api/chat';
+  private readonly apiUrl = buildApiUrl('/api/chat');
 
   getChatHistory(): Observable<ChatMessage[]> {
     return this.http.get<ChatMessage[]>(`${this.apiUrl}/history`);

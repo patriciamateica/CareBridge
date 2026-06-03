@@ -7,7 +7,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { Message } from 'primeng/message';
 import { HttpClient } from '@angular/common/http';
 import { ToastService } from '../toast-service/toast-service';
-import { environment } from '../../environments/environment';
+import { buildApiUrl } from '../api-config';
 
 @Component({
   selector: 'app-activation',
@@ -48,7 +48,7 @@ export class ActivateAccountFlow {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-     this.http.post(`${environment.apiBaseUrl}/api/auth/activate`, {
+     this.http.post(buildApiUrl('/api/auth/activate'), {
       email: this.email(),
       activationNumber: this.activationForm.value.activationCode
     }).subscribe({

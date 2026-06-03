@@ -4,10 +4,11 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { HealthStatus } from '../models/healthStatus';
 import { WsStompService } from './ws-stomp.service';
+import { buildApiUrl } from '../../api-config';
 
 @Injectable({ providedIn: 'root' })
 export class HealthStatusService {
-  private readonly apiUrl = '/api/health-status';
+  private readonly apiUrl = buildApiUrl('/api/health-status');
 
   constructor(private readonly http: HttpClient, private readonly ws: WsStompService) {}
 

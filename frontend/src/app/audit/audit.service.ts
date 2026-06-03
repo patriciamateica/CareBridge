@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { buildApiUrl } from '../api-config';
 
 export interface SuspiciousUser {
   id: string;
@@ -17,7 +18,7 @@ export interface SuspiciousUser {
 })
 export class AuditService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api/audit';
+  private readonly apiUrl = buildApiUrl('/api/audit');
 
   getSuspiciousUsers(): Observable<SuspiciousUser[]> {
     return this.http.get<SuspiciousUser[]>(`${this.apiUrl}/suspicious`);

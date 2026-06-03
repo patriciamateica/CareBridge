@@ -3,12 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { Appointments } from '../models/appointments';
 import { catchError } from 'rxjs/operators';
+import { buildApiUrl } from '../../api-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AppointmentsService {
-  private apiUrl = '/api/appointments';
+  private apiUrl = buildApiUrl('/api/appointments');
 
   constructor(private http: HttpClient) {}
 

@@ -8,12 +8,13 @@ import { environment } from '../../../environments/environment';
 import * as SockJS_ from 'sockjs-client';
 const SockJS = (SockJS_ as any).default || SockJS_;
 import { NurseDetails } from '../models/nurseDetails';
+import { buildApiUrl } from '../../api-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NurseDetailsService {
-  private apiUrl = 'api/nurse-details';
+  private apiUrl = buildApiUrl('/api/nurse-details');
   private stompClient: Client | null = null;
   private isBrowser: boolean;
 
