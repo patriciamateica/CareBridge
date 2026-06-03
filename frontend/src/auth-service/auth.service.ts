@@ -47,7 +47,8 @@ export class AuthService {
     return roles[0] || 'Patient';
   };
 
-  constructor() {
+
+  constructor(public authService: AuthService) {
     this.hydrateSessionFromToken();
   }
 
@@ -153,6 +154,6 @@ export class AuthService {
       if (role === 'NURSE')   return 'Nurse';
       if (role === 'FAMILY')  return 'Family';
       return 'Patient';
-    }) as UserRole[];
+    });
   }
 }

@@ -28,11 +28,11 @@
     <div class="menu-area">
       <div class="flex flex-col w-full gap-6">
         @for (section of menuSections; track section.label) {
-          @if (section.roles.includes(userRole)) {
+          @if (section.roles.includes(authService.currentRole())) {
             <div class="flex flex-col gap-2">
               <span class="menu-header">{{ section.label }}</span>
               @for (item of section.items; track item.path) {
-                @if (item.roles.includes(userRole)) {
+                @if (item.roles.includes(authService.currentRole())) {
                   <a [routerLink]="item.path"
                      routerLinkActive="active-link"
                      class="menu-item"

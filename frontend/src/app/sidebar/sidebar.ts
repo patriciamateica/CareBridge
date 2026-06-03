@@ -18,10 +18,6 @@ export class Sidebar {
   protected readonly authService = inject(AuthService);
   private cookiesService = inject(CookiesService);
 
-  get userRole(): string {
-    return this.authService.currentRole();
-  }
-
   menuSections = [
     {
       label: 'MAIN',
