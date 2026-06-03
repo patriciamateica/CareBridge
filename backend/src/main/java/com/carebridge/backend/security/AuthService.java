@@ -10,6 +10,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
@@ -40,6 +41,7 @@ public class AuthService {
         this.emailService = emailService;
     }
 
+    @Transactional
     public User register(RegisterRequest request) {
         if (userRepository.findByEmailIgnoreCase(request.email()).isPresent()) {
             throw new IllegalArgumentException("Email already exists");
@@ -66,6 +68,7 @@ public class AuthService {
         return savedUser;
     }
 
+    @Transactional
     public String login(LoginRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
@@ -73,6 +76,7 @@ public class AuthService {
         return jwtService.generateToken(authentication.getName(), authentication.getAuthorities());
     }
 
+    @Transactional
     public void activateAccount(String email, String activationNumber) {
         User user = userRepository.findByEmailIgnoreCase(email)
             .orElseThrow(() -> new IllegalArgumentException("Account not found."));
