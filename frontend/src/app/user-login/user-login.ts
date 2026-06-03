@@ -71,7 +71,7 @@ export class UserLogin {
   private navigateToDashboard() {
     const role = this.authService.currentRole();
     const route = (role === 'Admin' || role === 'Nurse')
-      ? '/dashboard/home-nurse'
+      ? '/dashboard/patient-management'
       : '/dashboard/home-patient';
     this.toastService.showSuccess('Logged in successfully.');
     this.router.navigate([route]);
