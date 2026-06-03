@@ -48,7 +48,7 @@ export class AuthService {
   };
 
 
-  constructor(public authService: AuthService) {
+  constructor() {
     this.hydrateSessionFromToken();
   }
 
