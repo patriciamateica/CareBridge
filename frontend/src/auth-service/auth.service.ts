@@ -40,7 +40,12 @@ export class AuthService {
   readonly currentUserName = signal<string>('Guest');
   readonly currentUserId = signal<string>('');
 
-  readonly currentRole = () => this.currentRoles()[0] || 'Patient';
+  readonly currentRole = () => {
+    const roles = this.currentRoles();
+    if (roles.includes('Admin')) return 'Admin';
+    if (roles.includes('Nurse')) return 'Nurse';
+    return roles[0] || 'Patient';
+  };
 
   constructor() {
     this.hydrateSessionFromToken();

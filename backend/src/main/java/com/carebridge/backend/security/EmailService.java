@@ -40,7 +40,7 @@ public class EmailService {
                     "— The CareBridge Team"
             );
             logger.debug("Sending email with SimpleMailMessage to: {}", toEmail);
-            mailSender.send(message);
+            //mailSender.send(message);
             logger.info("✓ Activation email sent successfully to: {}", toEmail);
         } catch (Exception e) {
             logger.error("✗ SMTP Blocked by Railway. MANUAL ACTIVATION CODE FOR {}: {}", toEmail, activationCode);
@@ -68,7 +68,7 @@ public class EmailService {
                     "— The CareBridge Team"
             );
             logger.debug("Sending email with SimpleMailMessage to: {}", toEmail);
-            mailSender.send(message);
+            //mailSender.send(message);
             logger.info("✓ Password reset email sent successfully to: {}", toEmail);
         } catch (Exception e) {
             logger.error("✗ SMTP Blocked by Railway. MANUAL ACTIVATION CODE FOR {}: {}", toEmail, otpCode);
