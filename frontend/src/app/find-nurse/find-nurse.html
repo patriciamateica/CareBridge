@@ -1,0 +1,79 @@
+<div class="fn-page">
+
+  <div class="fn-header">
+    <div>
+      <h2 class="fn-title">Find a Nurse</h2>
+      <p class="fn-subtitle">Browse our network of healthcare professionals</p>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search search-icon"></i>
+      <input class="search-input" type="text" placeholder="Search by name or speciality..."
+             [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
+    </div>
+
+    <div class="spec-tabs">
+      @for (spec of specializations(); track spec) {
+        <button class="spec-tab" [ngClass]="{ active: activeSpec() === spec }"
+                (click)="activeSpec.set(spec)">{{ spec }}</button>
+      }
+    </div>
+  </div>
+
+  <div class="nurses-grid">
+    @for (nurse of filteredNurses(); track nurse.user.id) {
+      <div class="nurse-card" [ngClass]="{ 'is-assigned': isAssignedNurse(nurse.user.id) }">
+
+        @if (isAssignedNurse(nurse.user.id)) {
+          <div class="assigned-badge"><i class="pi pi-check-circle"></i> Your Nurse</div>
+        }
+
+        <div class="card-top">
+          <div class="avatar">{{ getInitials(nurse.user) }}</div>
+          <div class="nurse-name-block">
+            <h3 class="nurse-name">{{ nurse.user.firstName }} {{ nurse.user.lastName }}</h3>
+            <span class="nurse-spec">{{ nurse.details?.specialization || 'General Care' }}</span>
+          </div>
+        </div>
+
+        @if (nurse.details) {
+          <div class="nurse-info-list">
+            <div class="info-row">
+              <i class="pi pi-building"></i>
+              <span>{{ nurse.details.hospitalAffiliation || 'Independent' }}</span>
+            </div>
+            <div class="info-row">
+              <i class="pi pi-star"></i>
+              <span>{{ nurse.details.experienceYears }} year{{ nurse.details.experienceYears !== 1 ? 's' : '' }} experience</span>
+            </div>
+          </div>
+
+          @if (nurse.details.hireMeStatus) {
+            <div class="available-badge"><i class="pi pi-circle-fill"></i> Available for new patients</div>
+          }
+        }
+
+        <div class="card-actions">
+          <button class="action-btn request-btn"
+                  [disabled]="requestingNurseId() === nurse.user.id"
+                  (click)="requestVisit(nurse)">
+            @if (requestingNurseId() === nurse.user.id) {
+              <i class="pi pi-spin pi-spinner"></i> Sending…
+            } @else {
+              <i class="pi pi-calendar-plus"></i> Request Visit
+            }
+          </button>
+        </div>
+
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <i class="pi pi-users"></i>
+        <p>No nurses found matching your search.</p>
+      </div>
+    }
+  </div>
+
+</div>
