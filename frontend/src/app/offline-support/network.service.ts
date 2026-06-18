@@ -1,45 +1,28 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { combineLatest, from, fromEvent, merge, Observable, of, timer, Subject } from 'rxjs';
-import { catchError, distinctUntilChanged, map, shareReplay, switchMap, filter, pairwise } from 'rxjs/operators';
-import { buildApiUrl } from '../api-config';
+import { fromEvent, merge, Observable, of, Subject } from 'rxjs';
+import { distinctUntilChanged, filter, map, pairwise, shareReplay } from 'rxjs/operators';
 
-type OfflineReason = 'NETWORK_DOWN' | 'SERVER_UNREACHABLE' | 'ONLINE';
+type OfflineReason = 'NETWORK_DOWN' | 'ONLINE';
 
 @Injectable({ providedIn: 'root' })
 export class NetworkService {
-  private readonly probeIntervalMs = 10000;
-  private readonly probeTimeoutMs = 4000;
-  private readonly probeUrl = this.resolveProbeUrl();
-
   private readonly _browserOnline = signal<boolean>(typeof window === 'undefined' ? true : window.navigator.onLine);
-  private readonly _serverReachable = signal<boolean>(true);
   private readonly connectionRestoredSubject = new Subject<void>();
 
   readonly isBrowserOnlineSignal = this._browserOnline.asReadonly();
-  readonly isServerReachableSignal = this._serverReachable.asReadonly();
-  readonly isOnlineSignal = computed(() => this._browserOnline() && this._serverReachable());
+  readonly isServerReachableSignal = computed(() => true);
+  readonly isOnlineSignal = computed(() => this._browserOnline());
 
-  readonly isServerReachable$: Observable<boolean>;
+  readonly isServerReachable$: Observable<boolean> = of(true);
   readonly isOnline$: Observable<boolean>;
   readonly connectionRestored$ = this.connectionRestoredSubject.asObservable();
 
   constructor() {
     const browserOnline$ = this.buildBrowserOnlineStream();
 
-    this.isServerReachable$ = combineLatest([browserOnline$, timer(0, this.probeIntervalMs)]).pipe(
-      switchMap(([browserOnline]) => {
-        if (!browserOnline) return of(false);
-        return from(this.pingServer()).pipe(catchError(() => of(false)));
-      }),
-      distinctUntilChanged(),
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
-
     browserOnline$.subscribe((online) => this._browserOnline.set(online));
-    this.isServerReachable$.subscribe((reachable) => this._serverReachable.set(reachable));
 
-    this.isOnline$ = combineLatest([browserOnline$, this.isServerReachable$]).pipe(
-      map(([browserOnline, serverReachable]) => browserOnline && serverReachable),
+    this.isOnline$ = browserOnline$.pipe(
       distinctUntilChanged(),
       shareReplay({ bufferSize: 1, refCount: true })
     );
@@ -49,7 +32,6 @@ export class NetworkService {
       filter(([prev, curr]) => !prev && curr),
       map(() => undefined)
     ).subscribe(() => {
-      console.log('[NetworkService] Connection restored');
       this.connectionRestoredSubject.next();
     });
   }
@@ -63,14 +45,14 @@ export class NetworkService {
   }
 
   get isServerReachable(): boolean {
-    return this._serverReachable();
+    return true;
   }
 
   get offlineReason(): OfflineReason {
     if (!this._browserOnline()) return 'NETWORK_DOWN';
-    if (!this._serverReachable()) return 'SERVER_UNREACHABLE';
     return 'ONLINE';
   }
+
   private buildBrowserOnlineStream(): Observable<boolean> {
     if (typeof window === 'undefined') {
       return of(true).pipe(shareReplay({ bufferSize: 1, refCount: true }));
@@ -84,27 +66,5 @@ export class NetworkService {
       distinctUntilChanged(),
       shareReplay({ bufferSize: 1, refCount: true })
     );
-  }
-
-  private resolveProbeUrl(): string {
-    const url = buildApiUrl('/api/health');
-    console.log('[NetworkService] Initializing connectivity probe to:', url);
-    return url;
-  }
-
-  private async pingServer(): Promise<boolean> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.probeTimeoutMs);
-    try {
-      await fetch(this.probeUrl, {
-        method: 'GET',
-        signal: controller.signal,
-      });
-      return true;
-    } catch {
-      return false;
-    } finally {
-      clearTimeout(timeoutId);
-    }
   }
 }

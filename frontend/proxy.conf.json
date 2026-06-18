@@ -1,15 +1,11 @@
 {
   "/api": {
-    "target": "https://localhost:8443",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
+    "target": "http://localhost:8443",
+    "changeOrigin": true
   },
   "/ws": {
-    "target": "https://localhost:8443",
-    "secure": false,
+    "target": "http://localhost:8443",
     "changeOrigin": true,
-    "ws": true,
-    "logLevel": "debug"
+    "ws": true
   }
 }

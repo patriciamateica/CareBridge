@@ -42,21 +42,15 @@
     </div>
 
     <div class="flex flex-col gap-1">
-      <label class="text-sm font-semibold text-gray-600">Assigned Nurse *</label>
+      <label class="text-sm font-semibold text-gray-600">Assigned Nurse</label>
       <p-select name="assignedNurse"
                 [options]="nurseOptions()"
                 optionLabel="label"
                 optionValue="value"
-                placeholder="Select a nurse"
+                placeholder="Select a nurse (optional)"
                 [(ngModel)]="newPatient.assignedNurse"
-                #nurse="ngModel"
-                [invalid]="nurse.invalid && (nurse.touched || patientForm.submitted)"
                 appendTo="body"
-                styleClass="w-full"
-                required/>
-      @if (nurse.invalid && (nurse.touched || patientForm.submitted)) {
-        <p-message severity="error" size="small" variant="simple">Required.</p-message>
-      }
+                styleClass="w-full"/>
     </div>
 
     <div class="flex gap-3 pt-2">

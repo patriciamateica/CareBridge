@@ -4,10 +4,10 @@ export interface User {
   firstName: string;
   lastName: string;
   email: string;
-  phoneNumber: number;
+  phoneNumber: string;
   dateOfBirth: string;
   residentialAddress: string;
   nationality: string;
   roles: string[];
-  userStatus: any;
+  userStatus: 'ACTIVE' | 'INACTIVE' | string;
 }

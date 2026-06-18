@@ -69,6 +69,6 @@ export class PatientManagement implements OnInit, OnDestroy {
   }
 
   openDetail(patient: Patient): void {
-    this.router.navigate(['/dashboard/patient-detail', patient.id]);
+    this.router.navigate(['/dashboard/patient-management', patient.id]);
   }
 }

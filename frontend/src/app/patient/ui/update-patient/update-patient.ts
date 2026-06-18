@@ -98,7 +98,12 @@ export class UpdatePatient implements OnChanges, OnInit {
 
         await firstValueFrom(this.userSvc.update(this.patientData().id, userPayload));
 
-        const detail = await firstValueFrom(this.detailsSvc.getByUserId(this.patientData().id));
+        let detail: any = null;
+        try {
+          detail = await firstValueFrom(this.detailsSvc.getByUserId(this.patientData().id));
+        } catch {
+          // Patient has no details record yet — skip details update
+        }
 
         if (detail) {
           await firstValueFrom(this.detailsSvc.update(detail.id, {

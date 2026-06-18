@@ -1,6 +1,6 @@
 import { computed, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { firstValueFrom, forkJoin, Subscription } from 'rxjs';
+import { catchError, firstValueFrom, forkJoin, of, Subscription } from 'rxjs';
 
 import { User } from '../models/user';
 import { PatientDetails } from '../models/patientDetails';
@@ -188,11 +188,11 @@ export class PatientDetailFacadeService {
     this.subs.push(
       forkJoin({
         user:    this.userSvc.getById(id),
-        details: this.detailsSvc.getByUserId(id),
-        vitals:  this.vitalsSvc.getByPatientId(id, 0, 20),
-        notes:   this.careNotesSvc.getByPatientId(id, 0, this.notePageSize),
-        meds:    this.prescriptionSvc.getByPatientId(id, 0, this.medPageSize),
-        health:  this.healthStatusSvc.getByPatientId(id, 0, 10),
+        details: this.detailsSvc.getByUserId(id).pipe(catchError(() => of(null))),
+        vitals:  this.vitalsSvc.getByPatientId(id, 0, 20).pipe(catchError(() => of({ content: [] }))),
+        notes:   this.careNotesSvc.getByPatientId(id, 0, this.notePageSize).pipe(catchError(() => of({ content: [] }))),
+        meds:    this.prescriptionSvc.getByPatientId(id, 0, this.medPageSize).pipe(catchError(() => of({ content: [] }))),
+        health:  this.healthStatusSvc.getByPatientId(id, 0, 10).pipe(catchError(() => of({ content: [] }))),
       }).subscribe({
         next: (res: any) => {
           this.user.set(res.user);

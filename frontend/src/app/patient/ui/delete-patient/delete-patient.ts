@@ -40,9 +40,13 @@ export class DeletePatient {
 
     try {
       if (this.networkSvc.isOnline) {
-        const detail = await firstValueFrom(this.detailsSvc.getByUserId(p.id));
-        if (detail) {
-          await firstValueFrom(this.detailsSvc.delete(detail.id));
+        try {
+          const detail = await firstValueFrom(this.detailsSvc.getByUserId(p.id));
+          if (detail) {
+            await firstValueFrom(this.detailsSvc.delete(detail.id));
+          }
+        } catch {
+          // No details record — proceed to delete the user
         }
 
         await firstValueFrom(this.userSvc.delete(p.id));

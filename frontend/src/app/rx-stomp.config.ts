@@ -1,13 +1,11 @@
 import { RxStompConfig } from '@stomp/rx-stomp';
 import { environment } from '../environments/environment';
+// @ts-ignore
 import * as SockJS_ from 'sockjs-client';
 const SockJS = (SockJS_ as any).default || SockJS_;
 
 export const myRxStompConfig: RxStompConfig = {
-  webSocketFactory: () => {
-    const wsUrl = environment.wsUrl;
-    return new SockJS(wsUrl);
-  },
+  webSocketFactory: () => new SockJS(environment.wsUrl),
 
   connectHeaders: {},
 
@@ -16,7 +14,7 @@ export const myRxStompConfig: RxStompConfig = {
 
   reconnectDelay: 5000,
 
-  debug: (msg: string): void => {
+  debug: environment.production ? undefined : (msg: string): void => {
     console.log(new Date(), msg);
   },
 };

@@ -17,12 +17,7 @@ export class ConnectivityNotifierService {
       this.lastOnlineState = isOnline;
 
       if (!isOnline) {
-        if (this.network.offlineReason === 'NETWORK_DOWN') {
-          this.toast.showError('Internet connection lost. You are working offline.');
-          return;
-        }
-
-        this.toast.showError('Server is unreachable. You are working offline.');
+        this.toast.showError('Internet connection lost. You are working offline.');
         return;
       }
 
