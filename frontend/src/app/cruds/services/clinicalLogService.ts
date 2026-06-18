@@ -21,6 +21,10 @@ export class ClinicalLogService {
     return this.http.get<ClinicalLog>(`${this.apiUrl}/${id}`);
   }
 
+  getByPatientId(patientId: string): Observable<ClinicalLog[]> {
+    return this.http.get<ClinicalLog[]>(`${this.apiUrl}/patient/${patientId}`);
+  }
+
   create(data: ClinicalLog): Observable<ClinicalLog> {
     return this.http.post<ClinicalLog>(this.apiUrl, data);
   }

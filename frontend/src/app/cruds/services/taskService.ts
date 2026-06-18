@@ -24,6 +24,12 @@ export class TaskService {
     );
   }
 
+  getByPatientId(patientId: string, page = 0, size = 200): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/patient/${patientId}?page=${page}&size=${size}`).pipe(
+      catchError(err => { console.error('[TaskService] getByPatientId', err); return throwError(() => err); })
+    );
+  }
+
   getById(id: string): Observable<Task> {
     return this.http.get<Task>(`${this.apiUrl}/${id}`).pipe(
       catchError(err => { console.error('[TaskService] getById', err); return throwError(() => err); })

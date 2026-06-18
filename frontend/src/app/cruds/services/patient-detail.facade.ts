@@ -8,6 +8,7 @@ import { Vitals } from '../models/vitals';
 import { CareNotes } from '../models/careNotes';
 import { Prescription } from '../models/prescription';
 import { HealthStatus } from '../models/healthStatus';
+import { ClinicalLog } from '../models/clinicalLog';
 import { MoodStatus, Patient } from '../models/patient-ui-models';
 
 import { UserService } from './userService';
@@ -16,6 +17,7 @@ import { VitalsService } from './vitalsService';
 import { CareNotesService } from './careNotesService';
 import { PrescriptionService } from './prescriptionService';
 import { HealthStatusService } from './healthStatusService';
+import { ClinicalLogService } from './clinicalLogService';
 import { NetworkService } from '../../offline-support/network.service';
 import { OfflineStorageService } from '../../offline-support/offline-storage.service';
 import { ToastService } from '../../toast-service/toast-service';
@@ -31,6 +33,10 @@ export class PatientDetailFacadeService {
   readonly careNotesRaw   = signal<CareNotes[]>([]);
   readonly prescriptionsRaw = signal<Prescription[]>([]);
   readonly healthStatusesRaw = signal<HealthStatus[]>([]);
+
+  readonly clinicalLogsRaw = signal<ClinicalLog[]>([]);
+  readonly showClinicalLogsDialog = signal(false);
+  readonly clinicalLogFilter = signal<string>('ALL');
 
   readonly loading         = signal(false);
   readonly medPage         = signal(0);
@@ -129,6 +135,20 @@ export class PatientDetailFacadeService {
 
   readonly isAnyCritical = computed(() => this.patient()?.status === 'Critical');
 
+  readonly filteredClinicalLogs = computed(() => {
+    const filter = this.clinicalLogFilter();
+    const logs = this.clinicalLogsRaw();
+    return (filter === 'ALL' ? logs : logs.filter(l => l.documentType === filter))
+      .sort((a, b) => new Date(b.datePerformed).getTime() - new Date(a.datePerformed).getTime());
+  });
+
+  readonly docTypeIcon: Record<string, string> = {
+    SCAN: 'pi-image', REPORT: 'pi-file-pdf', LAB_RESULT: 'pi-chart-bar',
+    REFERRAL: 'pi-send', PRESCRIPTION: 'pi-pills',
+  };
+
+  getDocIcon(type: string): string { return this.docTypeIcon[type] || 'pi-file'; }
+
   getPainColor(level: number): string {
     if (level <= 3) return '#4ade80';
     if (level <= 6) return '#facc15';
@@ -142,6 +162,7 @@ export class PatientDetailFacadeService {
     private readonly careNotesSvc: CareNotesService,
     private readonly prescriptionSvc: PrescriptionService,
     private readonly healthStatusSvc: HealthStatusService,
+    private readonly clinicalLogSvc: ClinicalLogService,
     private readonly networkSvc: NetworkService,
     private readonly offlineStorage: OfflineStorageService,
     private readonly toastService: ToastService,
@@ -168,6 +189,9 @@ export class PatientDetailFacadeService {
     this.careNotesRaw.set([]);
     this.prescriptionsRaw.set([]);
     this.healthStatusesRaw.set([]);
+    this.clinicalLogsRaw.set([]);
+    this.showClinicalLogsDialog.set(false);
+    this.clinicalLogFilter.set('ALL');
     this.medPage.set(0);
     this.notePage.set(0);
     this.visibleMedCount.set(this.medPageSize);
@@ -193,6 +217,7 @@ export class PatientDetailFacadeService {
         notes:   this.careNotesSvc.getByPatientId(id, 0, this.notePageSize).pipe(catchError(() => of({ content: [] }))),
         meds:    this.prescriptionSvc.getByPatientId(id, 0, this.medPageSize).pipe(catchError(() => of({ content: [] }))),
         health:  this.healthStatusSvc.getByPatientId(id, 0, 10).pipe(catchError(() => of({ content: [] }))),
+        logs:    this.clinicalLogSvc.getByPatientId(id).pipe(catchError(() => of([]))),
       }).subscribe({
         next: (res: any) => {
           this.user.set(res.user);
@@ -201,6 +226,7 @@ export class PatientDetailFacadeService {
           this.careNotesRaw.set(res.notes?.content ?? []);
           this.prescriptionsRaw.set(res.meds?.content ?? []);
           this.healthStatusesRaw.set(res.health?.content ?? []);
+          this.clinicalLogsRaw.set(Array.isArray(res.logs) ? res.logs : []);
           this.syncCheckIn();
           this.loading.set(false);
         },
@@ -341,17 +367,20 @@ export class PatientDetailFacadeService {
         timestamp: new Date().toISOString(),
       };
       if (this.editingNoteId()) {
+        const noteId = this.editingNoteId()!;
         if (this.networkSvc.isOnline) {
-          await firstValueFrom(this.careNotesSvc.update(this.editingNoteId()!, payload));
+          const updated = await firstValueFrom(this.careNotesSvc.update(noteId, payload));
+          this.careNotesRaw.update(list => list.map(n => n.id === noteId ? updated : n));
           this.toastService.showSuccess('Care Note updated.');
         } else {
-          this.offlineStorage.queueOperation({ type: 'CARE_NOTE_UPDATE', payload: { noteId: this.editingNoteId(), ...payload } });
+          this.offlineStorage.queueOperation({ type: 'CARE_NOTE_UPDATE', payload: { noteId, ...payload } });
           this.toastService.showSuccess('Care Note update queued for sync.');
         }
         this.editingNoteId.set(null);
       } else {
         if (this.networkSvc.isOnline) {
-          await firstValueFrom(this.careNotesSvc.create(payload));
+          const created = await firstValueFrom(this.careNotesSvc.create(payload));
+          this.careNotesRaw.update(list => [created, ...list]);
           this.toastService.showSuccess('Care Note added.');
         } else {
           this.offlineStorage.queueOperation({ type: 'CARE_NOTE_ADD', payload });
@@ -384,6 +413,7 @@ export class PatientDetailFacadeService {
     try {
       if (this.networkSvc.isOnline) {
         await firstValueFrom(this.careNotesSvc.delete(noteId));
+        this.careNotesRaw.update(list => list.filter(n => n.id !== noteId));
         this.toastService.showSuccess('Care note deleted successfully.');
       } else {
         this.offlineStorage.queueOperation({ type: 'CARE_NOTE_DELETE', payload: { noteId } });
@@ -418,7 +448,8 @@ export class PatientDetailFacadeService {
         patientDetailsId: '',
       };
       if (this.networkSvc.isOnline) {
-        await firstValueFrom(this.prescriptionSvc.create(payload));
+        const created = await firstValueFrom(this.prescriptionSvc.create(payload));
+        this.prescriptionsRaw.update(list => [created, ...list]);
         this.toastService.showSuccess('Medication added successfully.');
       } else {
         this.offlineStorage.queueOperation({ type: 'MEDICATION_ADD', payload });
@@ -442,6 +473,7 @@ export class PatientDetailFacadeService {
     try {
       if (this.networkSvc.isOnline) {
         await firstValueFrom(this.prescriptionSvc.delete(medId));
+        this.prescriptionsRaw.update(list => list.filter(p => p.id !== medId));
         this.toastService.showSuccess('Medication deleted successfully.');
       } else {
         this.offlineStorage.queueOperation({ type: 'MEDICATION_DELETE', payload: { medId } });

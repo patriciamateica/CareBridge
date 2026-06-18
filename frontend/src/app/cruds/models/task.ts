@@ -7,4 +7,5 @@ export interface Task {
   status: any;
   patientId: string;
   claimerId: string;
+  remote?: boolean;
 }

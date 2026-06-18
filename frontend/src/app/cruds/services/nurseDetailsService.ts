@@ -21,6 +21,10 @@ export class NurseDetailsService {
     return this.http.get<NurseDetails>(`${this.apiUrl}/${id}`);
   }
 
+  getByUserId(userId: string): Observable<NurseDetails> {
+    return this.http.get<NurseDetails>(`${this.apiUrl}/by-user/${userId}`);
+  }
+
   create(data: NurseDetails): Observable<NurseDetails> {
     return this.http.post<NurseDetails>(this.apiUrl, data);
   }

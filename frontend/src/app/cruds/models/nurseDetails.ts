@@ -5,4 +5,5 @@ export interface NurseDetails {
   hospitalAffiliation: string;
   experienceYears: number;
   hireMeStatus: boolean;
+  licenseNumber?: string;
 }

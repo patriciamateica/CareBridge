@@ -4,5 +4,7 @@ export interface Prescription {
   dose: string;
   timing: string;
   patientId: string;
-  mandatory: any;
+  nurseId: string;
+  refillsLeft?: number;
+  nextRefillDate?: string;
 }
