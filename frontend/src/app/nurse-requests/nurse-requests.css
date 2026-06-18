@@ -1,0 +1,249 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.requests-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  font-family: sans-serif;
+  color: #1a1a1a;
+}
+
+.requests-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.requests-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #3a6b3a;
+  margin: 0;
+}
+
+.requests-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0.2rem 0 0;
+}
+
+.pending-badge-large {
+  background: #3a6b3a;
+  color: #fff;
+  border-radius: 1rem;
+  padding: 0.5rem 1.25rem;
+  text-align: center;
+  min-width: 70px;
+}
+
+.pending-count {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.pending-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.85;
+}
+
+.search-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.625rem 1rem 0.625rem 2.5rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  background: #fff;
+  color: #1a1a1a;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+}
+
+.search-input:focus {
+  border-color: #5F8D5F;
+}
+
+.empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #9ca3af;
+}
+
+.empty-icon {
+  font-size: 3.5rem;
+  color: #d1d5db;
+}
+
+.empty-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0;
+}
+
+.empty-sub {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.requests-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.request-card {
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.request-card:hover {
+  border-color: #5F8D5F;
+  box-shadow: 0 2px 12px rgba(95, 141, 95, 0.12);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.patient-info {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.patient-avatar {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: #5F8D5F;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.patient-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.patient-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #111827;
+}
+
+.request-time {
+  font-size: 0.8rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.status-pill {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1.5px solid #fcd34d;
+  border-radius: 999px;
+  padding: 0.3rem 0.875rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.request-description {
+  background: #f3f4f6;
+  border-left: 3px solid #5F8D5F;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-decline,
+.btn-accept {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border-radius: 0.625rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  border: none;
+}
+
+.btn-decline {
+  background: #f3f4f6;
+  color: #374151;
+  border: 2px solid #d1d5db;
+}
+
+.btn-decline:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #b91c1c;
+}
+
+.btn-accept {
+  background: #5F8D5F;
+  color: #fff;
+}
+
+.btn-accept:hover {
+  background: #4a7a4a;
+  transform: translateY(-1px);
+}
+
+.btn-accept:active {
+  transform: translateY(0);
+}

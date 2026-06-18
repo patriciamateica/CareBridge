@@ -1,0 +1,70 @@
+<div class="requests-page">
+
+  <div class="requests-header">
+    <div>
+      <h1 class="requests-title">Patient Requests</h1>
+      <p class="requests-subtitle">Patients requesting to work with you</p>
+    </div>
+    @if (!loading()) {
+      <div class="pending-badge-large">
+        <span class="pending-count">{{ filteredRequests().length }}</span>
+        <span class="pending-label">Pending</span>
+      </div>
+    }
+  </div>
+
+  <div class="search-wrap">
+    <i class="pi pi-search search-icon"></i>
+    <input
+      [(ngModel)]="searchQuery"
+      placeholder="Search by patient name or description…"
+      class="search-input" />
+  </div>
+
+  @if (loading()) {
+    <div class="empty-state">
+      <i class="pi pi-spin pi-spinner" style="font-size:2rem;color:#5F8D5F;"></i>
+      <p>Loading requests…</p>
+    </div>
+  } @else if (!filteredRequests().length) {
+    <div class="empty-state">
+      <i class="pi pi-inbox empty-icon"></i>
+      <p class="empty-title">No pending requests</p>
+      <p class="empty-sub">New patient requests will appear here</p>
+    </div>
+  } @else {
+    <div class="requests-list">
+      @for (req of filteredRequests(); track req.id) {
+        <div class="request-card">
+
+          <div class="card-top">
+            <div class="patient-info">
+              <div class="patient-avatar">
+                <i class="pi pi-user"></i>
+              </div>
+              <div class="patient-text">
+                <span class="patient-name">{{ getPatientName(req.patientId) }}</span>
+                <span class="request-time">
+                  <i class="pi pi-calendar"></i>
+                  {{ req.timeSlot | date:'MMM d, y · h:mm a' }}
+                </span>
+              </div>
+            </div>
+            <span class="status-pill">Pending</span>
+          </div>
+
+          @if (req.description) {
+            <div class="request-description">{{ req.description }}</div>
+          }
+
+          <div class="card-actions">
+            <button class="btn-decline" (click)="declineRequest(req)">Decline</button>
+            <button class="btn-accept" (click)="acceptRequest(req)">Accept</button>
+          </div>
+
+        </div>
+      }
+    </div>
+  }
+
+</div>
