@@ -1,0 +1,77 @@
+<div class="mr-page">
+
+  <div class="mr-header">
+    <h2 class="mr-title">Medical Records</h2>
+    <div class="flex items-center gap-3">
+      @if (isNurseMode()) {
+        <p-select
+          [options]="patientOptions()"
+          [ngModel]="selectedPatientId()"
+          (ngModelChange)="onPatientSelect($event)"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Select a patient…"
+          styleClass="patient-selector">
+        </p-select>
+      }
+      <span class="record-count">{{ filteredLogs().length }} record{{ filteredLogs().length !== 1 ? 's' : '' }}</span>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search search-icon"></i>
+      <input class="search-input" type="text" placeholder="Search records..."
+             [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
+    </div>
+
+    <div class="filter-tabs">
+      @for (type of documentTypes; track type) {
+        <button class="filter-tab" [ngClass]="{ active: activeFilter() === type }"
+                (click)="activeFilter.set(type)">
+          {{ type === 'ALL' ? 'All' : getDocTypeLabel(type) }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="records-list">
+    @for (log of filteredLogs(); track log.id) {
+      <div class="record-card">
+        <div class="record-icon-col">
+          <div class="doc-icon">
+            <i class="pi {{ getDocTypeIcon(log.documentType) }}"></i>
+          </div>
+        </div>
+
+        <div class="record-main">
+          <div class="record-title-row">
+            <h3 class="record-title">{{ log.documentTitle || 'Untitled Document' }}</h3>
+            <span class="doc-type-badge">{{ getDocTypeLabel(log.documentType) }}</span>
+          </div>
+          <div class="record-meta">
+            <span class="meta-item"><i class="pi pi-calendar"></i> {{ log.datePerformed | date: 'dd MMM yyyy' }}</span>
+            <span class="meta-item"><i class="pi pi-user"></i> {{ getNurseName(log.nurseId) }}</span>
+            <span class="meta-item"><i class="pi pi-clock"></i> Uploaded {{ log.uploadTimestamp | date: 'dd MMM yyyy, HH:mm' }}</span>
+          </div>
+        </div>
+
+        <div class="record-status-col">
+          <span class="status-badge" [ngClass]="getStatusClass(log.status)">{{ log.status }}</span>
+          @if (log.fileUrl) {
+            <a [href]="log.fileUrl" target="_blank" rel="noopener" class="view-btn">
+              <i class="pi pi-external-link"></i> View
+            </a>
+          }
+        </div>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <i class="pi pi-folder-open"></i>
+        <p>No medical records found.</p>
+        <span>Your nurse will upload records as they become available.</span>
+      </div>
+    }
+  </div>
+
+</div>
