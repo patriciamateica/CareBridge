@@ -1,0 +1,81 @@
+.med-page { display: flex; flex-direction: column; gap: 1.5rem; padding-bottom: 2rem; }
+.med-header { margin-bottom: 0; }
+.med-title { font-size: 1.75rem; font-weight: 700; color: #1a1a1a; margin: 0; }
+
+.stats-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.stat-card {
+  flex: 1; min-width: 160px; background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+  padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;
+}
+.stat-card.warn { border-left: 4px solid #f59e0b; }
+.stat-card.info { border-left: 4px solid #5f8d5f; }
+.stat-label { font-size: 0.8125rem; font-weight: 500; color: #6b7280; }
+.stat-value { font-size: 2rem; font-weight: 800; color: #1a1a1a; line-height: 1; }
+.stat-value.date { font-size: 1.5rem; }
+
+.toolbar {
+  background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+  padding: 1rem; display: flex; align-items: center; gap: 1rem;
+}
+.search-wrap { position: relative; flex: 1; max-width: 400px; }
+.search-icon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+.search-input { width: 100%; padding: 0.5rem 0.875rem 0.5rem 2.25rem; border: 1.5px solid #d1d5db; border-radius: 8px; outline: none; transition: 0.15s; font-size: 0.875rem; box-sizing: border-box; }
+.search-input:focus { border-color: #5f8d5f; }
+
+.prescription-list { display: flex; flex-direction: column; gap: 0.875rem; }
+
+.prescription-card {
+  background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+  padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03); transition: box-shadow 0.2s;
+}
+.prescription-card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.06); }
+.prescription-card.needs-refill { border-left: 4px solid #f59e0b; }
+
+.presc-main { flex: 1; min-width: 0; }
+.presc-name-row { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 0.25rem; }
+.presc-name { font-size: 1rem; font-weight: 700; color: #1a1a1a; }
+.presc-dose { font-size: 0.875rem; font-weight: 500; color: #6b7280; }
+.presc-timing { font-size: 0.8125rem; color: #9ca3af; }
+
+.presc-meta { display: flex; gap: 2rem; align-items: center; }
+.meta-item { display: flex; flex-direction: column; gap: 0.125rem; min-width: 80px; }
+.meta-label { font-size: 0.7rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
+.meta-value { font-size: 0.875rem; font-weight: 600; color: #374151; }
+.meta-value.low-refills { color: #d97706; }
+
+.presc-actions { display: flex; align-items: center; }
+.refill-btn {
+  padding: 0.5rem 1.25rem; background: #5f8d5f; color: white; border: none;
+  border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.2s;
+}
+.refill-btn:hover { background: #4d7a4d; }
+
+.empty-state { text-align: center; padding: 4rem; color: #9ca3af; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+
+.dialog-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.dialog-box {
+  background: white; border-radius: 14px; padding: 2rem; width: 420px; max-width: 90vw;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+}
+.dialog-title { font-size: 1.25rem; font-weight: 700; color: #1a1a1a; margin: 0 0 0.75rem; }
+.dialog-body { font-size: 0.9375rem; color: #4b5563; line-height: 1.6; margin: 0 0 1.5rem; }
+.dialog-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+
+.action-btn {
+  padding: 0.55rem 1.25rem; border-radius: 8px; font-size: 0.875rem; font-weight: 600;
+  cursor: pointer; border: none; transition: 0.2s;
+}
+.action-btn.primary { background: #5f8d5f; color: white; }
+.action-btn.primary:hover { background: #4d7a4d; }
+.action-btn.outline { background: white; border: 1.5px solid #d1d5db; color: #374151; }
+.action-btn.outline:hover { background: #f3f4f6; }
+
+@media (max-width: 768px) {
+  .prescription-card { flex-direction: column; align-items: flex-start; }
+  .presc-meta { flex-wrap: wrap; gap: 1rem; }
+  .stats-row { flex-direction: column; }
+}

@@ -1,0 +1,96 @@
+<div class="med-page">
+
+  <div class="med-header">
+    <h2 class="med-title">Medication</h2>
+    @if (isNurseMode()) {
+      <p-select
+        [options]="patientOptions()"
+        [ngModel]="selectedPatientId()"
+        (ngModelChange)="onPatientSelect($event)"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Select a patient…"
+        styleClass="patient-selector">
+      </p-select>
+    }
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-label">Active Prescriptions</span>
+      <span class="stat-value">{{ activePrescriptionCount() < 10 ? ('0' + activePrescriptionCount()) : activePrescriptionCount() }}</span>
+    </div>
+    <div class="stat-card warn">
+      <span class="stat-label">Need Refill</span>
+      <span class="stat-value">{{ needRefillCount() < 10 ? ('0' + needRefillCount()) : needRefillCount() }}</span>
+    </div>
+    <div class="stat-card info">
+      <span class="stat-label">Next Refill Due</span>
+      <span class="stat-value date">{{ nextRefillDate() ? (nextRefillDate() | date: 'MMM d') : '—' }}</span>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="pi pi-search search-icon"></i>
+      <input class="search-input" type="text" placeholder="Search Prescriptions..."
+             [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)" />
+    </div>
+  </div>
+
+  <div class="prescription-list">
+    @for (p of filteredPrescriptions(); track p.id) {
+      <div class="prescription-card" [ngClass]="{ 'needs-refill': (p.refillsLeft ?? 0) <= 1 }">
+        <div class="presc-main">
+          <div class="presc-name-row">
+            <span class="presc-name">{{ p.name }}</span>
+            <span class="presc-dose">{{ p.dose }}</span>
+          </div>
+          <div class="presc-timing">{{ p.timing }}</div>
+        </div>
+
+        <div class="presc-meta">
+          <div class="meta-item">
+            <span class="meta-label">Prescribed by</span>
+            <span class="meta-value">Nurse</span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Refills Left</span>
+            <span class="meta-value" [ngClass]="{ 'low-refills': (p.refillsLeft ?? 0) <= 1 }">
+              {{ p.refillsLeft ?? 0 }}
+            </span>
+          </div>
+          <div class="meta-item">
+            <span class="meta-label">Next Refill</span>
+            <span class="meta-value">{{ p.nextRefillDate ? (p.nextRefillDate | date: 'dd MMM yyyy') : '—' }}</span>
+          </div>
+        </div>
+
+        <div class="presc-actions">
+          <button class="refill-btn" (click)="requestRefill(p)">Refill</button>
+        </div>
+      </div>
+    } @empty {
+      <div class="empty-state">
+        <i class="pi pi-pills text-4xl text-gray-300"></i>
+        <p>No prescriptions found.</p>
+      </div>
+    }
+  </div>
+
+</div>
+
+@if (showRefillDialog()) {
+  <div class="dialog-overlay" (click)="showRefillDialog.set(false)">
+    <div class="dialog-box" (click)="$event.stopPropagation()">
+      <h3 class="dialog-title">Request Refill</h3>
+      <p class="dialog-body">
+        Send a refill request for <strong>{{ refillTarget()?.name }} {{ refillTarget()?.dose }}</strong> to your assigned nurse?
+      </p>
+      <div class="dialog-actions">
+        <button class="action-btn outline" (click)="showRefillDialog.set(false)">Cancel</button>
+        <button class="action-btn primary" (click)="confirmRefill()">Send Request</button>
+      </div>
+    </div>
+  </div>
+}
