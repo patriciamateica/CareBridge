@@ -1,8 +1,10 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SliderModule } from 'primeng/slider';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
 
 import { AuthService } from '../../../auth-service/auth.service';
 import { PatientDetailFacadeService } from '../../cruds/services/patient-detail.facade';
@@ -10,7 +12,7 @@ import { PatientDetailFacadeService } from '../../cruds/services/patient-detail.
 @Component({
   selector: 'app-patient-detail',
   standalone: true,
-  imports: [DatePipe, FormsModule, SliderModule, RouterLink],
+  imports: [DatePipe, NgStyle, FormsModule, SliderModule, RouterLink, DialogModule, InputTextModule],
   templateUrl: './patient-detail.html',
   styleUrl: './patient-detail.css',
 })

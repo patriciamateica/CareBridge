@@ -99,8 +99,14 @@
                 <span class="history-label">Associated Conditions:</span>
                 <span class="history-value">{{ p.associatedConditions }}</span>
               </div>
-              <button class="green-action-btn" style="margin-top: auto; align-self: center;">
+              <button class="green-action-btn" style="margin-top: auto; align-self: center;"
+                      (click)="facade.showClinicalLogsDialog.set(true)">
                 View Clinical Log
+                @if (facade.clinicalLogsRaw().length) {
+                  <span style="margin-left:0.4rem;background:rgba(255,255,255,0.3);border-radius:999px;padding:0 6px;font-size:0.75rem;">
+                    {{ facade.clinicalLogsRaw().length }}
+                  </span>
+                }
               </button>
             </div>
           </div>
@@ -270,3 +276,100 @@
     <p>Patient not found.</p>
   </div>
 }
+
+<!-- Add Medication Dialog -->
+<p-dialog
+  [visible]="facade.showMedDialog()"
+  (onHide)="facade.showMedDialog.set(false)"
+  header="Add Medication"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width:'440px',maxWidth:'95vw'}">
+  <div style="display:flex;flex-direction:column;gap:1rem;padding-top:0.5rem;">
+    <div style="display:flex;flex-direction:column;gap:0.3rem;">
+      <label style="font-size:0.875rem;font-weight:600;">Name *</label>
+      <input pInputText [ngModel]="facade.newMedName()" (ngModelChange)="facade.newMedName.set($event)"
+             placeholder="e.g. Morphine" style="width:100%;" />
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.3rem;">
+      <label style="font-size:0.875rem;font-weight:600;">Dose</label>
+      <input pInputText [ngModel]="facade.newMedDose()" (ngModelChange)="facade.newMedDose.set($event)"
+             placeholder="e.g. 10mg" style="width:100%;" />
+    </div>
+    <div style="display:flex;flex-direction:column;gap:0.3rem;">
+      <label style="font-size:0.875rem;font-weight:600;">Timing</label>
+      <input pInputText [ngModel]="facade.newMedTiming()" (ngModelChange)="facade.newMedTiming.set($event)"
+             placeholder="e.g. Twice daily" style="width:100%;" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div style="display:flex;gap:0.5rem;justify-content:flex-end;">
+      <button class="green-action-btn outline" (click)="facade.showMedDialog.set(false)">Cancel</button>
+      <button class="green-action-btn" (click)="submitMedication()">Add Medication</button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Clinical Logs Dialog -->
+<p-dialog
+  [visible]="facade.showClinicalLogsDialog()"
+  (onHide)="facade.showClinicalLogsDialog.set(false)"
+  header="Clinical Logs"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{width: '780px', maxWidth: '95vw'}">
+
+  <!-- Filter tabs -->
+  <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+    @for (type of ['ALL','SCAN','REPORT','PRESCRIPTION','LAB_RESULT','REFERRAL','OTHER']; track type) {
+      <button
+        style="padding:0.3rem 0.875rem;border-radius:999px;font-size:0.8rem;font-weight:500;cursor:pointer;border:1.5px solid;transition:all 0.15s;"
+        [ngStyle]="facade.clinicalLogFilter() === type
+          ? {'background':'#5F8D5F','color':'#fff','border-color':'#5F8D5F'}
+          : {'background':'#fff','color':'#374151','border-color':'#d1d5db'}"
+        (click)="facade.clinicalLogFilter.set(type)">
+        {{ type === 'ALL' ? 'All' : type.replace('_', ' ') }}
+      </button>
+    }
+  </div>
+
+  @if (!facade.filteredClinicalLogs().length) {
+    <div style="text-align:center;padding:2.5rem 0;color:#9ca3af;">
+      <i class="pi pi-folder-open" style="font-size:2.5rem;display:block;margin-bottom:0.5rem;"></i>
+      <p style="margin:0;">No clinical logs found.</p>
+    </div>
+  } @else {
+    <div style="display:flex;flex-direction:column;gap:0.75rem;max-height:460px;overflow-y:auto;">
+      @for (log of facade.filteredClinicalLogs(); track log.id) {
+        <div style="display:flex;align-items:center;gap:1rem;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:0.75rem;padding:0.875rem 1rem;">
+          <div style="width:2.5rem;height:2.5rem;border-radius:50%;background:#5F8D5F;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="pi {{ facade.getDocIcon(log.documentType) }}"></i>
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              {{ log.documentTitle || 'Untitled' }}
+            </div>
+            <div style="font-size:0.78rem;color:#6b7280;margin-top:0.15rem;display:flex;gap:0.75rem;flex-wrap:wrap;">
+              <span><i class="pi pi-tag" style="margin-right:3px;"></i>{{ log.documentType?.replace('_',' ') }}</span>
+              <span><i class="pi pi-calendar" style="margin-right:3px;"></i>{{ log.datePerformed | date:'MMM d, y' }}</span>
+            </div>
+          </div>
+          <span style="font-size:0.72rem;padding:0.25rem 0.75rem;border-radius:999px;font-weight:600;flex-shrink:0;"
+                [ngStyle]="log.status === 'ACTIVE'
+                  ? {'background':'#d1fae5','color':'#065f46'}
+                  : {'background':'#f3f4f6','color':'#6b7280'}">
+            {{ log.status }}
+          </span>
+          @if (log.fileUrl) {
+            <a [href]="log.fileUrl" target="_blank"
+               style="color:#5F8D5F;font-size:0.85rem;font-weight:500;text-decoration:none;white-space:nowrap;flex-shrink:0;">
+              <i class="pi pi-external-link" style="margin-right:3px;"></i>View
+            </a>
+          }
+        </div>
+      }
+    </div>
+  }
+</p-dialog>

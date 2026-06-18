@@ -10,7 +10,9 @@ import { AuthService } from '../../auth-service/auth.service';
 
 import { AppointmentsService } from '../cruds/services/appointmentsService';
 import { UserService } from '../cruds/services/userService';
+import { PatientDetailsService } from '../cruds/services/patientDetailsService';
 import { RxStompService } from '../rx-stomp.service';
+import { ToastService } from '../toast-service/toast-service';
 
 import { Appointments } from '../cruds/models/appointments';
 import { User } from '../cruds/models/user';
@@ -35,8 +37,12 @@ interface CalendarDay {
 export class PatientAppointmentsComponent implements OnInit, OnDestroy {
   private readonly aptSvc = inject(AppointmentsService);
   private readonly userSvc = inject(UserService);
+  private readonly patientDetailsSvc = inject(PatientDetailsService);
   private readonly rxStompSvc = inject(RxStompService);
+  private readonly toastService = inject(ToastService);
   protected readonly authService = inject(AuthService);
+
+  private assignedNurseId = '';
 
   private readonly _allApts = signal<Appointments[]>([]);
   private readonly _users = signal<User[]>([]);
@@ -85,6 +91,10 @@ export class PatientAppointmentsComponent implements OnInit, OnDestroy {
 
   private loadData() {
     const currentUserId = this.authService.currentUserId();
+    this.patientDetailsSvc.getByUserId(currentUserId).subscribe({
+      next: (d) => { this.assignedNurseId = d.assignedNurseId || ''; },
+      error: () => {}
+    });
     forkJoin({
       apts: this.aptSvc.getByPatientId(currentUserId, 0, 200),
       users: this.userSvc.getByRole('NURSE')
@@ -183,10 +193,46 @@ export class PatientAppointmentsComponent implements OnInit, OnDestroy {
   }
 
   submitNewAppointment() {
-    console.log("Submitting new requested appointment to Nurse:", this.newApt);
-    this.showAppointmentForm.set(false);
+    const patientId = this.authService.currentUserId();
+    const nurseId = this.assignedNurseId;
+
+    if (!nurseId) {
+      this.toastService.showError('You need an assigned nurse before requesting an appointment.');
+      return;
+    }
+    if (!this.newApt.date || !this.newApt.time || !this.newApt.description) {
+      this.toastService.showError('Please fill in all fields.');
+      return;
+    }
+
+    const timeSlot = `${this.newApt.date}T${this.newApt.time}`;
+    const appointment: any = {
+      patientId,
+      nurseId,
+      description: this.newApt.description,
+      timeSlot,
+      status: 'REQUESTED'
+    };
+
+    this.aptSvc.create(appointment).subscribe({
+      next: () => {
+        this.toastService.showSuccess('Appointment request sent to your nurse.');
+        this.showAppointmentForm.set(false);
+        this.newApt = { date: null, time: null, description: '' };
+      },
+      error: () => {
+        this.toastService.showError('Could not submit appointment request. Please try again.');
+      }
+    });
   }
 
-  reschedule(id: string) { console.log("Reschedule", id); }
-  cancel(id: string) { console.log("Cancel", id); }
+  cancel(id: string) {
+    const apt = this._allApts().find(a => a.id === id);
+    if (!apt) return;
+    const updated: Appointments = { ...apt, status: 'CANCELLED' };
+    this.aptSvc.update(id, updated).subscribe({
+      next: () => this.toastService.showSuccess('Appointment cancelled.'),
+      error: () => this.toastService.showError('Could not cancel appointment.')
+    });
+  }
 }

@@ -13,9 +13,11 @@ import { AuthService } from '../../auth-service/auth.service';
 import { UserService } from '../cruds/services/userService';
 import { VitalsService } from '../cruds/services/vitalsService';
 import { HealthStatusService } from '../cruds/services/healthStatusService';
+import { PatientDetailsService } from '../cruds/services/patientDetailsService';
 
 import { User } from '../cruds/models/user';
 import { Vitals } from '../cruds/models/vitals';
+import { PatientProfile } from '../patient-profile/patient-profile';
 
 @Component({
   selector: 'app-home-patient',
@@ -28,6 +30,7 @@ import { Vitals } from '../cruds/models/vitals';
     CheckboxModule,
     ButtonModule,
     TextareaModule,
+    PatientProfile,
   ],
   templateUrl: './home-patient.html',
   styleUrl: './home-patient.css'
@@ -36,12 +39,14 @@ export class HomePatient implements OnInit {
   private readonly userSvc = inject(UserService);
   private readonly vitalsSvc = inject(VitalsService);
   private readonly healthSvc = inject(HealthStatusService);
+  private readonly patientDetailsSvc = inject(PatientDetailsService);
   private readonly authService = inject(AuthService);
 
   readonly profileDialogVisible = signal(false);
 
   private readonly _currentUser = signal<User | null>(null);
   private readonly _vitals = signal<Vitals[]>([]);
+  readonly profileData = signal<any>(null);
 
   readonly patientName = computed(() => {
     const user = this._currentUser();
@@ -58,7 +63,33 @@ export class HomePatient implements OnInit {
   ngOnInit() {
     const id = this.authService.currentUserId();
     if (id) {
-      this.userSvc.getById(id).subscribe(u => this._currentUser.set(u));
+      this.userSvc.getById(id).subscribe(u => {
+        this._currentUser.set(u);
+        this.patientDetailsSvc.getByUserId(id).subscribe({
+          next: (details) => {
+            this.profileData.set({
+              dob: u.dateOfBirth,
+              email: u.email,
+              nationality: u.nationality,
+              phone: u.phoneNumber,
+              address: u.residentialAddress,
+              diagnosis: details.primaryDiagnosis,
+              diagnosisDate: '',
+              neurologicalStatus: details.diagnostics?.[0] || '',
+              associatedConditions: details.diagnostics?.slice(1).join(', ') || ''
+            });
+          },
+          error: () => {
+            this.profileData.set({
+              dob: u.dateOfBirth,
+              email: u.email,
+              nationality: u.nationality,
+              phone: u.phoneNumber,
+              address: u.residentialAddress
+            });
+          }
+        });
+      });
       this.vitalsSvc.getByPatientId(id).subscribe((res: any) => {
         this._vitals.set(res.content || []);
       });

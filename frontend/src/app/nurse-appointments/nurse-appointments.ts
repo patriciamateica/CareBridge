@@ -10,6 +10,7 @@ import { AuthService } from '../../auth-service/auth.service';
 import { AppointmentsService } from '../cruds/services/appointmentsService';
 import { UserService } from '../cruds/services/userService';
 import { RxStompService } from '../rx-stomp.service';
+import { ToastService } from '../toast-service/toast-service';
 
 import { Appointments } from '../cruds/models/appointments';
 import { User } from '../cruds/models/user';
@@ -36,6 +37,7 @@ export class NurseAppointmentsComponent implements OnInit, OnDestroy {
   private readonly userSvc = inject(UserService);
   private readonly rxStompSvc = inject(RxStompService);
   protected readonly authService = inject(AuthService);
+  private readonly toastSvc = inject(ToastService);
 
   private readonly _allApts = signal<Appointments[]>([]);
   private readonly _users = signal<User[]>([]);
@@ -168,12 +170,48 @@ export class NurseAppointmentsComponent implements OnInit, OnDestroy {
   cancelRequest(id: string) { this.aptSvc.delete(id).subscribe(); }
 
   submitNewAppointment() {
-    console.log("Submitting new appointment", this.newApt);
-    this.showAppointmentForm.set(false);
+    const { patientId, date, time, description } = this.newApt;
+    if (!patientId || !date || !time) {
+      this.toastSvc.showError('Patient, date and time are required');
+      return;
+    }
+    const [h, m] = (time as any as string).split(':').map(Number);
+    const dt = new Date(date as any);
+    dt.setHours(h, m, 0, 0);
+    const nurseId = this.authService.currentUserId();
+    this.aptSvc.create({
+      id: '',
+      patientId,
+      nurseId,
+      description: description || '',
+      timeSlot: dt.toISOString(),
+      status: 'SCHEDULED'
+    }).subscribe({
+      next: () => { this.toastSvc.showSuccess('Appointment scheduled'); this.showAppointmentForm.set(false); },
+      error: () => this.toastSvc.showError('Failed to create appointment')
+    });
   }
 
   submitBlockedTime() {
-    console.log("Blocking time", this.blockTimeData);
-    this.showBlockTimeForm.set(false);
+    const { date, startTime, reason } = this.blockTimeData;
+    if (!date || !startTime) {
+      this.toastSvc.showError('Date and start time are required');
+      return;
+    }
+    const [h, m] = (startTime as any as string).split(':').map(Number);
+    const dt = new Date(date as any);
+    dt.setHours(h, m, 0, 0);
+    const nurseId = this.authService.currentUserId();
+    this.aptSvc.create({
+      id: '',
+      patientId: nurseId,
+      nurseId,
+      description: reason || 'Blocked time',
+      timeSlot: dt.toISOString(),
+      status: 'SCHEDULED'
+    }).subscribe({
+      next: () => { this.toastSvc.showSuccess('Time blocked'); this.showBlockTimeForm.set(false); },
+      error: () => this.toastSvc.showError('Failed to block time')
+    });
   }
 }
