@@ -422,7 +422,6 @@ public class SeederService {
         return text.length() > 250 ? text.substring(0, 245) + "..." : text;
     }
 
-    // Phase Debugging: Seed audit logs with mock data
     private void seedAuditLogsTable() {
         List<User> allUsers = userRepository.findAll();
         String[] actions = {"Login", "Create Patient", "Update Patient", "Delete Patient", "Create Task", "View Report", "Export Data", "Change Password"};
@@ -448,7 +447,6 @@ public class SeederService {
         }
     }
 
-    // Phase Debugging: Seed suspicious users with mock data
     private void seedSuspiciousUsersTable() {
         List<User> allUsers = userRepository.findAll();
         String[] reasons = {"Brute Force Detected", "Mass Data Modification", "Bot Activity Detected", "Unusual Login Pattern"};
