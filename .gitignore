@@ -27,7 +27,6 @@ dist/
 # Docker & DB
 .docker/
 postgres_data/
-application.properties
 /frontend/typescript-client/.openapi-generator/FILES
 /frontend/typescript-client/.openapi-generator/VERSION
 /frontend/typescript-client/api/api.ts
