@@ -15,7 +15,8 @@ public class NurseDetailsMapper {
             details.getSpecialization(),
             details.getHospitalAffiliation(),
             details.getExperienceYears(),
-            details.isHireMeStatus()
+            details.isHireMeStatus(),
+            details.getLicenseNumber()
         );
     }
 
@@ -25,7 +26,8 @@ public class NurseDetailsMapper {
             dto.specialization(),
             dto.hospitalAffiliation(),
             dto.experienceYears(),
-            dto.hireMeStatus()
+            dto.hireMeStatus(),
+            dto.licenseNumber()
         );
     }
 }

@@ -29,5 +29,7 @@ public record TaskDto(
     @NotNull(message = "Patient ID is mandatory")
     UUID patientId,
 
-    UUID claimerId
+    UUID claimerId,
+
+    Boolean remote
 ) {}

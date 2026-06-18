@@ -35,6 +35,11 @@ public class NurseDetailsController {
         return mapper.toDto(service.getById(id));
     }
 
+    @GetMapping("/by-user/{userId}")
+    public NurseDetailsDto getByUserId(@PathVariable UUID userId) {
+        return mapper.toDto(service.getByUserId(userId));
+    }
+
     @PostMapping
     public NurseDetailsDto create(@RequestBody NurseDetailsDto dto) {
         User user = userService.getUserById(dto.userId());

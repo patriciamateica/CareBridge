@@ -17,7 +17,8 @@ public class TaskMapper {
             task.getNeededBy(),
             task.getStatus(),
             task.getPatient() != null ? task.getPatient().getId() : null,
-            task.getClaimer() != null ? task.getClaimer().getId() : null
+            task.getClaimer() != null ? task.getClaimer().getId() : null,
+            task.isRemote()
         );
     }
 
@@ -30,7 +31,8 @@ public class TaskMapper {
             dto.neededBy(),
             dto.status(),
             patient,
-            claimer
+            claimer,
+            dto.remote() != null && dto.remote()
         );
     }
 }

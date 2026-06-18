@@ -320,7 +320,8 @@ public class SeederService {
                 LocalDateTime.now().plusHours(random.nextInt(1, 48)),
                 TaskStatus.OPEN,
                 patient,
-                null));
+                null,
+                false));
         }
     }
 
@@ -517,7 +518,8 @@ public class SeederService {
             LocalDateTime.now().plusHours(24),
             TaskStatus.OPEN,
             randomPatient,
-            null));
+            null,
+            false));
         careNotesService.create(new CareNotes(null,
             truncate(faker.lorem().paragraph()),
             randomPatient,

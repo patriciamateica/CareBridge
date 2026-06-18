@@ -20,5 +20,7 @@ public record NurseDetailsDto(
     @Min(value = 0, message = "Experience years cannot be negative")
     int experienceYears,
 
-    boolean hireMeStatus
+    boolean hireMeStatus,
+
+    String licenseNumber
 ) {}

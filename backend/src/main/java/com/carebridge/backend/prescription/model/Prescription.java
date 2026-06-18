@@ -2,6 +2,7 @@ package com.carebridge.backend.prescription.model;
 
 import com.carebridge.backend.user.model.User;
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -20,6 +21,12 @@ public class Prescription {
 
     @Column(nullable = false)
     private String timing;
+
+    @Column(name = "refills_left")
+    private int refillsLeft;
+
+    @Column(name = "next_refill_date")
+    private LocalDate nextRefillDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
@@ -40,6 +47,22 @@ public class Prescription {
         this.patient = patient;
         this.nurse = nurse;
     }
+
+    public Prescription(UUID id, String name, String dose, String timing, int refillsLeft, LocalDate nextRefillDate, User patient, User nurse) {
+        this.id = id;
+        this.name = name;
+        this.dose = dose;
+        this.timing = timing;
+        this.refillsLeft = refillsLeft;
+        this.nextRefillDate = nextRefillDate;
+        this.patient = patient;
+        this.nurse = nurse;
+    }
+
+    public int getRefillsLeft() { return refillsLeft; }
+    public void setRefillsLeft(int refillsLeft) { this.refillsLeft = refillsLeft; }
+    public LocalDate getNextRefillDate() { return nextRefillDate; }
+    public void setNextRefillDate(LocalDate nextRefillDate) { this.nextRefillDate = nextRefillDate; }
 
     public UUID getId() {
         return id;

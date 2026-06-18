@@ -30,6 +30,9 @@ public class NurseDetails {
     @Column(name = "hire_me_status", nullable = false)
     private boolean hireMeStatus;
 
+    @Column(name = "license_number")
+    private String licenseNumber;
+
     public NurseDetails() {
     }
 
@@ -38,13 +41,15 @@ public class NurseDetails {
         String specialization,
         String hospitalAffiliation,
         int experienceYears,
-        boolean hireMeStatus
+        boolean hireMeStatus,
+        String licenseNumber
     ) {
         this.user = user;
         this.specialization = specialization;
         this.hospitalAffiliation = hospitalAffiliation;
         this.experienceYears = experienceYears;
         this.hireMeStatus = hireMeStatus;
+        this.licenseNumber = licenseNumber;
     }
 
     public UUID getId() {
@@ -93,5 +98,13 @@ public class NurseDetails {
 
     public void setHireMeStatus(boolean hireMeStatus) {
         this.hireMeStatus = hireMeStatus;
+    }
+
+    public String getLicenseNumber() {
+        return licenseNumber;
+    }
+
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
     }
 }

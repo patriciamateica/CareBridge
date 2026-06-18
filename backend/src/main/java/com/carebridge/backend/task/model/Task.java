@@ -39,6 +39,9 @@ public class Task {
     @JoinColumn(name = "claimer_id")
     private User claimer;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean remote = false;
+
     public Task() {
     }
 
@@ -50,7 +53,8 @@ public class Task {
         LocalDateTime neededBy,
         TaskStatus status,
         User patient,
-        User claimer
+        User claimer,
+        boolean remote
     ) {
         this.id = id;
         this.title = title;
@@ -59,9 +63,9 @@ public class Task {
         this.neededBy = neededBy;
         this.status = status;
         this.patient = patient;
-        this.claimer= claimer;
+        this.claimer = claimer;
+        this.remote = remote;
     }
-
     public UUID getId() {
         return id;
     }
@@ -123,6 +127,14 @@ public class Task {
     }
 
     public void setClaimer(User claimer) {
-        this.claimer= claimer;
+        this.claimer = claimer;
+    }
+
+    public boolean isRemote() {
+        return remote;
+    }
+
+    public void setRemote(boolean remote) {
+        this.remote = remote;
     }
 }

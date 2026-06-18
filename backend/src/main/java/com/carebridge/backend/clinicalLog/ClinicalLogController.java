@@ -8,7 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/clinical-logs")
@@ -33,6 +35,11 @@ public class ClinicalLogController {
     @GetMapping("/{id}")
     public ClinicalLogDto getById(@PathVariable UUID id) {
         return mapper.toDto(service.getById(id));
+    }
+
+    @GetMapping("/patient/{patientId}")
+    public List<ClinicalLogDto> getByPatientId(@PathVariable UUID patientId) {
+        return service.getByPatientId(patientId).stream().map(mapper::toDto).collect(Collectors.toList());
     }
 
     @PostMapping
