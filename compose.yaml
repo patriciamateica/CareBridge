@@ -6,8 +6,8 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: carebridge_db
-      POSTGRES_PASSWORD: dbpassword
-      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
     ports:
       - "5433:5432"
   mongodb:
@@ -17,7 +17,7 @@ services:
     restart: unless-stopped
     environment:
       MONGO_INITDB_DATABASE: chat_db
-      MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
     ports:
       - "27017:27017"
