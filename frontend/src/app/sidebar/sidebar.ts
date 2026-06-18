@@ -35,9 +35,10 @@ export class Sidebar {
       label: 'MEDICAL',
       roles: ['Admin', 'Nurse', 'Patient'],
       items: [
-        { path: '/dashboard/patient-management', title: 'Patients',  roles: ['Admin', 'Nurse'] },
+        { path: '/dashboard/patient-management', title: 'Patients',       roles: ['Admin', 'Nurse'] },
         { path: '/dashboard/medication',         title: 'Medication',      roles: ['Admin', 'Nurse', 'Patient'] },
         { path: '/dashboard/records',            title: 'Medical Records', roles: ['Admin', 'Nurse', 'Patient'] },
+        { path: '/dashboard/find-nurse',         title: 'Find Nurse',      roles: ['Admin', 'Patient'] },
         { path: '/dashboard/requests',           title: 'Requests',        roles: ['Admin', 'Nurse'] }
       ]
     },

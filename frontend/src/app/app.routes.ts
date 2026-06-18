@@ -14,6 +14,11 @@ import {PatientAppointmentsComponent} from './patient-appointments/patient-appoi
 import {ChatComponent} from './chat/chat';
 import {ObservationList} from './audit/observation-list/observation-list';
 import {AuditLogsComponent} from './audit/audit-logs/audit-logs';
+import {MedicationComponent} from './medication/medication';
+import {MedicalRecordsComponent} from './medical-records/medical-records';
+import {FindNurseComponent} from './find-nurse/find-nurse';
+import {CareVillageComponent} from './care-village/care-village';
+import {NurseRequestsComponent} from './nurse-requests/nurse-requests';
 
 export const routes: Routes = [
   {
@@ -52,6 +57,11 @@ export const routes: Routes = [
       { path: 'chat', title: 'Community Chat', component: ChatComponent },
        { path: 'observation-list', title: 'Security Monitor', component: ObservationList},
        { path: 'audit-logs', title: 'System Audit Logs', component: AuditLogsComponent},
+       { path: 'medication', title: 'Medication', component: MedicationComponent },
+       { path: 'records', title: 'Medical Records', component: MedicalRecordsComponent },
+       { path: 'find-nurse', title: 'Find a Nurse', component: FindNurseComponent },
+       { path: 'village', title: 'Care Village', component: CareVillageComponent },
+       { path: 'requests', title: 'Requests', component: NurseRequestsComponent },
        { path: '', redirectTo: 'home-nurse', pathMatch: 'full' }
     ]
   }
